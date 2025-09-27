@@ -10,6 +10,8 @@ import { FileUpload } from "@/components/ui/FileUpload";
 import { HealthcareButton } from "@/components/ui/healthcare-button";
 import { RoleSelector, UserRole } from "@/components/ui/RoleSelector";
 import { registerUser, registerDoctor } from "@/app/api/auth";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 interface RegisterProps {
   role: UserRole;
@@ -70,20 +72,31 @@ export default function Register({ role, setRole }: RegisterProps) {
           password: data.password,
           license: base64String,
         };
-        const res = await registerDoctor(payload);
-        console.log("Doctor registration:", res);
+        await registerDoctor(payload);
+
+        toast.info(
+          "Your request has been sent to the admin. Please wait for approval. You will get an email once approved.",
+          { position: "top-center", autoClose: 5000 }
+        );
       } else {
-        const res = await registerUser({
+        await registerUser({
           username: data.fullName,
           email: data.email,
           password: data.password,
         });
-        console.log("Patient registration:", res);
+
+        toast.success("Patient account created successfully!", {
+          position: "top-center",
+          autoClose: 3000,
+        });
       }
       reset();
       setVerificationFile(null);
     } catch (err) {
       console.error("Registration failed:", err);
+      toast.error("Registration failed. Please try again.", {
+        position: "top-center",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -145,7 +158,12 @@ export default function Register({ role, setRole }: RegisterProps) {
             />
           )}
 
-          <HealthcareButton type="submit" loading={isLoading} className="w-full" size="lg">
+          <HealthcareButton
+            type="submit"
+            loading={isLoading}
+            className="w-full"
+            size="lg"
+          >
             Create Account
           </HealthcareButton>
         </form>
