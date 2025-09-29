@@ -41,15 +41,15 @@ export default function DoctorRequestsList({
   return (
     <div className="space-y-4">
       {requests.map(request => (
-        <div key={request.id} className="p-4 rounded-lg border hover:bg-accent/30 transition-all">
+        <div key={request.doctorReqId} className="p-4 rounded-lg border hover:bg-accent/30 transition-all">
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="font-semibold text-lg">{request.name}</h4>
+              <h4 className="font-semibold text-lg">{request.userName}</h4>
               <p className="text-sm text-muted-foreground">{request.email}</p>
             </div>
             <div className="flex items-center gap-2">
               <Badge className={getStatusColor(request.status)}>
-                {request.status.replace('-', ' ')}
+                {request.status?.replace("-", " ").toUpperCase()}
               </Badge>
 
               <Dialog>
@@ -60,23 +60,22 @@ export default function DoctorRequestsList({
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                   <DialogHeader>
-                    <DialogTitle>{request.name} - Application Details</DialogTitle>
-                    <DialogDescription>{request.personalStatement}</DialogDescription>
+                    <DialogTitle>{request.userName} - Application Details</DialogTitle>
+
                   </DialogHeader>
                   <div className="space-y-2 mt-2">
                     <p><strong>Email:</strong> {request.email}</p>
-                    <p><strong>State:</strong> {request.issuingState}</p>
-                    <p><strong>Documents:</strong> {Object.values(request.documents).join(", ")}</p>
+        
                   </div>
                 </DialogContent>
               </Dialog>
 
-              {request.status === "pending" || request.status === "under-review" ? (
+              {request.status === "PENDING" || request.status === "under-review" ? (
                 <>
-                  <Button size="sm" className="bg-success hover:bg-success/90" onClick={() => onApprove(request.id)}>
+                  <Button size="sm" className="bg-green-500" onClick={() => onApprove(request.doctorReqId)}>
                     <Check className="h-3 w-3" />
                   </Button>
-                  <Button size="sm" variant="destructive" onClick={() => onReject(request.id)}>
+                  <Button size="sm" variant="destructive" onClick={() => onReject(request.doctorReqId)}>
                     <X className="h-3 w-3" />
                   </Button>
                 </>

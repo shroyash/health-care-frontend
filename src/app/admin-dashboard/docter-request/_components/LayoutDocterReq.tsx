@@ -1,106 +1,105 @@
-"use client"; 
-import { useState } from "react";
+"use client";
+
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
- import DoctorSearch from "./DoctorSearch";
-import {DoctorRequestType} from "../_types/DoctorRequestType";
+import DoctorSearch from "./DoctorSearch";
 import DoctorRequestsList from "./DoctorRequestsList";
-
-const doctorRequests: DoctorRequestType[] = [
-  {
-    id: 1,
-    name: "Dr. James Wilson",
-    email: "james.wilson@email.com",
-    phone: "+1 (555) 456-7890",
-    specialty: "Dermatology",
-    experience: "6 years",
-    education: "MD - Harvard Medical School",
-    previousHospital: "Boston General Hospital",
-    licenseNumber: "DRM-2018-45678",
-    licenseExpiry: "2026-12-15",
-    issuingState: "Massachusetts",
-    requestDate: "2024-09-15",
-    status: "pending",
-    documents: {
-      medicalLicense: "license_james_wilson.pdf",
-      cv: "cv_james_wilson.pdf",
-      references: "references_james_wilson.pdf"
-    },
-    personalStatement: "I am passionate about dermatology and have extensive experience treating various skin conditions. I believe I would be a valuable addition to your healthcare team."
-  }
-];
+import { DoctorRequestType } from "../_types/DoctorRequestType";
+import { getAllDoctorPendingReq } from "@/app/api/docterReq";
+import { approveOrRejectDoctorReq } from "@/app/api/docterReq";
 
 export default function DoctorRequestLayout() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState<DoctorRequestType | null>(null);
-  const [requests, setRequests] = useState(doctorRequests);
+  const [requests, setRequests] = useState<DoctorRequestType[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredRequests = requests.filter(request =>
-    request.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    request.specialty.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    request.email.toLowerCase().includes(searchTerm.toLowerCase())
+  // --- Fetch pending doctor requests on mount ---
+  useEffect(() => {
+    const fetchDoctorRequests = async () => {
+      try {
+        setLoading(true);
+        const response = await getAllDoctorPendingReq(); // backend should return only pending requests
+        setRequests(response);
+      } catch (error) {
+        toast.error("Failed to fetch doctor requests. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDoctorRequests();
+  }, []);
+
+  // --- Filter requests by search term ---
+  const filteredRequests = requests.filter((request) =>
+    request.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    request.email.toLowerCase().includes(searchTerm.toLowerCase()) 
   );
 
-  const handleApprove = (doctorId: number) => {
-    setRequests(prev => prev.map(req => 
-      req.id === doctorId ? { ...req, status: "approved" } : req
-    ));
-    toast.success("Doctor Approved: The doctor has been successfully approved and added to the system.");
-  };
+  // --- Handlers ---
+  const handleStatusChange = async (doctorId: number, status: string) => {
+    try {
+      // Call backend to approve/reject/review
+      await approveOrRejectDoctorReq(doctorId, status);
 
-  const handleReject = (doctorId: number) => {
-    setRequests(prev => prev.map(req => 
-      req.id === doctorId ? { ...req, status: "rejected" } : req
-    ));
-    toast.error("Doctor Request Rejected: The doctor request has been rejected.");
-  };
+      // Update frontend state
+      setRequests((prev) =>
+        prev.map((req) => (req.doctorReqId === doctorId ? { ...req, status } : req))
+      );
 
-  const handleReview = (doctorId: number) => {
-    setRequests(prev => prev.map(req => 
-      req.id === doctorId ? { ...req, status: "under-review" } : req
-    ));
-    toast.info("Request Under Review: The doctor request is now under review.");
+      // Show toast notifications
+      if (status === "approved") {
+        toast.success("Doctor Approved: Successfully added to the system.");
+      } else if (status === "rejected") {
+        toast.error("Doctor Request Rejected.");
+      } else if (status === "under-review") {
+        toast.info("Request is now under review.");
+      }
+    } catch (error) {
+      toast.error("Failed to update doctor status. Please try again.");
+    }
   };
 
   const handleViewDetails = (doctor: DoctorRequestType) => {
     setSelectedDoctor(doctor);
   };
 
+  // --- Render ---
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Doctor Requests</h1>
-          <p className="text-muted-foreground mt-1">Review and approve doctor applications</p>
+          <p className="text-muted-foreground mt-1">
+            Review and approve doctor applications
+          </p>
         </div>
         <div className="flex gap-2">
           <Badge variant="outline" className="text-warning border-warning/20">
-            {requests.filter(r => r.status === 'pending').length} Pending
-          </Badge>
-          <Badge variant="outline" className="text-primary border-primary/20">
-            {requests.filter(r => r.status === 'under-review').length} Under Review
+            {requests.filter((r) => r.status === "pending").length} Pending
           </Badge>
         </div>
       </div>
 
-    
-
       {/* Search */}
-      <DoctorSearch 
-        searchTerm={searchTerm} 
-        onSearchChange={setSearchTerm} 
-      />
+      <DoctorSearch searchTerm={searchTerm} onSearchChange={setSearchTerm} />
 
       {/* Requests List */}
-      <DoctorRequestsList
-        requests={filteredRequests}
-        onApprove={handleApprove}
-        onReject={handleReject}
-        onReview={handleReview}
-        onViewDetails={handleViewDetails}
-      />
+      {loading ? (
+        <p className="text-muted-foreground">Loading doctor requests...</p>
+      ) : (
+        <DoctorRequestsList
+          requests={filteredRequests}
+          onApprove={(id) => handleStatusChange(id, "approved")}
+          onReject={(id) => handleStatusChange(id, "rejected")}
+          onReview={(id) => handleStatusChange(id, "under-review")}
+          onViewDetails={handleViewDetails}
+        />
+      )}
     </div>
   );
 }

@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormInput } from "@/components/ui/form-input";
 import { HealthcareButton } from "@/components/ui/healthcare-button";
-import { loginUser } from "@/app/api/auth";
+import { loginUserWeb } from "@/app/api/auth";
 import { useState } from "react";
 
 interface LoginProps {
@@ -32,7 +32,7 @@ export default function Login({ setShowForgotPassword }: LoginProps) {
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
-      const res = await loginUser({ email: data.email, password: data.password });
+      const res = await loginUserWeb({ email: data.email, password: data.password });
       console.log("Login response:", res);
       reset();
     } catch (err) {

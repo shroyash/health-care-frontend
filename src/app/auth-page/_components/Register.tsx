@@ -70,9 +70,11 @@ export default function Register({ role, setRole }: RegisterProps) {
           username: data.fullName,
           email: data.email,
           password: data.password,
-          license: base64String,
+          license: "file",
         };
+           console.log(payload);
         await registerDoctor(payload);
+     
 
         toast.info(
           "Your request has been sent to the admin. Please wait for approval. You will get an email once approved.",
