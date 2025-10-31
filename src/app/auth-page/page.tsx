@@ -7,6 +7,7 @@ import { ForgotPasswordModal } from "@/components/ui/ForgotPasswordModal";
 import { Shield, Heart } from "lucide-react";
 import Login from "./_components/Login";
 import Register from "./_components/Register";
+import Image from "next/image";
 
 type AuthMode = "login" | "register";
 
@@ -22,18 +23,22 @@ export default function AuthPage() {
       {/* Left Hero Image */}
       <div className="hidden lg:flex lg:w-1/2 lg:h-screen relative overflow-hidden sticky top-0">
         <div className="absolute inset-0 bg-blue-900/50"></div>
-        <img
-          src="./healthcare-hero.jpg"
+        <Image
+          src="/healthcare-hero.png"
           alt="Healthcare professionals"
+          width={800}
+          height={1200}
           className="w-full h-full object-cover"
         />
+
         <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center">
           <Heart className="w-16 h-16 mx-auto mb-4 text-blue-300" />
           <h1 className="text-4xl font-bold mb-4 text-blue-200">
             Welcome to HealthCare
           </h1>
           <p className="text-xl text-blue-200 leading-relaxed">
-            Connecting patients and doctors with modern, secure, and trusted healthcare solutions.
+            Connecting patients and doctors with modern, secure, and trusted
+            healthcare solutions.
           </p>
         </div>
       </div>
@@ -88,9 +93,7 @@ export default function AuthPage() {
 
           {/* Form Section */}
           {mode === "login" ? (
-            <Login
-              setShowForgotPassword={setShowForgotPassword}
-            />
+            <Login setShowForgotPassword={setShowForgotPassword} />
           ) : (
             <Register role={role} setRole={setRole} />
           )}

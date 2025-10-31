@@ -26,17 +26,16 @@ import {
 } from "@/components/ui/sidebar";
 
 const navigationItems = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard, group: "Overview" },
-  { title: "Appointments", url: "/appointments", icon: Calendar, group: "Management" },
-  { title: "Doctors", url: "/doctors", icon: UserCheck, group: "Management" },
-  { title: "Doctor Requests", url: "/doctor-requests", icon: FileText, group: "Management" },
-  { title: "Patients", url: "/patients", icon: Users, group: "Management" },
-  { title: "User Management", url: "/users", icon: Shield, group: "Management" },
-  { title: "Analytics", url: "/analytics", icon: BarChart3, group: "Reports" },
-  { title: "Reports", url: "/reports", icon: FileText, group: "Reports" },
-  { title: "System Monitor", url: "/monitor", icon: Activity, group: "System" },
-  { title: "Notifications", url: "/notifications", icon: Bell, group: "System" },
-  { title: "Settings", url: "/settings", icon: Settings, group: "System" },
+  { title: "Admin Dashboard", url: "/dashboard/admin", icon: LayoutDashboard, group: "Overview" },
+  { title: "Appointments", url: "/dashboard/admin/appointments", icon: Calendar, group: "Management" },
+  { title: "Doctors", url: "/dashboard/admin/doctors", icon: UserCheck, group: "Management" },
+  { title: "Doctor Requests", url: "/dashboard/admin/doctor-requests", icon: FileText, group: "Management" },
+  { title: "Patients", url: "/dashboard/admin/patients", icon: Users, group: "Management" },
+  { title: "Analytics", url: "/dashboard/admin/analytics", icon: BarChart3, group: "Reports" },
+  { title: "Reports", url: "/dashboard/admin/reports", icon: FileText, group: "Reports" },
+  { title: "System Monitor", url: "/dashboard/admin/monitor", icon: Activity, group: "System" },
+  { title: "Notifications", url: "/admin/notifications", icon: Bell, group: "System" },
+  { title: "Settings", url: "/dashboard/admin/settings", icon: Settings, group: "System" },
 ];
 
 const groupedItems = navigationItems.reduce((acc, item) => {

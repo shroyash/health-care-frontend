@@ -1,9 +1,14 @@
+'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
-  return (
-   <div>
-      <h1>Welcome to My Healthcare App</h1>
-   </div>
-  );
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace('/auth-page'); 
+  }, [router]);
+
+  return null; 
 }
