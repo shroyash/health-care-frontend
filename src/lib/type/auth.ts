@@ -15,8 +15,12 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   message: string;
-  username: string;
-  email: string;
+  status: string;
+  data: UserResponseDto;
+}
+export interface Role {
+  id: number;
+  name: string;
 }
 
 export interface JwtResponse {
@@ -29,7 +33,7 @@ export interface JwtResponse {
 export interface UserResponseDto {
   username: string;
   email: string;
-  roles: string[];
+  role: Role[];
 }
 
 export interface ForgotPasswordRequest {

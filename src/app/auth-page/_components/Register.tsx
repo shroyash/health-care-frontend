@@ -9,7 +9,7 @@ import { FormInput } from "@/components/ui/form-input";
 import { FileUpload } from "@/components/ui/FileUpload";
 import { HealthcareButton } from "@/components/ui/healthcare-button";
 import { RoleSelector, UserRole } from "@/components/ui/RoleSelector";
-import { registerDoctor,registerUser } from "@/lib/auth";
+import { registerDoctor,registerUser } from "@/lib/api/auth";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
