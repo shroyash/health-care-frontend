@@ -1,57 +1,71 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, UserCheck, Calendar, TrendingUp } from "lucide-react";
-
-interface Stat {
-  title: string;
-  value: string;
-  change: string;
-  changeType: "positive" | "negative";
-  icon: React.ComponentType<{ className?: string }>;
-  gradient: string;
-}
-
-const stats: Stat[] = [
-  {
-    title: "Total Patients",
-    value: "2",
-    change: "+12.5%",
-    changeType: "positive",
-    icon: Users,
-    gradient: "bg-gradient-primary",
-  },
-  {
-    title: "Active Doctors",
-    value: "2",
-    change: "+3.2%",
-    changeType: "positive",
-    icon: UserCheck,
-    gradient: "bg-gradient-success",
-  },
-  {
-    title: "Today's Appointments",
-    value: "1",
-    change: "+8.1%",
-    changeType: "positive",
-    icon: Calendar,
-    gradient: "bg-gradient-card",
-  },
-  {
-    title: "System Growth",
-    value: "94.3%",
-    change: "+2.4%",
-    changeType: "positive",
-    icon: TrendingUp,
-    gradient: "bg-gradient-primary",
-  },
-];
+import { getAdminDashboardStats } from "@/lib/api/adminDashboard";
 
 export function DashboardStats() {
+  const [statsData, setStatsData] = useState({
+    totalPatients: 0,
+    totalDoctors: 0,
+    totalAppointmentsToday: 0,
+    pendingDoctorApprovals: 0,
+  });
+
+    useEffect(() => {
+    async function fetchStats() {
+      try {
+        const res = await getAdminDashboardStats();
+        // If API.getOne() returns { data: {...} }
+        setStatsData(res);
+      } catch (error) {
+        console.error("Error fetching dashboard stats:", error);
+      }
+    }
+
+    fetchStats();
+  }, []);
+
+    const stats = [
+    {
+      title: "Total Patients",
+      value: statsData.totalPatients.toString(),
+      change: "+12.5%",
+      changeType: "positive" as const,
+      icon: Users,
+      gradient: "bg-gradient-primary",
+    },
+    {
+      title: "Active Doctors",
+      value: statsData.totalDoctors.toString(),
+      change: "+3.2%",
+      changeType: "positive" as const,
+      icon: UserCheck,
+      gradient: "bg-gradient-success",
+    },
+    {
+      title: "Today's Appointments",
+      value: statsData.totalAppointmentsToday.toString(),
+      change: "+8.1%",
+      changeType: "positive" as const,
+      icon: Calendar,
+      gradient: "bg-gradient-card",
+    },
+    {
+      title: "Pending Doctor Approvals",
+      value: statsData.pendingDoctorApprovals.toString(),
+      change: "-2.4%",
+      changeType: "negative" as const,
+      icon: TrendingUp,
+      gradient: "bg-gradient-primary",
+    },
+  ];
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {stats.map((stat) => {
-        const Icon = stat.icon; // Correct way to render dynamic component
+        const Icon = stat.icon;
         const changeColor =
           stat.changeType === "positive" ? "text-green-500" : "text-red-500";
 
@@ -60,9 +74,7 @@ export function DashboardStats() {
             key={stat.title}
             className="relative overflow-hidden border-0 shadow-soft hover:shadow-medium transition-all duration-300"
           >
-            {/* Background gradient */}
             <div className={`absolute inset-0 opacity-5 ${stat.gradient}`} />
-
             <CardHeader className="relative flex items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 {stat.title}
