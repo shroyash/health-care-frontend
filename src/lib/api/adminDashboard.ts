@@ -1,4 +1,5 @@
 import { API } from "./api";
+import api from "./api";
 import type {
   AdminDashboardStats,
   AppointmentFull,
@@ -6,6 +7,7 @@ import type {
   PatientProfile,
   DoctorRequest,
   DoctorRequestResponse,
+  PatientStats
 } from "../type/adminDashboard";
 
 // Dashboard stats
@@ -35,9 +37,13 @@ export const approveOrRejectDoctor = (doctorReqId: number, approve: boolean) =>
     null
   );
 
-// Pending doctor count
-export const getPendingDoctorCount = () =>
-  API.getOne<number>("admin/pending-doctors-count");
+export const getPendingDoctorCount = async (): Promise<number> => {
+  const res = await api.get("admin/pending-doctors-count");
+  // If backend returns { data: 5 }, use:
+  return res.data.data; 
+};
+
+
 
 // Suspend a doctor
 export const suspendDoctor = (doctorId: number) =>
@@ -60,3 +66,10 @@ export const suspendPatient = (patientId: number) =>
 // Restore a suspended patient
 export const restorePatient = (patientId: number) =>
   API.create<null, PatientProfile>(`/patient-profiles/restore/${patientId}`, null);
+
+//get all patients
+export const getAllPatients = () =>
+  API.getAll<PatientProfile>("dashboard/admin/patients");
+
+export const getPatientStats = () =>
+  API.getOne<PatientStats>("dashboard/admin/patient-stats");

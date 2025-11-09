@@ -14,16 +14,20 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// Redirect on 401
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401 && typeof window !== "undefined") {
-      window.location.href = "/login";
-    }
-    return Promise.reject(error);
-  }
-);
+
+// api.interceptors.response.use(
+//   (response) => response,
+//   (error) => {
+//     if (error.response?.status === 401 && typeof window !== "undefined") {
+//       console.log("API 401 Unauthorized - redirecting to /auth-page");
+//       // Only redirect if NOT already on auth-page
+//       if (!window.location.pathname.includes("/auth-page")) {
+//         window.location.href = "/auth-page";
+//       }
+//     }
+//     return Promise.reject(error);
+//   }
+// );
 
 export const API = {
   // GET single item

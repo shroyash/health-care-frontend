@@ -1,17 +1,13 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import { ToastContainer } from "react-toastify";
+import { DashboardStatsProvider } from "@/context/DashboardStatsContext";
 import "react-toastify/dist/ReactToastify.css";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({ 
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: "--font-inter",
 });
 
 export const metadata: Metadata = {
@@ -26,9 +22,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {children}
-        {/* Toastify container must be here */}
+      <body className={`${inter.variable} antialiased`}>
+        <DashboardStatsProvider>
+            {children}
+        </DashboardStatsProvider>
         <ToastContainer position="top-right" autoClose={3000} />
       </body>
     </html>

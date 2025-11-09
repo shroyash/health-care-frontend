@@ -10,7 +10,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
-        <AdminSidebar />
+        {/* Sidebar with fixed width */}
+        <div className="flex-none w-64">
+          <AdminSidebar />
+        </div>
+
+        {/* Main content */}
         <div className="flex-1 flex flex-col">
           <header className="h-16 flex items-center justify-between px-6 border-b border-border bg-card/50">
             <div className="flex items-center gap-4">
@@ -25,9 +30,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               </div>
             </div>
           </header>
-          <main className="flex-1 p-6 overflow-auto">
-            {children}
-          </main>
+
+          <main className="flex-1 p-6 overflow-auto">{children}</main>
         </div>
       </div>
     </SidebarProvider>

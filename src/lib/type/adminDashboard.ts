@@ -5,6 +5,12 @@ export type AdminDashboardStats = {
   pendingDoctorApprovals: number;
 };
 
+export type PatientStats = {
+  activePatients: number;
+  totalPatients: number;
+  totalAppointments: number;
+};
+
 export type AppointmentFull = {
   id: number;
   patientName: string;
@@ -14,6 +20,7 @@ export type AppointmentFull = {
 };
 
 export type DoctorProfile = {
+  contactNumber: string;
   doctorProfileId: number;
   fullName: string;
   email: string;
@@ -32,9 +39,10 @@ export type PatientProfile = {
 };
 
 export type DoctorRequest = {
-  id: number;
-  doctorName: string;
+  doctorReqId: number;
+  userName: string;
   email: string;
+  doctorLicense: string;
   status: string; // pending, approved, rejected
 };
 
@@ -42,7 +50,7 @@ export type DoctorRequestResponse = {
   id: number;
   message: string;
   status: string;
-};
+}; 
 
 // Generic API response wrapper
 export type APIResponse<T> = { success: boolean; data: T };

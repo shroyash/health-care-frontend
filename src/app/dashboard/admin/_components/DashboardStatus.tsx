@@ -1,31 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, UserCheck, Calendar, TrendingUp } from "lucide-react";
-import { getAdminDashboardStats } from "@/lib/api/adminDashboard";
+import { useDashboardStats } from "@/context/DashboardStatsContext";
+
 
 export function DashboardStats() {
-  const [statsData, setStatsData] = useState({
-    totalPatients: 0,
-    totalDoctors: 0,
-    totalAppointmentsToday: 0,
-    pendingDoctorApprovals: 0,
-  });
-
-    useEffect(() => {
-    async function fetchStats() {
-      try {
-        const res = await getAdminDashboardStats();
-        // If API.getOne() returns { data: {...} }
-        setStatsData(res);
-      } catch (error) {
-        console.error("Error fetching dashboard stats:", error);
-      }
-    }
-
-    fetchStats();
-  }, []);
+ const { statsData } = useDashboardStats();
 
     const stats = [
     {
