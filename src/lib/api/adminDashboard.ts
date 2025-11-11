@@ -72,4 +72,4 @@ export const getAllPatients = () =>
   API.getAll<PatientProfile>("dashboard/admin/patients");
 
 export const getPatientStats = () =>
-  API.getOne<PatientStats>("dashboard/admin/patient-stats");
+  API.getOne<PatientStats>("dashboard/admin/patients-stats");

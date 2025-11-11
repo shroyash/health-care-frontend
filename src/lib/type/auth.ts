@@ -5,7 +5,7 @@ export interface RegisterUserRequest {
 }
 
 export interface RegisterDoctorRequest extends RegisterUserRequest {
-  license: string;
+  license?: File;
 }
 
 export interface LoginRequest {

@@ -20,8 +20,17 @@ export const registerUser = async (data: RegisterUserRequest): Promise<UserRespo
   return res.data;
 };
 
-export const registerDoctor = async (data: RegisterDoctorRequest): Promise<UserResponseDto> => {
-  const res = await api.post("/auth/register/doctor", data);
+export const registerDoctor = async (data: RegisterDoctorRequest, file: File) => {
+  const formData = new FormData();
+  formData.append("username", data.username);
+  formData.append("email", data.email);
+  formData.append("password", data.password);
+  formData.append("license", file); // file upload
+
+  const res = await api.post("/auth/register/doctor", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+
   return res.data;
 };
 
