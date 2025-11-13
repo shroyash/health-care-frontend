@@ -73,7 +73,7 @@ export default function Login({ setShowForgotPassword }: LoginProps) {
         password: formData.password,
       });
 
-      const userData = res.data; // ✅ Single user
+      const userData = res.data; 
       console.log("Logged in user:", userData);
 
       const roles = userData.role?.map(r => r.name);
@@ -81,7 +81,7 @@ export default function Login({ setShowForgotPassword }: LoginProps) {
 
       localStorage.setItem("user", JSON.stringify(userData));
 
-      // Redirect based on role
+  
       if (roles.includes("ROLE_DOCTOR")) router.push("/dashboard/doctor");
       else if (roles.includes("ROLE_PATIENT")) router.push("/dashboard/patient");
       else if (roles.includes("ROLE_ADMIN")) router.push("/dashboard/admin");

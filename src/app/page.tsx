@@ -1,12 +1,19 @@
 // app/page.tsx
-'use client';
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
-  // Remove the useEffect redirect entirely
-  // Let middleware handle the redirect
+  const router = useRouter();
+
+  useEffect(() => {
+    router.push("/auth-page");
+  }, [router]);
+
   return (
     <div className="flex items-center justify-center min-h-screen">
-      <p>Redirecting...</p>
+      <p>Redirecting to Auth Page...</p>
     </div>
   );
 }

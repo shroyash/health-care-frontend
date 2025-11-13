@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { RoleSelector, UserRole } from "@/components/ui/RoleSelector";
+import { UserRole } from "@/components/ui/RoleSelector";
 import { ForgotPasswordModal } from "@/components/ui/ForgotPasswordModal";
 import { Shield, Heart } from "lucide-react";
 import Login from "./_components/Login";
@@ -28,6 +28,7 @@ export default function AuthPage() {
           alt="Healthcare professionals"
           width={800}
           height={1200}
+          priority
           className="w-full h-full object-cover"
         />
 
