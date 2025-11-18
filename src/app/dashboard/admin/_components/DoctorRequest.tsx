@@ -23,7 +23,6 @@ import {
 import type { DoctorRequest } from "@/lib/type/adminDashboard";
 import "react-toastify/dist/ReactToastify.css";
 import Image from "next/image";
-import { base64url } from "jose";
 
 type Tab = "all" | "pending";
 
@@ -91,6 +90,18 @@ export default function DoctorRequests() {
 
     fetchRequests();
   }, []);
+
+  // Debug selected doctor license URL
+  useEffect(() => {
+    if (selectedDoctor) {
+      console.log("Selected Doctor Full Data:", selectedDoctor);
+      console.log("Doctor License Value:", selectedDoctor.doctorLicence);
+      console.log("Doctor License Type:", typeof selectedDoctor.doctorLicence);
+      if (selectedDoctor.doctorLicence) {
+        console.log("Full Image URL:", API_BASE_URL + selectedDoctor.doctorLicence);
+      }
+    }
+  }, [selectedDoctor]);
 
   const displayedRequests = (
     activeTab === "all" ? allRequests : pendingRequests
@@ -336,20 +347,20 @@ export default function DoctorRequests() {
                 <label className="text-sm font-semibold text-gray-700 block mb-2">
                   Doctor License:
                 </label>
-                {selectedDoctor.doctorLicense ? (
-                  <>
-                    {console.log(
-                      "📸 Doctor License URL:",
-                      API_BASE_URL + selectedDoctor.doctorLicense
-                    )}
-                    <Image
-                      src={API_BASE_URL + selectedDoctor.doctorLicense}
-                      alt={`${selectedDoctor.userName} license`}
-                      width={400}
-                      height={300}
-                      className="rounded-lg border border-gray-200 w-full object-cover max-h-96"
-                    />
-                  </>
+          
+                {selectedDoctor.doctorLicence && selectedDoctor.doctorLicence.trim() !== "" ? (
+                  <Image
+                    src={API_BASE_URL + selectedDoctor.doctorLicence}
+                    alt={`${selectedDoctor.userName} license`}
+                    width={400}
+                    height={300}
+                    className="rounded-lg border border-gray-200 w-full object-cover max-h-96"
+                    unoptimized
+                    onError={(e) => {
+                      console.error("Image failed to load:", e);
+                      console.error("Attempted URL:", API_BASE_URL + selectedDoctor.doctorLicence);
+                    }}
+                  />
                 ) : (
                   <p className="text-gray-600 bg-gray-50 p-4 rounded-lg">
                     No license uploaded.

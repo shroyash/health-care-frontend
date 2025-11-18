@@ -42,8 +42,8 @@ export type DoctorRequest = {
   doctorReqId: number;
   userName: string;
   email: string;
-  doctorLicense: string;
-  status: string; // pending, approved, rejected
+  doctorLicence: string; 
+  status: string;
 };
 
 export type DoctorRequestResponse = {

@@ -148,6 +148,13 @@ export default function Login({ setShowForgotPassword }: LoginProps) {
             >
               Forgot password?
             </button>
+             <button
+              type="button"
+              onClick={() => setShowForgotPassword(true)}
+              className="text-sm text-primary hover:text-primary-dark transition-colors"
+            >
+              Forgot password?
+            </button>
           </div>
 
           <HealthcareButton
