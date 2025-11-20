@@ -8,13 +8,13 @@ import type {
 } from "../type/doctorDashboard";
 
 export const dashboardStats = async () => {
-  const res = await API.getOne<DoctorDashboardStats>("dashboard/doctor/stats");
+  const res = await API.getOne<DoctorDashboardStats>("/dashboard/doctor");
   return res;
 };
 
 export const getTodayAppointments = async (): Promise<DoctorAppointment[]> => {
   const res = await API.getAll<DoctorAppointment>(
-    "dashboard/doctor/today-appointments"
+    "/dashboard/doctor/today-appointments"
   );
   return res;
 };

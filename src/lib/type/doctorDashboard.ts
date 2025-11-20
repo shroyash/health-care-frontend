@@ -26,7 +26,6 @@ export interface ScheduleDto {
 }
 
 export interface DoctorScheduleDto {
-  doctorProfileId: number;
   schedules: ScheduleDto[];
 }
 
