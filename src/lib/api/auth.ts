@@ -25,7 +25,7 @@ export const registerDoctor = async (data: RegisterDoctorRequest, file: File) =>
   formData.append("username", data.username);
   formData.append("email", data.email);
   formData.append("password", data.password);
-  formData.append("license", file); // file upload
+  formData.append("license", file); 
 
   const res = await api.post("/auth/register/doctor", formData, {
     headers: { "Content-Type": "multipart/form-data" },

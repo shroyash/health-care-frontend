@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ToastContainer } from "react-toastify";
 import { DashboardStatsProvider } from "@/context/DashboardStatsContext";
+import { UserProfileProvider } from "@/context/UserProfileContext";
 import "react-toastify/dist/ReactToastify.css";
 import "./globals.css";
 
@@ -23,9 +24,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} antialiased`}>
+            <UserProfileProvider>
         <DashboardStatsProvider>
             {children}
         </DashboardStatsProvider>
+        </UserProfileProvider>
         <ToastContainer position="top-right" autoClose={3000} />
       </body>
     </html>

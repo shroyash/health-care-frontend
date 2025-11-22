@@ -56,7 +56,3 @@ export interface ChangePasswordRequest {
   newPassword: string;
 }
 
-export type UserResponse = {
-  username: string;
-  roles: string[];
-};
