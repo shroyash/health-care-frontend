@@ -14,8 +14,11 @@ export interface PatientAppointment {
 
 export interface PatientDashboardStats {
   totalUpcomingAppointments: number;
-  upcomingAppointments: PatientAppointment[];
+  totalActiveDoctor:number;
 }
+
+export type PatientUpcomingAppointments = PatientAppointment[];
+
 
 export interface DoctorWithSchedule {
   doctorProfileId: number;
@@ -32,7 +35,7 @@ export interface DoctorSchedule {
   endTime: string;    
   available: boolean;
 }
-// types/appointmentRequest.ts
+
 
 export interface AppointmentRequest {
   requestId: number;
@@ -53,3 +56,5 @@ export interface CreateAppointmentRequestDto {
   endTime: string;
   notes?: string;
 }
+
+

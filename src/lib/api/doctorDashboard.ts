@@ -30,7 +30,7 @@ export const getDoctorAppointmentRequests = () =>
 
 export const updateAppointmentRequestStatus = (
   requestId: number,
-  status: "ACCEPTED" | "REJECTED"
+  status: "CONFIRMED" | "REJECTED"
 ) =>
   API.create<null, AppointmentRequest>(
     `/appointments/update-status/${requestId}?status=${status}`,

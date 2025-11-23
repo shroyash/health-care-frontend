@@ -38,7 +38,7 @@ export interface AppointmentRequest {
   day: string;
   startTime: string;
   endTime: string;
-  status: "PENDING" | "ACCEPTED" | "REJECTED";
+  status: "PENDING" | "CONFIRMED" | "REJECTED";
   notes?: string;
 }
 

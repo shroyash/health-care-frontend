@@ -28,7 +28,7 @@ export default function AppointmentsPage() {
     }
   };
 
-  const handleStatusUpdate = async (id: number, status: "ACCEPTED" | "REJECTED") => {
+  const handleStatusUpdate = async (id: number, status: "CONFIRMED" | "REJECTED") => {
     try {
       await updateAppointmentRequestStatus(id, status);
       setAppointments((prev) =>
@@ -55,7 +55,7 @@ export default function AppointmentsPage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "ACCEPTED":
+      case "CONFIRMED":
         return "status-approved";
       case "REJECTED":
         return "status-declined";
@@ -140,7 +140,7 @@ export default function AppointmentsPage() {
                   <div className="flex space-x-2">
                     <Button
                       size="sm"
-                      onClick={() => handleStatusUpdate(appointment.requestId, "ACCEPTED")}
+                      onClick={() => handleStatusUpdate(appointment.requestId, "CONFIRMED")}
                       className="success-button"
                     >
                       <CheckCircle className="w-4 h-4 mr-2" />
