@@ -11,7 +11,6 @@ import type {
   ResetPasswordRequest,
   ChangePasswordRequest,
   UserResponseDto,
-  UserResponse,
 } from "../type/auth"; 
 
 // --- Auth APIs ---
@@ -72,7 +71,7 @@ export const checkAuth = async (): Promise<boolean> => {
   }
 };
 
-export const getCurrentUser = async (): Promise<UserResponse> => {
+export const getCurrentUser = async (): Promise<UserResponseDto> => {
   const res = await api.get("/users/auth/me");
   return res.data;
 };

@@ -42,14 +42,15 @@ export interface ForgotPasswordRequest {
 
 export interface VerifyResetTokenRequest {
   email: string;
-  token: string;
+  token: string; // NOT otp
 }
 
 export interface ResetPasswordRequest {
   email: string;
-  token: string;
+  token: string; // NOT otp
   newPassword: string;
 }
+
 
 export interface ChangePasswordRequest {
   oldPassword: string;

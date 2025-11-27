@@ -28,19 +28,37 @@ export default function AppointmentsPage() {
     }
   };
 
-  const handleStatusUpdate = async (id: number, status: "CONFIRMED" | "REJECTED") => {
-    try {
-      await updateAppointmentRequestStatus(id, status);
-      setAppointments((prev) =>
-        prev.map((apt) =>
-          apt.requestId === id ? { ...apt, status: status } : apt
-        )
-      );
-      toast.success(`Appointment ${status.toLowerCase()}`);
-    } catch (error) {
-      toast.error("Failed to update status");
-    }
-  };
+const handleStatusUpdate = async (
+  id: number,
+  status: "APPROVED" | "REJECTED"
+) => {
+  console.log("🔵 handleStatusUpdate called with:", { id, status });
+
+  try {
+    console.log("⏳ Sending request to updateAppointmentRequestStatus...");
+    const response = await updateAppointmentRequestStatus(id, status);
+
+    setAppointments((prev) => {
+      console.log("📌 Previous appointments:", prev);
+
+      const updated = prev.map((apt) => {
+        if (apt.requestId === id) {
+          console.log("🟢 Matching appointment found:", apt);
+          return { ...apt, status };
+        }
+        return apt;
+      });
+
+      console.log("🆕 Updated appointments:", updated);
+      return updated;
+    });
+
+    toast.success(`Appointment ${status.toLowerCase()}`);
+  } catch (error) {
+    console.error("❌ Error updating appointment:", error);
+    toast.error("Failed to update status");
+  }
+};
 
   const filteredAppointments = appointments.filter((apt) => {
     const matchesSearch =
@@ -55,7 +73,7 @@ export default function AppointmentsPage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "CONFIRMED":
+      case "APPROVED":
         return "status-approved";
       case "REJECTED":
         return "status-declined";
@@ -140,7 +158,7 @@ export default function AppointmentsPage() {
                   <div className="flex space-x-2">
                     <Button
                       size="sm"
-                      onClick={() => handleStatusUpdate(appointment.requestId, "CONFIRMED")}
+                      onClick={() => handleStatusUpdate(appointment.requestId, "APPROVED")}
                       className="success-button"
                     >
                       <CheckCircle className="w-4 h-4 mr-2" />

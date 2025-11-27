@@ -59,6 +59,11 @@ export const API = {
     const res = await api.put<ApiResponse<Res>>(`${endpoint}/${id}`, data);
     return res.data.data;
   },
+  
+   patch: async <Req, Res>(endpoint: string, data: Req): Promise<Res> => {
+    const res = await api.patch<ApiResponse<Res>>(endpoint, data);
+    return res.data.data;
+  },
 
   // DELETE
   remove: async (endpoint: string, id: string | number): Promise<void> => {
