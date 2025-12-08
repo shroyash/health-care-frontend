@@ -13,15 +13,29 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+
+    "typeRoots": ["./types", "./node_modules/@types","./src/lib/type"],
+
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+
     "plugins": [
       {
         "name": "next"
       }
-    ],
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+    ]
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "middleware.js", "next.config.js"],
+
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "middleware.js",
+    "next.config.js",
+    "types/**/*.d.ts"
+  ],
+
   "exclude": ["node_modules"]
 }
