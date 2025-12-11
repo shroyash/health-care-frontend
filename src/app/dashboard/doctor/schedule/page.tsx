@@ -13,7 +13,6 @@ import "react-toastify/dist/ReactToastify.css";
 import { saveWeeklySchedule } from "@/lib/api/doctorDashboard";
 import { ScheduleDto, DoctorScheduleDto } from "@/lib/type/doctorDashboard";
 
-// Local type for UI management
 interface TimeSlot {
   id: number;
   day: string;
@@ -22,7 +21,7 @@ interface TimeSlot {
 }
 
 interface ScheduleProps {
-  doctorProfileId: number; // Must pass from parent
+  doctorProfileId: number;
 }
 
 const Schedule = ({ doctorProfileId }: ScheduleProps) => {
@@ -59,7 +58,6 @@ const Schedule = ({ doctorProfileId }: ScheduleProps) => {
     }
 
     try {
-      // Map local TimeSlot to ScheduleDto
       const scheduleDtoArray: ScheduleDto[] = schedules.map(slot => ({
         dayOfWeek: slot.day,
         startTime: slot.startTime,
@@ -67,9 +65,7 @@ const Schedule = ({ doctorProfileId }: ScheduleProps) => {
         available: true
       }));
 
-      const dto: DoctorScheduleDto = {
-        schedules: scheduleDtoArray
-      };
+      const dto: DoctorScheduleDto = { schedules: scheduleDtoArray };
 
       await saveWeeklySchedule(dto);
       toast.success("Weekly schedule saved to server");
@@ -82,9 +78,9 @@ const Schedule = ({ doctorProfileId }: ScheduleProps) => {
   return (
     <div className="space-y-6">
       {/* Add New Schedule */}
-      <Card className="medical-card">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
+      <Card className="shadow-lg border border-gray-200 hover:shadow-xl transition-shadow">
+        <CardHeader className="bg-blue-50">
+          <CardTitle className="flex items-center space-x-2 text-blue-700 font-semibold">
             <Plus className="w-5 h-5" />
             <span>Add New Time Slot</span>
           </CardTitle>
@@ -97,7 +93,7 @@ const Schedule = ({ doctorProfileId }: ScheduleProps) => {
                 value={newSlot.day}
                 onValueChange={value => setNewSlot({ ...newSlot, day: value })}
               >
-                <SelectTrigger className="medical-input">
+                <SelectTrigger className="border border-gray-300 rounded-md p-2">
                   <SelectValue placeholder="Select day" />
                 </SelectTrigger>
                 <SelectContent>
@@ -115,7 +111,7 @@ const Schedule = ({ doctorProfileId }: ScheduleProps) => {
                 type="time"
                 value={newSlot.startTime}
                 onChange={e => setNewSlot({ ...newSlot, startTime: e.target.value })}
-                className="medical-input"
+                className="border border-gray-300 rounded-md p-2"
               />
             </div>
 
@@ -126,26 +122,27 @@ const Schedule = ({ doctorProfileId }: ScheduleProps) => {
                 type="time"
                 value={newSlot.endTime}
                 onChange={e => setNewSlot({ ...newSlot, endTime: e.target.value })}
-                className="medical-input"
+                className="border border-gray-300 rounded-md p-2"
               />
             </div>
           </div>
 
-          <Button onClick={handleAddSlot} className="medical-button mt-2">
-            <Plus className="w-4 h-4 mr-2" />
-            Add Time Slot
-          </Button>
+          <div className="flex flex-wrap gap-2 mt-2">
+            <Button onClick={handleAddSlot} className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2 px-4 py-2 rounded-md transition">
+              <Plus className="w-4 h-4" /> Add Time Slot
+            </Button>
 
-          <Button onClick={handleSaveToServer} className="medical-button mt-4">
-            Save Weekly Schedule
-          </Button>
+            <Button onClick={handleSaveToServer} className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 px-4 py-2 rounded-md transition">
+              Save Weekly Schedule
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
       {/* Current Schedules */}
-      <Card className="medical-card">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
+      <Card className="shadow-lg border border-gray-200 hover:shadow-xl transition-shadow">
+        <CardHeader className="bg-purple-50">
+          <CardTitle className="flex items-center space-x-2 text-purple-700 font-semibold">
             <Clock className="w-5 h-5" />
             <span>Your Weekly Schedule</span>
           </CardTitle>
@@ -156,27 +153,27 @@ const Schedule = ({ doctorProfileId }: ScheduleProps) => {
               schedules.map(slot => (
                 <div
                   key={slot.id}
-                  className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-muted/50 transition-[var(--transition-smooth)]"
+                  className="flex items-center justify-between p-4 rounded-lg border border-gray-200 hover:bg-purple-50 transition-colors"
                 >
                   <div className="flex items-center space-x-4">
-                    <Badge className="status-approved">{slot.day}</Badge>
-                    <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <Badge className="bg-purple-100 text-purple-800">{slot.day}</Badge>
+                    <div className="flex items-center space-x-2 text-sm text-gray-600">
                       <Clock className="w-4 h-4" />
                       <span>{slot.startTime} - {slot.endTime}</span>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Button variant="ghost" size="sm">
-                      <Edit2 className="w-4 h-4" />
+                    <Button variant="ghost" size="sm" className="hover:bg-gray-100 transition">
+                      <Edit2 className="w-4 h-4 text-blue-600" />
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDeleteSlot(slot.id)}>
-                      <Trash2 className="w-4 h-4 text-destructive" />
+                    <Button variant="ghost" size="sm" onClick={() => handleDeleteSlot(slot.id)} className="hover:bg-gray-100 transition">
+                      <Trash2 className="w-4 h-4 text-red-600" />
                     </Button>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="text-center py-12 text-muted-foreground">
+              <div className="text-center py-12 text-gray-400">
                 <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
                 <p>No schedules added yet. Create your first time slot above.</p>
               </div>

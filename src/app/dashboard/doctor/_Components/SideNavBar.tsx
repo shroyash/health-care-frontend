@@ -29,8 +29,7 @@ export default function SideNavBar() {
   const isActive = (path: string) => pathname === path;
 
   return (
-    <div className="h-full bg-card border-r border-border flex flex-col">
-
+    <div className="h-screen flex flex-col bg-card border-r border-border overflow-y-auto">
       {/* Logo + Title */}
       <div className="p-6 border-b border-border">
         <div className="flex items-center space-x-3">
@@ -44,7 +43,7 @@ export default function SideNavBar() {
         </div>
       </div>
 
-      {/* NAVIGATION */}
+      {/* Navigation Links */}
       <nav className="flex-1 p-4 space-y-2">
         {navigation.map((item) => {
           const Icon = item.icon;
@@ -65,8 +64,8 @@ export default function SideNavBar() {
         })}
       </nav>
 
-      {/* Footer Profile */}
-      <div className="p-4 border-t border-border">
+      {/* Footer / Doctor Profile */}
+      <div className="p-4 border-t border-border mt-auto">
         <div className="flex items-center space-x-3 mb-4">
           <Avatar>
             <AvatarImage src="/doctor.png" />
@@ -92,7 +91,6 @@ export default function SideNavBar() {
           </Button>
         </div>
       </div>
-
     </div>
   );
 }

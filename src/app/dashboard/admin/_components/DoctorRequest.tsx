@@ -43,6 +43,8 @@ const getStatusColor = (status: string) => {
 };
 
 export default function DoctorRequests() {
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+const [fullImageUrl, setFullImageUrl] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [allRequests, setAllRequests] = useState<DoctorRequest[]>([]);
   const [pendingRequests, setPendingRequests] = useState<DoctorRequest[]>([]);
@@ -156,6 +158,11 @@ export default function DoctorRequests() {
     setSelectedDoctor(doctor);
     setViewModalOpen(true);
   };
+  const openFullImage = (url: string) => {
+  setFullImageUrl(url);
+  setImageModalOpen(true);
+};
+
 
   if (loading) {
     return (
@@ -349,23 +356,23 @@ export default function DoctorRequests() {
                 </label>
           
                 {selectedDoctor.doctorLicence && selectedDoctor.doctorLicence.trim() !== "" ? (
-                  <Image
-                    src={API_BASE_URL + selectedDoctor.doctorLicence}
-                    alt={`${selectedDoctor.userName} license`}
-                    width={400}
-                    height={300}
-                    className="rounded-lg border border-gray-200 w-full object-cover max-h-96"
-                    unoptimized
-                    onError={(e) => {
-                      console.error("Image failed to load:", e);
-                      console.error("Attempted URL:", API_BASE_URL + selectedDoctor.doctorLicence);
-                    }}
-                  />
-                ) : (
-                  <p className="text-gray-600 bg-gray-50 p-4 rounded-lg">
-                    No license uploaded.
-                  </p>
-                )}
+  <Image
+    src={API_BASE_URL + selectedDoctor.doctorLicence}
+    alt={`${selectedDoctor.userName} license`}
+    width={400}
+    height={300}
+    className="rounded-lg border border-gray-200 w-full object-cover max-h-96 cursor-pointer"
+    unoptimized
+    onClick={() =>
+      openFullImage(API_BASE_URL + selectedDoctor.doctorLicence)
+    }
+  />
+) : (
+  <p className="text-gray-600 bg-gray-50 p-4 rounded-lg">
+    No license uploaded.
+  </p>
+)}
+
               </div>
             </div>
           )}
@@ -440,6 +447,33 @@ export default function DoctorRequests() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={imageModalOpen} onOpenChange={setImageModalOpen}>
+  <DialogContent className="max-w-5xl bg-white p-0">
+    <div className="flex justify-end p-3">
+      <Button
+        variant="outline"
+        onClick={() => setImageModalOpen(false)}
+        className="text-white border-white"
+      >
+        Close
+      </Button>
+    </div>
+    {fullImageUrl && (
+      <div className="flex items-center justify-center p-4">
+        <Image
+          src={fullImageUrl}
+          alt="Full License Image"
+          width={1200}
+          height={800}
+          className="rounded-lg object-contain max-h-[90vh]"
+          unoptimized
+        />
+      </div>
+    )}
+  </DialogContent>
+</Dialog>
+
     </div>
   );
 }

@@ -1,217 +1,246 @@
-'use client';
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, UserPlus, Mail, Phone, MapPin, Award, Clock, Edit, Trash2 } from "lucide-react";
-import { DoctorProfile } from "@/lib/type/adminDashboard";
-import { toast } from "react-toastify";
-import { useDashboardStats } from "@/context/DashboardStatsContext";
-
+import { Search, User, ArrowLeft, Phone, Mail, Award, MapPin } from "lucide-react";
 import {
-  getPendingDoctorCount,
   getAllDoctors,
+  getPendingDoctorCount,
   suspendDoctor,
   restoreDoctor,
 } from "@/lib/api/adminDashboard";
+import { DoctorProfile as Doctor } from "@/lib/type/adminDashboard";
+import { useDashboardStats } from "@/context/DashboardStatsContext";
 
-interface Doctor {
-  id: number;
-  name: string;
-  specialty: string;
-  status: 'active' | 'pending' | 'inactive';
-  experience: string;
-  phone: string;
-  email: string;
-  location: string;
-  patients: number;
-  rating: number;
-  availability: 'Available' | 'Busy' | 'On Leave' | 'Pending Approval';
-}
-
-
-
+// Status Badge Color
+const getStatusColor = (status: Doctor["status"]) => {
+  switch (status) {
+    case "active":
+      return "bg-green-100 text-green-700 border-green-200";
+    case "pending":
+      return "bg-yellow-100 text-yellow-700 border-yellow-200";
+    case "inactive":
+      return "bg-gray-100 text-gray-600 border-gray-200";
+    default:
+      return "bg-muted text-muted-foreground";
+  }
+};
 
 export default function DoctorManagementPage() {
-  const [doctors, setDoctors] = useState<DoctorProfile[]>([]);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [pendingCount, setPendingCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [specialtyFilter, setSpecialtyFilter] = useState("all");
+  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [loading, setLoading] = useState(true);
 
-  //Fetch all doctors and pending count
+  const { statsData } = useDashboardStats();
+
+  // Fetch doctors
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchDoctors = async () => {
       try {
-        setLoading(true);
         const [allDoctors, pending] = await Promise.all([
           getAllDoctors(),
           getPendingDoctorCount(),
         ]);
-        console.log(allDoctors);
         setDoctors(allDoctors);
-        console.log(pending);
         setPendingCount(pending);
-      } catch (error) {
-        toast.error("Failed to load doctors data");
-        console.error(error);
+      } catch (err) {
+        console.error("Failed loading doctor data", err);
       } finally {
         setLoading(false);
       }
     };
-    fetchData();
+    fetchDoctors();
   }, []);
 
-  const specialties = useMemo(() => [...new Set(doctors.map((d) => d.specialization))], [doctors]);
-
-   const { statsData } = useDashboardStats();
-
+  // Search filter
   const filteredDoctors = useMemo(() => {
-    const search = searchTerm.toLowerCase();
-    return doctors.filter((d) => {
-      const matchesSearch =
-        d.fullName.toLowerCase().includes(search) ||
-        d.specialization.toLowerCase().includes(search) ||
-        d.email.toLowerCase().includes(search);
-      const matchesStatus = statusFilter === "all" || d.status === statusFilter;
-      const matchesSpecialty = specialtyFilter === "all" || d.specialization === specialtyFilter;
-      return matchesSearch && matchesStatus && matchesSpecialty;
-    });
-  }, [searchTerm, statusFilter, specialtyFilter, doctors]);
+    const term = searchTerm.toLowerCase();
+    return doctors.filter(
+      (d) =>
+        d.fullName.toLowerCase().includes(term) ||
+        d.email.toLowerCase().includes(term) ||
+        d.specialization.toLowerCase().includes(term)
+    );
+  }, [searchTerm, doctors]);
+
+  // Suspend / Restore doctor
+  const handleStatusChange = async (doctor: Doctor) => {
+    try {
+      if (doctor.status === "active") {
+        await suspendDoctor(doctor.doctorProfileId);
+      } else {
+        await restoreDoctor(doctor.doctorProfileId);
+      }
+
+      // Refresh doctor list
+      const updated = await getAllDoctors();
+      setDoctors(updated);
+
+      if (selectedDoctor) {
+        const match = updated.find((d) => d.doctorProfileId === selectedDoctor.doctorProfileId);
+        setSelectedDoctor(match || null);
+      }
+    } catch (err) {
+      console.error("Failed updating doctor status", err);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen justify-center items-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading doctors...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Doctor Management</h1>
-          <p className="text-muted-foreground mt-1">Manage all healthcare professionals</p>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold">Doctor Management</h1>
+        <p className="text-muted-foreground mt-1">Manage healthcare professionals</p>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="shadow-soft border-0">
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-green-600">
-              {statsData.totalDoctors}
-            </div>
-            <div className="text-sm text-muted-foreground">Active Doctors</div>
-          </CardContent>
-        </Card>
-        <Card className="shadow-soft border-0">
-          <CardContent className="p-4">
+      {/* Stats (only in list view) */}
+      {!selectedDoctor && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card><CardContent className="p-4">
+            <div className="text-2xl font-bold text-primary">{statsData.totalDoctors}</div>
+            <p className="text-sm text-muted-foreground">Active Doctors</p>
+          </CardContent></Card>
+
+          <Card><CardContent className="p-4">
             <div className="text-2xl font-bold text-yellow-600">{pendingCount}</div>
-            <div className="text-sm text-muted-foreground">Pending Approval</div>
-          </CardContent>
-        </Card>
-        <Card className="shadow-soft border-0">
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-foreground">{specialties.length}</div>
-            <div className="text-sm text-muted-foreground">Specialties</div>
-          </CardContent>
-        </Card>
-        <Card className="shadow-soft border-0">
-          {/* <CardContent className="p-4">
-            <div className="text-2xl font-bold text-blue-600">
-              {doctors.reduce((sum, d) => sum + d.patients, 0)}
+            <p className="text-sm text-muted-foreground">Pending Approval</p>
+          </CardContent></Card>
+
+          <Card><CardContent className="p-4">
+            <div className="text-2xl font-bold text-foreground">
+              {new Set(doctors.map((d) => d.specialization)).size}
             </div>
-            <div className="text-sm text-muted-foreground">Total Patients</div>
-          </CardContent> */}
-        </Card>
-      </div>
-
-      {/* Filters */}
-      <Card className="shadow-soft border-0">
-        <CardHeader>
-          <CardTitle className="text-lg">Filter & Search</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by name, specialty, or email..."
-                className="pl-10"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-
-
-            <Select value={specialtyFilter} onValueChange={setSpecialtyFilter}>
-              <SelectTrigger className="w-full md:w-48">
-                <SelectValue placeholder="Filter by specialty" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Specialties</SelectItem>
-                {specialties.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {s}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Doctors Grid */}
-      {loading ? (
-        <div className="text-center py-12 text-muted-foreground">Loading doctors...</div>
-      ) : filteredDoctors.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredDoctors.map((d) => (
-            <Card key={d.doctorProfileId} className="shadow-soft border-0 hover:shadow-medium transition-all duration-300">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Award className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg">{d.fullName}</CardTitle>
-                      <CardDescription className="text-primary font-medium">{d.specialization}</CardDescription>
-                    </div>
-                  </div>
-                  {/* <Badge className={getStatusColor(d.status)}>{d.status}</Badge> */}
-                </div>
-              </CardHeader>
-
-              <CardContent className="space-y-4">
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-3 w-3 text-muted-foreground" /> {d.contactNumber}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-3 w-3 text-muted-foreground" /> {d.email}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-3 w-3 text-muted-foreground" /> {d.workingAT}
-                  </div>
-                  {/* <div className="flex items-center gap-2">
-                    <Clock className={`h-3 w-3 ${getAvailabilityColor(d.workingAT)}`} />
-                    <span className={getAvailabilityColor(d.workingAT)}>{d.availability}</span>
-                  </div> */}
-                </div>
-
-                <div className="btn suspend">
-                  <Button className="btn bg-red-400" onClick={() => suspendDoctor(d.doctorProfileId) }>Suspend</Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+            <p className="text-sm text-muted-foreground">Specialties</p>
+          </CardContent></Card>
         </div>
-      ) : (
-        <Card className="shadow-soft border-0">
-          <CardContent className="text-center py-12">
-            <p className="text-muted-foreground">No doctors found matching your criteria.</p>
+      )}
+
+      {/* Doctor Details */}
+      {selectedDoctor ? (
+        <Card className="shadow-soft">
+          <CardHeader className="flex justify-between items-center">
+            <div>
+              <CardTitle>Doctor Details</CardTitle>
+              <CardDescription>Profile overview</CardDescription>
+            </div>
+
+            <Button variant="ghost" onClick={() => setSelectedDoctor(null)}>
+              <ArrowLeft className="h-4 w-4 mr-1" /> Back
+            </Button>
+          </CardHeader>
+
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-primary/10 rounded-lg">
+                <Award className="h-6 w-6 text-primary" />
+              </div>
+
+              <div>
+                <h2 className="text-xl font-semibold">{selectedDoctor.fullName}</h2>
+                <p className="text-muted-foreground">{selectedDoctor.specialization}</p>
+
+                <Badge className={`mt-2 ${getStatusColor(selectedDoctor.status)}`}>
+                  {selectedDoctor.status}
+                </Badge>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              <p><strong>Email:</strong> {selectedDoctor.email}</p>
+              <p><strong>Phone:</strong> {selectedDoctor.contactNumber}</p>
+              <p><strong>Working At:</strong> {selectedDoctor.workingAT}</p>
+              <p><strong>Experience:</strong> {selectedDoctor.yearsOfExperience || "N/A"}</p>
+            </div>
+
+            <Button
+              className={
+                selectedDoctor.status === "active"
+                  ? "bg-red-500 hover:bg-red-600"
+                  : "bg-green-600 hover:bg-green-700"
+              }
+              onClick={() => handleStatusChange(selectedDoctor)}
+            >
+              {selectedDoctor.status === "active" ? "Suspend Doctor" : "Restore Doctor"}
+            </Button>
           </CardContent>
         </Card>
+      ) : (
+        <>
+          {/* Search */}
+          <Card>
+            <CardHeader><CardTitle>Search Doctors</CardTitle></CardHeader>
+            <CardContent>
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name, email, or specialization..."
+                  className="pl-10"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Doctor List */}
+          <Card>
+            <CardHeader>
+              <CardTitle>All Doctors ({filteredDoctors.length})</CardTitle>
+              <CardDescription>Complete list of registered doctors</CardDescription>
+            </CardHeader>
+
+            <CardContent>
+              <div className="space-y-4">
+                {filteredDoctors.map((d) => (
+                  <div
+                    key={d.doctorProfileId}
+                    className="p-4 border rounded-lg hover:bg-accent/30 transition flex justify-between items-center"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="p-3 rounded-lg bg-primary/10">
+                        <User className="h-5 w-5 text-primary" />
+                      </div>
+
+                      <div>
+                        <h4 className="font-semibold text-lg">{d.fullName}</h4>
+                        <p className="text-muted-foreground text-sm">{d.email}</p>
+                        <p className="text-sm">{d.specialization}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <Badge className={getStatusColor(d.status)}>{d.status}</Badge>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedDoctor(d)}
+                      >
+                        View
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </>
       )}
     </div>
   );
