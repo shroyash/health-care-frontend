@@ -2,6 +2,7 @@
 
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { getCurrentUser } from '@/lib/api/auth';
+import { UserResponseDto } from '@/lib/type/auth';
 
 
 export type User = {
@@ -18,7 +19,7 @@ export type UserResponse = {
 
 
 type UserProfileContextType = {
-  userProfile: UserResponse | null;
+  userProfile: UserResponseDto | null;
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
@@ -27,7 +28,7 @@ type UserProfileContextType = {
 const UserProfileContext = createContext<UserProfileContextType | undefined>(undefined);
 
 export const UserProfileProvider = ({ children }: { children: ReactNode }) => {
-  const [userProfile, setUserProfile] = useState<UserResponse | null>(null);
+  const [userProfile, setUserProfile] = useState<UserResponseDto | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 

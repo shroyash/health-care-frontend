@@ -8,13 +8,17 @@ export async function verifyJWT(token: string) {
       throw new Error("JWT_PUBLIC_KEY not configured");
     }
 
-    // Import the PEM public key properly
     const publicKey = await importSPKI(publicKeyPem, "RS256");
 
-    // Verify the JWT
     const { payload } = await jwtVerify(token, publicKey);
 
-    return payload;
+    // Extract userId from payload.sub
+    const userId = payload.sub ? Number(payload.sub) : null;
+
+    return {
+      ...payload,
+      userId,
+    };
   } catch (err) {
     console.error("JWT verification failed:", err instanceof Error ? err.message : err);
     return null;

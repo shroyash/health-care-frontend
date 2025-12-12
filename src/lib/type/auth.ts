@@ -31,7 +31,7 @@ export interface JwtResponse {
 }
 
 export interface UserResponseDto {
-  username: string;
+  userName: string;
   email: string;
   role: Role[];
 }
