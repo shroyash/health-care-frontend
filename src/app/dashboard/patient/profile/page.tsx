@@ -12,6 +12,9 @@ import { Dialog, Transition } from "@headlessui/react";
 import { Button } from "@/components/ui/button";
 import { Edit, Camera } from "lucide-react";
 
+// API calls go through gateway, but images come directly from backend
+const STATIC_BASE_URL = "http://localhost:8004"; // For serving images
+
 export default function PatientProfilePage() {
   const [profile, setProfile] = useState<PatientProfileDTO | null>(null);
   const [form, setForm] = useState<PatientProfileUpdateDto>({
@@ -20,8 +23,10 @@ export default function PatientProfilePage() {
   });
   const [editing, setEditing] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [imageKey, setImageKey] = useState(0);
+  const [imageError, setImageError] = useState(false);
 
+  // Fetch profile from backend
   useEffect(() => {
     fetchProfile();
   }, []);
@@ -29,13 +34,17 @@ export default function PatientProfilePage() {
   const fetchProfile = async () => {
     try {
       const data = await getPatientProfile();
+      console.log("Profile data received:", data);
+      console.log("Profile image URL:", data.profileImgUrl); // Fixed field name
       setProfile(data);
       setForm({ fullname: data.fullName, contactNumber: data.contactNumber });
+      setImageError(false); // Reset error state on new fetch
     } catch (err) {
       console.error("Failed to fetch profile:", err);
     }
   };
 
+  // Save profile updates
   const handleSave = async () => {
     try {
       await updatePatientProfile(form);
@@ -46,43 +55,37 @@ export default function PatientProfilePage() {
     }
   };
 
+  // Upload profile image
   const handleFileUpload = async (file: File) => {
     if (!profile) return;
     setUploading(true);
 
-    // Show preview immediately
-    const objectUrl = URL.createObjectURL(file);
-    setPreview(objectUrl);
-
     try {
       const uploadedUrl = await uploadPatientProfileImage(profile.patientId, file);
-      console.log("Uploaded URL:", uploadedUrl);
-
-      // Update profile image URL with timestamp to prevent caching
+      console.log("Uploaded image URL:", uploadedUrl);
+      
+      // Update profile with new image URL and force re-render
       setProfile((prev) =>
-        prev
-          ? {
-              ...prev,
-              profileImageUrl: uploadedUrl + "?t=" + new Date().getTime(),
-            }
-          : prev
+        prev ? { ...prev, profileImgUrl: uploadedUrl } : prev // Fixed field name
       );
-
-      // Optional: refresh other profile data from backend
-      await fetchProfile();
+      setImageKey(prev => prev + 1); // Force image component to reload
+      setImageError(false);
     } catch (err) {
       console.error("Failed to upload image:", err);
+      alert("Failed to upload image. Please try again.");
     } finally {
       setUploading(false);
     }
-
-    // Revoke the object URL after use to free memory
-    URL.revokeObjectURL(objectUrl);
   };
 
   if (!profile) return <p className="p-6 text-center text-gray-500">Loading profile...</p>;
 
-  const letter = profile.fullName.charAt(0).toUpperCase();
+  const firstLetter = profile.fullName.charAt(0).toUpperCase();
+  const fullImageUrl = profile.profileImgUrl  // Fixed field name
+    ? `${STATIC_BASE_URL}${profile.profileImgUrl}` 
+    : null;
+
+  console.log("Rendering with image URL:", fullImageUrl);
 
   return (
     <div className="min-h-screen bg-gray-100 p-6 flex justify-center">
@@ -91,16 +94,24 @@ export default function PatientProfilePage() {
         <div className="bg-white rounded-2xl shadow p-6 flex items-center gap-6">
           <div className="relative w-28 h-28">
             <div className="w-full h-full rounded-full overflow-hidden bg-blue-100 flex items-center justify-center text-3xl font-bold text-blue-700">
-              {preview ? (
-                <img src={preview} alt="Preview" className="w-full h-full object-cover" />
-              ) : profile.profileImageUrl ? (
+              {profile.profileImgUrl && !imageError ? ( // Fixed field name
                 <img
-                  src={profile.profileImageUrl}
-                  alt="Profile"
+                  key={imageKey}
+                  src={fullImageUrl!}
+                  alt={profile.fullName}
                   className="w-full h-full object-cover"
+                  onLoad={() => {
+                    console.log("✅ Image loaded successfully:", fullImageUrl);
+                  }}
+                  onError={(e) => {
+                    console.error("❌ Failed to load image:", fullImageUrl);
+                    console.error("Check if this URL is accessible:", fullImageUrl);
+                    setImageError(true);
+                    e.currentTarget.style.display = 'none';
+                  }}
                 />
               ) : (
-                letter
+                firstLetter
               )}
             </div>
 
@@ -108,17 +119,16 @@ export default function PatientProfilePage() {
             <input
               id="profile-image-upload"
               type="file"
+              accept="image/*"
               className="hidden"
-              onChange={(e) => {
-                e.target.files && handleFileUpload(e.target.files[0]);
-              }}
+              onChange={(e) => e.target.files && handleFileUpload(e.target.files[0])}
               disabled={uploading}
             />
-
-            {/* Camera icon triggers file input */}
             <label
               htmlFor="profile-image-upload"
-              className="absolute bottom-0 right-0 bg-blue-600 p-2 rounded-full border-2 border-white cursor-pointer z-10"
+              className={`absolute bottom-0 right-0 bg-blue-600 p-2 rounded-full border-2 border-white z-10 ${
+                uploading ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-blue-700"
+              }`}
             >
               <Camera className="w-4 h-4 text-white" />
             </label>
@@ -128,12 +138,34 @@ export default function PatientProfilePage() {
             <h1 className="text-2xl font-bold">{profile.fullName}</h1>
             <p className="text-gray-500">{profile.email}</p>
             <p className="text-sm text-gray-400 mt-1">Contact: {profile.contactNumber}</p>
-            {uploading && <p className="text-sm text-gray-500 mt-1">Uploading image...</p>}
+            {uploading && <p className="text-sm text-blue-600 mt-1">Uploading image...</p>}
+            {imageError && profile.profileImgUrl && ( // Fixed field name
+              <p className="text-sm text-red-600 mt-1">
+                Failed to load image. <button 
+                  onClick={() => {
+                    setImageError(false);
+                    setImageKey(prev => prev + 1);
+                  }}
+                  className="underline"
+                >
+                  Retry
+                </button>
+              </p>
+            )}
           </div>
 
           <Button variant="outline" onClick={() => setEditing(true)}>
             <Edit className="w-4 h-4 mr-2" /> Edit
           </Button>
+        </div>
+
+        {/* Debug Info - Remove in production */}
+        <div className="bg-white rounded-2xl shadow p-4 text-xs text-gray-600">
+          <p><strong>Debug Info:</strong></p>
+          <p>Profile Image URL from API: {profile.profileImgUrl || "Not set"}</p>
+          <p>Full Image URL: {fullImageUrl || "Not set"}</p>
+          <p>Image Key: {imageKey}</p>
+          <p>Image Error: {imageError ? "Yes" : "No"}</p>
         </div>
       </div>
 

@@ -19,7 +19,7 @@ import {
   Legend,
 } from "recharts";
 
-import { dashboardStats, getTodayAppointments } from "@/lib/api/doctorDashboard";
+import { dashboardStats, getUpcomingAppointments } from "@/lib/api/doctorDashboard";
 
 interface DoctorDashboardStats {
   totalAppointmentsToday: number;
@@ -44,19 +44,19 @@ const COLORS = ["#3b82f6", "#facc15", "#10b981", "#ef4444"]; // for pie chart
 
 const DoctorDashboard = () => {
   const [statsData, setStatsData] = useState<DoctorDashboardStats | null>(null);
-  const [todayAppointments, setTodayAppointments] = useState<DoctorAppointment[]>([]);
+  const [upcomingAppointments, setUpcomingAppointments] = useState<DoctorAppointment[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [stats, appointments] = await Promise.all([
+        const [stats, upcoming] = await Promise.all([
           dashboardStats(),
-          getTodayAppointments(),
+          getUpcomingAppointments(),
         ]);
 
         setStatsData(stats);
-        setTodayAppointments(appointments);
+        setUpcomingAppointments(upcoming);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching dashboard data", error);
@@ -69,13 +69,6 @@ const DoctorDashboard = () => {
 
   const stats = statsData
     ? [
-        {
-          title: "Today's Appointments",
-          value: statsData.totalAppointmentsToday.toString(),
-          change: "+2 from yesterday",
-          icon: Clock,
-          bgColor: "bg-blue-500",
-        },
         {
           title: "Pending Requests",
           value: statsData.pendingRequests.toString(),
@@ -100,7 +93,7 @@ const DoctorDashboard = () => {
       ]
     : [];
 
-  // Sample weekly data (replace with real backend data if available)
+  // Sample weekly data (replace with backend data)
   const weeklyAppointments = Array.from({ length: 7 }).map((_, i) => ({
     name: `Day ${i + 1}`,
     appointments: Math.floor(Math.random() * 10) + 1,
@@ -114,13 +107,54 @@ const DoctorDashboard = () => {
     { name: "Specialist", value: 3 },
   ];
 
+  const renderAppointments = (appointments: DoctorAppointment[], badgeText: string, badgeColor: string) => {
+    if (loading) {
+      return (
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div key={index} className="animate-pulse p-4 bg-gray-50 rounded-lg"></div>
+          ))}
+        </div>
+      );
+    }
+
+    if (appointments.length === 0) {
+      return <div className="text-center py-8 text-gray-500">No upcoming appointments.</div>;
+    }
+
+    return (
+      <div className="space-y-4">
+        {appointments.map((appt) => (
+          <div
+            key={appt.appointmentId}
+            className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            <div className="flex items-center gap-4">
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${badgeColor}-100`}>
+                <Users className={`w-6 h-6 ${badgeColor}-600`} />
+              </div>
+              <div>
+                <p className="font-semibold text-gray-900">{appt.patientName}</p>
+                <p className="text-sm text-gray-600">{appt.checkupType}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <p className="font-semibold text-gray-900">{appt.startTime}</p>
+              <Badge className={`${badgeColor}-500 hover:${badgeColor}-600`}>{badgeText}</Badge>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {loading
-            ? Array.from({ length: 4 }).map((_, index) => (
+            ? Array.from({ length: 3 }).map((_, index) => (
                 <Card key={index} className="border-0 shadow-sm">
                   <CardContent className="p-6">
                     <div className="animate-pulse space-y-3">
@@ -200,51 +234,16 @@ const DoctorDashboard = () => {
           </Card>
         </div>
 
-        {/* Today's Appointments Table */}
+        {/* Upcoming Appointments Table */}
         <Card className="border-0 shadow-sm">
           <CardHeader className="flex items-center justify-between pb-4">
-            <CardTitle className="text-xl font-semibold">Today's Appointments</CardTitle>
-            <Button variant="ghost" className="text-blue-600 hover:text-blue-700">
+            <CardTitle className="text-xl font-semibold">Upcoming Appointments</CardTitle>
+            <Button variant="ghost" className="text-green-600 hover:text-green-700">
               View All
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="space-y-4">
-                {Array.from({ length: 3 }).map((_, index) => (
-                  <div key={index} className="animate-pulse p-4 bg-gray-50 rounded-lg"></div>
-                ))}
-              </div>
-            ) : todayAppointments.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                No appointments for today.
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {todayAppointments.map((appt) => (
-                  <div
-                    key={appt.appointmentId}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                        <Users className="w-6 h-6 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900">{appt.patientName}</p>
-                        <p className="text-sm text-gray-600">{appt.checkupType}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <p className="font-semibold text-gray-900">{appt.startTime}</p>
-                      <Badge className="bg-blue-500 hover:bg-blue-600">confirmed</Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
+          <CardContent>{renderAppointments(upcomingAppointments, "scheduled", "green")}</CardContent>
         </Card>
       </div>
     </div>
@@ -252,4 +251,3 @@ const DoctorDashboard = () => {
 };
 
 export default DoctorDashboard;
-``

@@ -8,6 +8,9 @@ export interface DoctorProfileUpdateDto {
   yearsOfExperience: number;
   workingAT: string;
   contactNumber: string;
+  profileImgUrl?: string; // Changed from String to string (primitive type)
+  doctorProfileId?: number; // Add this to match backend response
+  id?: number; // Alternative field name
 }
 
 // GET logged-in doctor's profile
@@ -15,6 +18,7 @@ export const getDoctorProfile = async () => {
   try {
     // /doctor-profiles/me expects cookie for auth
     const profile = await API.getOne<DoctorProfileUpdateDto>("/doctor-profiles/me");
+    console.log("Doctor profile fetched:", profile);
     return profile;
   } catch (err) {
     console.error("Failed to fetch doctor profile", err);
@@ -42,19 +46,27 @@ export const uploadDoctorProfileImage = async (doctorId: number, file: File): Pr
   formData.append("file", file);
 
   try {
+    // Fixed: Added parentheses instead of template literal for fetch
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/doctor-profiles/${doctorId}/upload-img`, {
       method: "POST",
       body: formData,
       credentials: "include", // important to send cookie
     });
 
-    const json = await res.json();
+    if (!res.ok) {
+      throw new Error(`Upload failed with status: ${res.status}`);
+    }
 
-    if (!json.status) {
+    const json = await res.json();
+    console.log("Upload response:", json);
+
+    // Handle different response formats from backend
+    if (json.status === false) {
       throw new Error(json.message || "Failed to upload doctor profile image");
     }
 
-    return json.data; // uploaded image URL
+    // Return the image URL - try multiple possible field names
+    return json.data || json.profileImgUrl || json.url || json.imageUrl;
   } catch (err) {
     console.error("Failed to upload profile image", err);
     throw err;

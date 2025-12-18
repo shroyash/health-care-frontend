@@ -19,7 +19,7 @@ const MeetingPage: React.FC = () => {
   useEffect(() => {
     const fetchAppointment = async () => {
       try {
-        const res = await api.get<AppointmentAccess>(`/appointments/${requestId}/access`, {
+        const res = await api.get<AppointmentAccess>(`/appointments/appointments/${requestId}/access`, {
           params: { token },
         });
         setAppointment(res.data);

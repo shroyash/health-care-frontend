@@ -6,7 +6,7 @@ export interface PatientProfileDTO {
   email: string;
   contactNumber: string;
   status: string;
-  profileImageUrl?: string;
+  profileImgUrl?: string;
 }
 
 export interface PatientProfileUpdateDto {

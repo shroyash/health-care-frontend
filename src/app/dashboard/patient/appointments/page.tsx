@@ -18,6 +18,7 @@ export default function AppointmentPage() {
       try {
         setLoading(true);
         const data = await getUpcomingAppointments();
+        console.log(data);
         setAppointments(data);
       } catch (err) {
         console.error("Failed to fetch appointments", err);

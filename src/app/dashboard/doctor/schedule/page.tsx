@@ -1,17 +1,32 @@
 'use client'
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Edit2, Plus, Clock } from "lucide-react";
+import { Trash2, Plus, Clock } from "lucide-react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { saveWeeklySchedule } from "@/lib/api/doctorDashboard";
-import { ScheduleDto, DoctorScheduleDto } from "@/lib/type/doctorDashboard";
+
+import {
+  saveWeeklySchedule,
+  getDoctorSchedule,
+} from "@/lib/api/doctorDashboard";
+
+import {
+  ScheduleDto,
+  SaveDoctorScheduleDto,
+  DoctorScheduleResponseDto,
+} from "@/lib/type/doctorDashboard";
 
 interface TimeSlot {
   id: number;
@@ -20,167 +35,265 @@ interface TimeSlot {
   endTime: string;
 }
 
-interface ScheduleProps {
-  doctorProfileId: number;
-}
+const days = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
 
-const Schedule = ({ doctorProfileId }: ScheduleProps) => {
-  const [schedules, setSchedules] = useState<TimeSlot[]>([]);
-  const [newSlot, setNewSlot] = useState({ day: "", startTime: "", endTime: "" });
+/* ===============================
+   EXISTING DOCTOR SCHEDULE (READONLY)
+   =============================== */
+const ExistingSchedule = ({ schedules }: { schedules: TimeSlot[] }) => {
+  return (
+    <Card className="shadow-2xl rounded-xl h-full border-l-8 border-purple-500">
+      <CardHeader className="bg-purple-50">
+        <CardTitle className="flex items-center gap-2 text-purple-700 text-lg font-semibold">
+          <Clock className="w-6 h-6" /> Your Schedule
+        </CardTitle>
+      </CardHeader>
 
-  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+      <CardContent className="overflow-y-auto max-h-[calc(100vh-100px)] p-6">
+        {schedules.length ? (
+          <div className="space-y-4">
+            {schedules.map((slot) => (
+              <div
+                key={slot.id}
+                className="flex justify-between items-center border border-purple-200 p-4 rounded-xl shadow-sm hover:shadow-md transition"
+              >
+                <div className="flex items-center gap-4">
+                  <Badge className="bg-purple-200 text-purple-800">{slot.day}</Badge>
+                  <span className="text-gray-700 font-medium">
+                    {slot.startTime} - {slot.endTime}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-center text-gray-400 py-12 font-medium">
+            No schedule set yet
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
 
+/* ===============================
+   EDITABLE SCHEDULE (MULTIPLE ADD)
+   =============================== */
+const EditableSchedule = ({ onSave }: { onSave?: () => void }) => {
+  const [newSlot, setNewSlot] = useState({
+    day: "",
+    startTime: "",
+    endTime: "",
+  });
+
+  const [tempSlots, setTempSlots] = useState<TimeSlot[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Add slot locally
   const handleAddSlot = () => {
     if (!newSlot.day || !newSlot.startTime || !newSlot.endTime) {
-      toast.error("Please fill in all fields");
+      toast.error("Please fill all fields");
       return;
     }
 
-    const newSchedule: TimeSlot = {
-      id: Date.now(),
-      ...newSlot
-    };
+    const exists = tempSlots.some(
+      (s) =>
+        s.day === newSlot.day &&
+        s.startTime === newSlot.startTime &&
+        s.endTime === newSlot.endTime
+    );
 
-    setSchedules([...schedules, newSchedule]);
+    if (exists) {
+      toast.warning("This slot is already added");
+      return;
+    }
+
+    setTempSlots((prev) => [
+      ...prev,
+      { id: Date.now(), ...newSlot },
+    ]);
+
     setNewSlot({ day: "", startTime: "", endTime: "" });
-    toast.success("Time slot added locally");
   };
 
-  const handleDeleteSlot = (id: number) => {
-    setSchedules(schedules.filter(slot => slot.id !== id));
-    toast.info("Time slot removed locally");
+  // Delete temp slot before saving
+  const handleDeleteTempSlot = (id: number) => {
+    setTempSlots((prev) => prev.filter((s) => s.id !== id));
   };
 
+  // Save all temp slots to server
   const handleSaveToServer = async () => {
-    if (schedules.length === 0) {
-      toast.error("Add at least one time slot before saving");
+    if (tempSlots.length === 0) {
+      toast.error("Add at least one time slot to save");
       return;
     }
 
     try {
-      const scheduleDtoArray: ScheduleDto[] = schedules.map(slot => ({
-        dayOfWeek: slot.day,
-        startTime: slot.startTime,
-        endTime: slot.endTime,
-        available: true
-      }));
+      setLoading(true);
 
-      const dto: DoctorScheduleDto = { schedules: scheduleDtoArray };
+      const dto: SaveDoctorScheduleDto = {
+        schedules: tempSlots.map((slot) => ({
+          dayOfWeek: slot.day,
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+          available: true,
+        })),
+      };
 
       await saveWeeklySchedule(dto);
-      toast.success("Weekly schedule saved to server");
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to save schedule to server");
+      toast.success("All time slots saved successfully");
+      setTempSlots([]); // Clear after save
+
+      if (onSave) onSave(); // Refresh left side
+    } catch (err) {
+      toast.error("Failed to save schedule");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="space-y-6">
-      {/* Add New Schedule */}
-      <Card className="shadow-lg border border-gray-200 hover:shadow-xl transition-shadow">
-        <CardHeader className="bg-blue-50">
-          <CardTitle className="flex items-center space-x-2 text-blue-700 font-semibold">
-            <Plus className="w-5 h-5" />
-            <span>Add New Time Slot</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="day">Day of Week</Label>
-              <Select
-                value={newSlot.day}
-                onValueChange={value => setNewSlot({ ...newSlot, day: value })}
+    <Card className="shadow-2xl rounded-xl h-full border-l-8 border-blue-500 flex flex-col">
+      <CardHeader className="bg-blue-50">
+        <CardTitle className="flex items-center gap-2 text-blue-700 text-lg font-semibold">
+          <Plus className="w-6 h-6" /> Add / Modify Schedule
+        </CardTitle>
+      </CardHeader>
+
+      <CardContent className="p-6 flex flex-col h-full">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div>
+            <Label>Day</Label>
+            <Select
+              value={newSlot.day}
+              onValueChange={(v) => setNewSlot({ ...newSlot, day: v })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select day" />
+              </SelectTrigger>
+              <SelectContent>
+                {days.map((day) => (
+                  <SelectItem key={day} value={day}>
+                    {day}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label>Start Time</Label>
+            <Input
+              type="time"
+              value={newSlot.startTime}
+              onChange={(e) =>
+                setNewSlot({ ...newSlot, startTime: e.target.value })
+              }
+            />
+          </div>
+
+          <div>
+            <Label>End Time</Label>
+            <Input
+              type="time"
+              value={newSlot.endTime}
+              onChange={(e) =>
+                setNewSlot({ ...newSlot, endTime: e.target.value })
+              }
+            />
+          </div>
+        </div>
+
+        <Button
+          onClick={handleAddSlot}
+          className="bg-green-600 mb-4 w-full md:w-auto"
+        >
+          <Plus className="w-4 h-4 mr-2" /> Add Slot
+        </Button>
+
+        {/* TEMP SLOT LIST */}
+        {tempSlots.length > 0 && (
+          <div className="flex-1 overflow-y-auto mb-4">
+            {tempSlots.map((slot) => (
+              <div
+                key={slot.id}
+                className="flex justify-between items-center border p-4 rounded-lg mb-2 hover:shadow-md transition"
               >
-                <SelectTrigger className="border border-gray-300 rounded-md p-2">
-                  <SelectValue placeholder="Select day" />
-                </SelectTrigger>
-                <SelectContent>
-                  {days.map(day => (
-                    <SelectItem key={day} value={day}>{day}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="startTime">Start Time</Label>
-              <Input
-                id="startTime"
-                type="time"
-                value={newSlot.startTime}
-                onChange={e => setNewSlot({ ...newSlot, startTime: e.target.value })}
-                className="border border-gray-300 rounded-md p-2"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="endTime">End Time</Label>
-              <Input
-                id="endTime"
-                type="time"
-                value={newSlot.endTime}
-                onChange={e => setNewSlot({ ...newSlot, endTime: e.target.value })}
-                className="border border-gray-300 rounded-md p-2"
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-2 mt-2">
-            <Button onClick={handleAddSlot} className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2 px-4 py-2 rounded-md transition">
-              <Plus className="w-4 h-4" /> Add Time Slot
-            </Button>
-
-            <Button onClick={handleSaveToServer} className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 px-4 py-2 rounded-md transition">
-              Save Weekly Schedule
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Current Schedules */}
-      <Card className="shadow-lg border border-gray-200 hover:shadow-xl transition-shadow">
-        <CardHeader className="bg-purple-50">
-          <CardTitle className="flex items-center space-x-2 text-purple-700 font-semibold">
-            <Clock className="w-5 h-5" />
-            <span>Your Weekly Schedule</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {schedules.length > 0 ? (
-              schedules.map(slot => (
-                <div
-                  key={slot.id}
-                  className="flex items-center justify-between p-4 rounded-lg border border-gray-200 hover:bg-purple-50 transition-colors"
-                >
-                  <div className="flex items-center space-x-4">
-                    <Badge className="bg-purple-100 text-purple-800">{slot.day}</Badge>
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <Clock className="w-4 h-4" />
-                      <span>{slot.startTime} - {slot.endTime}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Button variant="ghost" size="sm" className="hover:bg-gray-100 transition">
-                      <Edit2 className="w-4 h-4 text-blue-600" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDeleteSlot(slot.id)} className="hover:bg-gray-100 transition">
-                      <Trash2 className="w-4 h-4 text-red-600" />
-                    </Button>
-                  </div>
+                <div className="flex items-center gap-4">
+                  <Badge className="bg-blue-200 text-blue-800">{slot.day}</Badge>
+                  <span className="text-gray-700 font-medium">
+                    {slot.startTime} - {slot.endTime}
+                  </span>
                 </div>
-              ))
-            ) : (
-              <div className="text-center py-12 text-gray-400">
-                <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>No schedules added yet. Create your first time slot above.</p>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDeleteTempSlot(slot.id)}
+                >
+                  <Trash2 className="w-4 h-4 text-red-600" />
+                </Button>
               </div>
-            )}
+            ))}
           </div>
-        </CardContent>
-      </Card>
+        )}
+
+        <Button
+          onClick={handleSaveToServer}
+          className="bg-blue-600 w-full md:w-auto mt-auto"
+          disabled={loading}
+        >
+          {loading ? "Saving..." : "Save All Slots"}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+};
+
+/* ===============================
+   MAIN SCHEDULE PAGE
+   =============================== */
+const Schedule = () => {
+  const [doctorSchedule, setDoctorSchedule] = useState<TimeSlot[]>([]);
+
+  const fetchSchedule = async () => {
+    try {
+      const response: DoctorScheduleResponseDto = await getDoctorSchedule();
+      const mapped: TimeSlot[] = response.schedules.map((slot: ScheduleDto) => ({
+        id: slot.scheduleId,
+        day: slot.dayOfWeek,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+      }));
+      setDoctorSchedule(mapped);
+    } catch (error) {
+      toast.error("Failed to load schedule");
+    }
+  };
+
+  useEffect(() => {
+    fetchSchedule();
+  }, []);
+
+  return (
+    <div className="h-screen w-full bg-gray-50 p-8 flex flex-col md:flex-row gap-6">
+      {/* LEFT: Existing Schedule */}
+      <div className="md:w-1/2 h-full">
+        <ExistingSchedule schedules={doctorSchedule} />
+      </div>
+
+      {/* RIGHT: Add New Schedule */}
+      <div className="md:w-1/2 h-full">
+        <EditableSchedule onSave={fetchSchedule} />
+      </div>
     </div>
   );
 };

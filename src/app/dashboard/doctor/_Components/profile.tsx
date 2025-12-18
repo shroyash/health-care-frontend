@@ -9,7 +9,9 @@ import {
 } from "@/lib/api/doctorProfileApi";
 import { Dialog, Transition } from "@headlessui/react";
 import { Button } from "@/components/ui/button";
-import { Edit, Camera } from "lucide-react";
+import { Edit, Camera, Briefcase, Phone, Mail, Award } from "lucide-react";
+
+const STATIC_BASE_URL = "http://localhost:8004";
 
 interface LabeledInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -17,18 +19,68 @@ interface LabeledInputProps extends React.InputHTMLAttributes<HTMLInputElement> 
 
 const LabeledInput = ({ label, ...props }: LabeledInputProps) => (
   <div className="space-y-1 w-full">
-    {label && <label className="block text-sm font-medium text-gray-700">{label}</label>}
+    {label && (
+      <label className="block text-sm font-medium text-gray-600">{label}</label>
+    )}
     <input
       {...props}
-      className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
     />
   </div>
 );
 
 interface DoctorProfile extends DoctorProfileUpdateDto {
   doctorProfileId: number;
-  profileImageUrl?: string;
 }
+
+const ProfileImage = ({
+  profileImgUrl,
+  previewImage,
+  firstLetter,
+  onFileChange,
+  uploading,
+  imageKey,
+}: any) => {
+  const fullImageUrl = profileImgUrl
+    ? `${STATIC_BASE_URL}${profileImgUrl}`
+    : null;
+
+  return (
+    <div className="relative">
+      {previewImage ? (
+        <img
+          src={previewImage}
+          className="w-44 h-44 rounded-full object-cover ring-4 ring-white shadow-xl"
+        />
+      ) : fullImageUrl ? (
+        <img
+          key={imageKey}
+          src={fullImageUrl}
+          className="w-44 h-44 rounded-full object-cover ring-4 ring-white shadow-xl"
+        />
+      ) : (
+        <div className="w-44 h-44 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-5xl font-bold text-white shadow-xl">
+          {firstLetter}
+        </div>
+      )}
+
+      <label
+        className={`absolute bottom-2 right-2 rounded-full p-3 bg-blue-600 text-white shadow-lg transition ${
+          uploading ? "opacity-50" : "cursor-pointer hover:bg-blue-700"
+        }`}
+      >
+        <Camera className="w-5 h-5" />
+        <input
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={onFileChange}
+          disabled={uploading}
+        />
+      </label>
+    </div>
+  );
+};
 
 export default function DoctorProfilePage() {
   const [profile, setProfile] = useState<DoctorProfile | null>(null);
@@ -40,156 +92,124 @@ export default function DoctorProfilePage() {
     workingAT: "",
     contactNumber: "",
   });
-  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [imageKey, setImageKey] = useState(0);
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const data = await getDoctorProfile();
-        setProfile({ ...data, doctorProfileId: (data as any).doctorProfileId || 0 });
-        setFormData(data);
-      } catch (err) {
-        console.error("Error fetching profile:", err);
-      }
-    };
-    fetchProfile();
+    getDoctorProfile().then((data: any) => {
+      const doctorProfileId = data.doctorProfileId || data.id || 0;
+      setProfile({ ...data, doctorProfileId });
+      setFormData(data);
+    });
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: any) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: name === "yearsOfExperience" ? Number(value) : value });
+    setFormData({
+      ...formData,
+      [name]: name === "yearsOfExperience" ? Number(value) : value,
+    });
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    setProfileImageFile(file);
-    if (file) setPreviewImage(URL.createObjectURL(file));
+  const handleImageChange = (e: any) => {
+    const file = e.target.files?.[0];
+    if (!file || !profile) return;
+
+    setUploading(true);
+    setPreviewImage(URL.createObjectURL(file));
+
+    uploadDoctorProfileImage(profile.doctorProfileId, file)
+      .then((url) => {
+        setProfile((p) => (p ? { ...p, profileImgUrl: url } : p));
+        setImageKey((k) => k + 1);
+        setPreviewImage(null);
+      })
+      .finally(() => setUploading(false));
   };
 
   const handleSave = async () => {
     if (!profile) return;
-
-    try {
-      const updated = await updateDoctorProfile(formData);
-      setProfile(prev => ({ ...prev, ...updated }));
-      setFormData(updated);
-      setIsEditing(false);
-
-      if (profileImageFile) {
-        setUploading(true);
-        const uploadedUrl = await uploadDoctorProfileImage(profile.doctorProfileId, profileImageFile);
-        setProfile(prev => prev ? { ...prev, profileImageUrl: uploadedUrl + "?t=" + Date.now() } : prev);
-        setPreviewImage(null);
-        setProfileImageFile(null);
-        setUploading(false);
-      }
-    } catch (err) {
-      console.error("Error saving profile:", err);
-      setUploading(false);
-    }
+    const updated = await updateDoctorProfile(formData);
+    setProfile((p) => (p ? { ...p, ...updated } : p));
+    setIsEditing(false);
   };
 
-  if (!profile) return <p className="p-6 text-center text-gray-500">Loading profile...</p>;
+  if (!profile)
+    return <p className="text-center mt-20 text-gray-500">Loading…</p>;
 
-  const firstLetter = profile.fullName?.charAt(0).toUpperCase() || "?";
+  const firstLetter = profile.fullName?.charAt(0) || "?";
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6 flex justify-center items-start">
-      <div className="max-w-4xl w-full space-y-6">
-        {/* Profile Card */}
-        <div className="bg-white shadow-xl rounded-2xl p-6 relative">
-          <div className="flex items-start space-x-6">
-            {/* Profile Image */}
-            <div className="relative">
-              {previewImage ? (
-                <img src={previewImage} alt="Profile Preview" className="w-28 h-28 rounded-full object-cover border-4 border-blue-500" />
-              ) : profile.profileImageUrl ? (
-                <img src={profile.profileImageUrl} alt="Profile" className="w-28 h-28 rounded-full object-cover border-4 border-blue-500" />
-              ) : (
-                <div className="w-28 h-28 rounded-full bg-gray-200 border-4 border-blue-500 flex items-center justify-center text-3xl font-bold text-gray-700">
-                  {firstLetter}
-                </div>
-              )}
+    <div className="min-h-screen bg-gradient-to-br  text-black">
+      {/* Hero Section */}
+      <div className="relative px-10 py-20">
+        <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-12">
+          <ProfileImage
+            profileImgUrl={profile.profileImgUrl}
+            previewImage={previewImage}
+            firstLetter={firstLetter}
+            onFileChange={handleImageChange}
+            uploading={uploading}
+            imageKey={imageKey}
+          />
 
-              <label className="absolute bottom-0 right-0 bg-blue-500 p-2 rounded-full cursor-pointer border-2 border-white">
-                <Camera className="w-4 h-4 text-white" />
-                <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} disabled={uploading} />
-              </label>
+          <div className="flex-1 text-center lg:text-left space-y-4">
+            <h1 className="text-4xl font-bold">Dr. {profile.fullName}</h1>
+            <p className="text-xl opacity-90">{profile.specialization}</p>
+
+            <div className="flex flex-wrap gap-6 justify-center lg:justify-start mt-6">
+              <div className="flex items-center gap-2">
+                <Award /> {profile.yearsOfExperience}+ yrs experience
+              </div>
+              <div className="flex items-center gap-2">
+                <Briefcase /> {profile.workingAT}
+              </div>
             </div>
 
-            {/* Profile Info */}
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold text-gray-900">{profile.fullName}</h1>
-              <p className="text-gray-500 text-sm">Email: {profile.email}</p>
-              <p className="text-gray-500 text-sm">Specialization: {profile.specialization}</p>
-              <p className="text-gray-400 text-sm mt-1">Experience: {profile.yearsOfExperience} years</p>
-              <p className="text-gray-500 text-sm">Working At: {profile.workingAT}</p>
-              <p className="text-gray-500 text-sm">Contact: {profile.contactNumber}</p>
-              <p className="text-gray-400 text-xs mt-1">Profile ID: {profile.doctorProfileId}</p>
+            <div className="flex flex-col sm:flex-row gap-4 mt-6">
+              <div className="flex items-center gap-2 opacity-90">
+                <Mail /> {profile.email}
+              </div>
+              <div className="flex items-center gap-2 opacity-90">
+                <Phone /> {profile.contactNumber}
+              </div>
             </div>
 
-            {/* Edit Button */}
-            <div className="ml-auto">
-              <Button variant="outline" onClick={() => setIsEditing(true)} className="flex items-center space-x-2">
-                <Edit className="w-4 h-4" /> <span>Edit</span>
-              </Button>
-            </div>
+            <Button
+              className="mt-8 bg-white text-blue-600 hover:bg-gray-100"
+              onClick={() => setIsEditing(true)}
+            >
+              <Edit className="w-4 h-4 mr-2" /> Edit Profile
+            </Button>
           </div>
-
-          {uploading && <p className="mt-4 text-sm text-gray-500">Uploading image...</p>}
         </div>
       </div>
 
       {/* Edit Modal */}
       <Transition appear show={isEditing} as={Fragment}>
-        <Dialog as="div" className="relative z-50" onClose={() => setIsEditing(false)}>
-          <Transition.Child
-            as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <div className="fixed inset-0 bg-black bg-opacity-30" />
-          </Transition.Child>
+        <Dialog as="div" className="relative z-50" onClose={setIsEditing}>
+          <div className="fixed inset-0 bg-black/50" />
+          <div className="fixed inset-0 flex items-center justify-center p-4">
+            <Dialog.Panel className="w-full max-w-md rounded-2xl bg-white p-6 text-gray-900">
+              <Dialog.Title className="text-lg font-semibold mb-4">
+                Edit Profile
+              </Dialog.Title>
 
-          <div className="fixed inset-0 overflow-y-auto">
-            <div className="flex min-h-full items-center justify-center p-4 text-center">
-              <Transition.Child
-                as={Fragment}
-                enter="ease-out duration-300"
-                enterFrom="opacity-0 scale-95"
-                enterTo="opacity-100 scale-100"
-                leave="ease-in duration-200"
-                leaveFrom="opacity-100 scale-100"
-                leaveTo="opacity-0 scale-95"
-              >
-                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 shadow-xl transition-all">
-                  <Dialog.Title className="text-xl font-semibold text-gray-900 mb-4">
-                    Edit Profile
-                  </Dialog.Title>
+              <div className="space-y-3">
+                <LabeledInput label="Full Name" name="fullName" value={formData.fullName} onChange={handleChange} />
+                <LabeledInput label="Specialization" name="specialization" value={formData.specialization} onChange={handleChange} />
+                <LabeledInput label="Years of Experience" name="yearsOfExperience" type="number" value={formData.yearsOfExperience} onChange={handleChange} />
+                <LabeledInput label="Working At" name="workingAT" value={formData.workingAT} onChange={handleChange} />
+                <LabeledInput label="Contact Number" name="contactNumber" value={formData.contactNumber} onChange={handleChange} />
+              </div>
 
-                  <div className="flex flex-col items-center space-y-4">
-                    {/* Editable Fields */}
-                    <LabeledInput label="Full Name" name="fullName" value={formData.fullName} onChange={handleChange} />
-                    <LabeledInput label="Specialization" name="specialization" value={formData.specialization} onChange={handleChange} />
-                    <LabeledInput label="Years of Experience" name="yearsOfExperience" type="number" value={formData.yearsOfExperience} onChange={handleChange} />
-                    <LabeledInput label="Working At" name="workingAT" value={formData.workingAT} onChange={handleChange} />
-                    <LabeledInput label="Contact Number" name="contactNumber" value={formData.contactNumber} onChange={handleChange} />
-                  </div>
-
-                  <div className="mt-6 flex justify-end space-x-2">
-                    <Button onClick={handleSave}>Save</Button>
-                    <Button variant="ghost" onClick={() => setIsEditing(false)}>Cancel</Button>
-                  </div>
-                </Dialog.Panel>
-              </Transition.Child>
-            </div>
+              <div className="mt-6 flex justify-end gap-2">
+                <Button onClick={handleSave}>Save</Button>
+                <Button variant="ghost" onClick={() => setIsEditing(false)}>Cancel</Button>
+              </div>
+            </Dialog.Panel>
           </div>
         </Dialog>
       </Transition>

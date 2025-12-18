@@ -17,17 +17,39 @@ export interface DoctorAppointment {
   checkupType: string;
   meetingLink: string;
 }
-
 export interface ScheduleDto {
+  scheduleId: number;
+  dayOfWeek: string;
+  startTime: string;
+  endTime: string;
+  available: boolean;
+  isLocked: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+
+// types.ts
+export interface SaveScheduleDto {
   dayOfWeek: string;
   startTime: string;
   endTime: string;
   available: boolean;
 }
 
-export interface DoctorScheduleDto {
+export interface SaveDoctorScheduleDto {
+  schedules: SaveScheduleDto[];
+}
+
+
+export interface DoctorScheduleResponseDto {
+  doctorName: string;
+  email: string;
+  specialization: string;
+  contactNumber: string;
   schedules: ScheduleDto[];
 }
+
 
 // types/appointmentRequest.ts
 export interface AppointmentRequest {

@@ -1,7 +1,7 @@
 "use client";
-
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
-import Stomp from "stompjs";
+import { Client, IMessage } from "@stomp/stompjs";
+import SockJS from "sockjs-client";
 
 interface WebRtcContextType {
   localStream: MediaStream | null;
@@ -15,7 +15,7 @@ interface Props {
   children: React.ReactNode;
   roomId: string;
   userId: string;
-  token?: string; // optional token for secure join
+  token?: string;
 }
 
 interface StompMessage {
@@ -31,9 +31,8 @@ export const WebRtcProvider: React.FC<Props> = ({ children, roomId, userId, toke
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStreams, setRemoteStreams] = useState<MediaStream[]>([]);
   const [messages, setMessages] = useState<string[]>([]);
-
   const pcRef = useRef<RTCPeerConnection | null>(null);
-  const stompClientRef = useRef<any>(null); // use any because STOMP lacks TS types
+  const stompClientRef = useRef<Client | null>(null);
 
   // Initialize local media & PeerConnection
   useEffect(() => {
@@ -52,8 +51,9 @@ export const WebRtcProvider: React.FC<Props> = ({ children, roomId, userId, toke
         pc.ontrack = (event) => {
           event.streams.forEach(remoteStream => {
             setRemoteStreams(prev => {
-              // avoid duplicates
-              if (!prev.some(s => s.id === remoteStream.id)) return [...prev, remoteStream];
+              if (!prev.some(s => s.id === remoteStream.id)) {
+                return [...prev, remoteStream];
+              }
               return prev;
             });
           });
@@ -64,42 +64,106 @@ export const WebRtcProvider: React.FC<Props> = ({ children, roomId, userId, toke
     };
 
     init();
+
+    // Cleanup
+    return () => {
+      if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+      }
+      if (pcRef.current) {
+        pcRef.current.close();
+      }
+      if (stompClientRef.current) {
+        stompClientRef.current.deactivate();
+      }
+    };
   }, []);
 
   // Join room via WebSocket + STOMP
   const joinRoom = () => {
     if (!token) console.warn("Token not provided! Room access might be insecure.");
 
-    const ws = new WebSocket("ws://localhost:8080/ws"); // Replace with your backend WS endpoint
-    const stompClient = Stomp.over(ws);
-    stompClientRef.current = stompClient;
+    const client = new Client({
+      webSocketFactory: () => new SockJS("http://localhost:8006/ws"),
+      reconnectDelay: 5000,
+      heartbeatIncoming: 4000,
+      heartbeatOutgoing: 4000,
+      debug: (str) => {
+        console.log("STOMP Debug:", str);
+      },
+    });
 
-    stompClient.connect({}, () => {
+    stompClientRef.current = client;
+
+    client.onConnect = () => {
+      console.log("STOMP connected successfully");
+
       // Subscribe to room topic
-      stompClient.subscribe(`/topic/appointment.${roomId}`, (msg: { body: string }) => {
-        const payload: StompMessage = JSON.parse(msg.body);
-
+      client.subscribe(`/topic/appointment.${roomId}`, (message: IMessage) => {
+        const payload: StompMessage = JSON.parse(message.body);
+        
         // Only append valid chat messages
         if (payload.type === "CHAT" && payload.content) {
-          setMessages(prev => [...prev, payload.content!]); // '!' ensures TS knows it's string
+          setMessages(prev => [...prev, payload.content!]);
         }
       });
 
       // Notify backend user joined
-      const joinPayload: StompMessage = { roomId, senderId: userId, type: "JOIN" };
-      stompClient.send("/app/join", {}, JSON.stringify(joinPayload));
-    });
+      const joinPayload: StompMessage = { 
+        roomId, 
+        senderId: userId, 
+        type: "JOIN" 
+      };
+      
+      client.publish({
+        destination: "/app/join",
+        body: JSON.stringify(joinPayload),
+      });
+    };
+
+    client.onStompError = (frame) => {
+      console.error("STOMP error:", frame.headers["message"]);
+      console.error("Details:", frame.body);
+    };
+
+    client.onWebSocketError = (event) => {
+      console.error("WebSocket error:", event);
+    };
+
+    client.activate();
   };
 
   const sendMessage = (msg: string) => {
-    if (!stompClientRef.current) return;
-    const payload: StompMessage = { roomId, senderId: userId, type: "CHAT", content: msg };
-    stompClientRef.current.send("/app/chat", {}, JSON.stringify(payload));
+    if (!stompClientRef.current || !stompClientRef.current.connected) {
+      console.warn("STOMP not connected yet");
+      return;
+    }
+
+    const payload: StompMessage = { 
+      roomId, 
+      senderId: userId, 
+      type: "CHAT", 
+      content: msg 
+    };
+
+    stompClientRef.current.publish({
+      destination: "/app/chat",
+      body: JSON.stringify(payload),
+    });
+
     setMessages(prev => [...prev, msg]); // show own message immediately
   };
 
+  const value: WebRtcContextType = {
+    localStream,
+    remoteStreams,
+    messages,
+    sendMessage,
+    joinRoom,
+  };
+
   return (
-    <WebRtcContext.Provider value={{ localStream, remoteStreams, messages, sendMessage, joinRoom }}>
+    <WebRtcContext.Provider value={value}>
       {children}
     </WebRtcContext.Provider>
   );
@@ -107,6 +171,8 @@ export const WebRtcProvider: React.FC<Props> = ({ children, roomId, userId, toke
 
 export const useWebRtc = (): WebRtcContextType => {
   const context = useContext(WebRtcContext);
-  if (!context) throw new Error("useWebRtc must be used within WebRtcProvider");
+  if (!context) {
+    throw new Error("useWebRtc must be used within WebRtcProvider");
+  }
   return context;
 };
