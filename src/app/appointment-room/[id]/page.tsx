@@ -6,12 +6,11 @@ import RoomContent from "@/components/ui/RoomContent";
 
 const AppointmentRoomPage: React.FC = () => {
   const params = useParams();
-  const searchParams = useSearchParams();
 
   const roomId = Array.isArray(params.id) ? params.id[0] : params.id;
-  const token = searchParams.get("token") || "";
 
-  // Generate a stable userId once per session
+
+  
   const userId = useMemo(() => "user-" + Math.floor(Math.random() * 100000), []);
 
   if (!roomId) {

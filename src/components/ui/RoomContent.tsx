@@ -1,22 +1,32 @@
 "use client";
-
 import { useWebRtc } from "@/context/WebRtcContext";
 import { useEffect, useRef, useState } from "react";
-import { Send, Video, Mic, X } from "lucide-react";
+import { Send, Video, Mic, PhoneOff, VideoOff, MicOff } from "lucide-react";
 
 const RoomContent: React.FC = () => {
-  const { localStream, remoteStreams, sendMessage, messages, joinRoom } =
-    useWebRtc();
-
+  const { localStream, remoteStreams, sendMessage, joinRoom, messages } = useWebRtc();
   const [msg, setMsg] = useState("");
-  const localVideoRef = useRef<HTMLVideoElement | null>(null);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isVideoOff, setIsVideoOff] = useState(false);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(true);
 
-  // Join room once
+  const localVideoRef = useRef<HTMLVideoElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // Always join room immediately
   useEffect(() => {
     joinRoom();
+    setTimeout(() => setIsLoadingMessages(false), 2000); // simulate message loading
   }, [joinRoom]);
 
-  // Attach local stream
   useEffect(() => {
     if (localVideoRef.current && localStream) {
       localVideoRef.current.srcObject = localStream;
@@ -29,106 +39,116 @@ const RoomContent: React.FC = () => {
     setMsg("");
   };
 
+  const toggleMute = () => {
+    if (localStream) {
+      localStream.getAudioTracks().forEach((track) => (track.enabled = !track.enabled));
+      setIsMuted(!isMuted);
+    }
+  };
+
+  const toggleVideo = () => {
+    if (localStream) {
+      localStream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled));
+      setIsVideoOff(!isVideoOff);
+    }
+  };
+
   return (
-    <div className="h-screen w-full flex bg-gray-100">
-      {/* ================= VIDEO SECTION ================= */}
-      <div className="flex-1 flex flex-col p-4 gap-4 bg-gray-900">
-        {/* Top bar */}
-        <div className="flex justify-between items-center text-white mb-2">
-          <span className="font-semibold text-lg">Video Room</span>
-          <button className="p-2 rounded-full hover:bg-gray-800 transition">
-            <X size={20} />
-          </button>
-        </div>
-
-        {/* Video Grid */}
-        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Local Video */}
-          <div className="relative rounded-xl overflow-hidden bg-black shadow-lg border-2 border-gray-700">
-            <video
-              ref={localVideoRef}
-              autoPlay
-              muted
-              playsInline
-              className="w-full h-full object-cover"
-            />
-            <span className="absolute bottom-2 left-2 text-xs bg-black/60 px-2 py-1 rounded">
-              You
-            </span>
-          </div>
-
-          {/* Remote Videos */}
-          {remoteStreams.map((stream, i) => (
-            <div
-              key={i}
-              className="relative rounded-xl overflow-hidden bg-black shadow-lg border-2 border-gray-700"
-            >
+    <div className="h-screen flex bg-white">
+      {/* Video Section */}
+      <div className="flex-1 flex flex-col bg-gradient-to-br from-blue-50 to-purple-50">
+        <div
+          className="flex-1 p-4 grid gap-4"
+          style={{
+            gridTemplateColumns: remoteStreams.length > 1 ? "repeat(2, 1fr)" : "1fr",
+            gridTemplateRows: remoteStreams.length > 2 ? "repeat(2, 1fr)" : "1fr",
+          }}
+        >
+          {remoteStreams.map((r) => (
+            <div key={r.id} className="relative bg-gray-900 rounded-3xl overflow-hidden shadow-2xl">
               <video
+                ref={(el) => { if (el) el.srcObject = r.stream; }}
                 autoPlay
                 playsInline
-                ref={(el) => {
-                  if (el) el.srcObject = stream;
-                }}
                 className="w-full h-full object-cover"
               />
-              <span className="absolute bottom-2 left-2 text-xs bg-black/60 px-2 py-1 rounded">
-                User {i + 1}
-              </span>
+              <div className="absolute bottom-2 left-2 bg-black/60 px-2 py-1 rounded-full text-white text-sm font-medium">
+                {r.name}
+              </div>
             </div>
           ))}
+
+          {/* Local Video */}
+          <div className={`relative bg-gray-900 rounded-3xl overflow-hidden shadow-2xl ${remoteStreams.length === 0 ? "col-span-2 row-span-2" : ""}`}>
+            <video ref={localVideoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+            <div className="absolute bottom-2 left-2 bg-blue-500 px-2 py-1 rounded-full text-white text-sm font-medium">
+              You
+            </div>
+          </div>
         </div>
 
         {/* Call Controls */}
-        <div className="flex justify-center gap-4 mt-4">
-          <button className="p-3 bg-gray-700 rounded-full hover:bg-gray-600 transition text-white">
-            <Video />
+        <div className="p-6 flex items-center justify-center gap-4">
+          <button onClick={toggleMute} className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg ${isMuted ? "bg-red-500" : "bg-gray-700"} text-white`}>
+            {isMuted ? <MicOff size={24} /> : <Mic size={24} />}
           </button>
-          <button className="p-3 bg-gray-700 rounded-full hover:bg-gray-600 transition text-white">
-            <Mic />
+          <button onClick={toggleVideo} className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg ${isVideoOff ? "bg-red-500" : "bg-gray-700"} text-white`}>
+            {isVideoOff ? <VideoOff size={24} /> : <Video size={24} />}
+          </button>
+          <button className="w-16 h-16 rounded-full bg-red-500 flex items-center justify-center shadow-lg text-white">
+            <PhoneOff size={28} />
           </button>
         </div>
       </div>
 
-      {/* ================= CHAT SECTION ================= */}
-      <div className="w-full md:w-[400px] bg-white flex flex-col shadow-xl">
-        {/* Chat Header */}
-        <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-          <span className="font-semibold text-lg text-gray-900">Room Chat</span>
-          <span className="text-sm text-gray-500">{remoteStreams.length} users</span>
+      {/* Chat Section */}
+      <div className="w-96 flex flex-col bg-white border-l border-gray-200">
+        <div className="p-4 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-800">Chat</h2>
+          <p className="text-sm text-gray-500 mt-0.5">{remoteStreams.length + 1} participant{remoteStreams.length !== 0 ? "s" : ""}</p>
         </div>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-          {messages.map((m, i) => (
-            <div
-              key={i}
-              className={`max-w-[80%] break-words px-4 py-2 text-sm rounded-2xl shadow 
-                ${
-                  m.startsWith("me:")
-                    ? "ml-auto bg-blue-500 text-white rounded-br-none"
-                    : "bg-gray-200 text-gray-900 rounded-bl-none"
-                }`}
-            >
-              {m.replace(/^me:/, "")}
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {isLoadingMessages ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-gray-400 text-sm">Loading messages...</div>
             </div>
-          ))}
+          ) : messages.length === 0 ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-gray-400 text-sm">No messages yet. Say hi! 👋</div>
+            </div>
+          ) : (
+            <>
+              {messages.map((m, i) => {
+                const isMe = m.sender === "You";
+                return (
+                  <div key={i} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                    <div className={`max-w-[75%] px-4 py-2.5 rounded-3xl ${isMe ? "bg-blue-500 text-white rounded-br-md" : "bg-gray-100 text-gray-800 rounded-bl-md"}`}>
+                      <p className="text-xs font-semibold">{m.sender}</p>
+                      <p className="text-sm leading-relaxed">{m.content}</p>
+                    </div>
+                  </div>
+                );
+              })}
+              <div ref={messagesEndRef} />
+            </>
+          )}
         </div>
 
-        {/* Input */}
-        <div className="p-3 flex items-center gap-2 border-t border-gray-200 bg-gray-50">
-          <input
-            value={msg}
-            onChange={(e) => setMsg(e.target.value)}
-            placeholder="Type a message…"
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            className="flex-1 px-4 py-2 rounded-full bg-white border border-gray-300 outline-none placeholder-gray-400 focus:ring-1 focus:ring-blue-400"
-          />
-          <button
-            onClick={handleSend}
-            className="p-3 bg-blue-500 rounded-full hover:bg-blue-400 transition text-white"
-          >
-            <Send size={18} />
-          </button>
+        <div className="p-4 border-t border-gray-200">
+          <div className="flex items-center gap-2 bg-gray-100 rounded-full px-4 py-2">
+            <input
+              type="text"
+              value={msg}
+              onChange={(e) => setMsg(e.target.value)}
+              placeholder="Aa"
+              onKeyDown={(e) => e.key === "Enter" && handleSend()}
+              className="flex-1 bg-transparent outline-none text-gray-800 placeholder-gray-400"
+            />
+            <button onClick={handleSend} disabled={!msg.trim()} className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${msg.trim() ? "bg-blue-500 text-white" : "bg-gray-300 text-gray-500 cursor-not-allowed"}`}>
+              <Send size={16} />
+            </button>
+          </div>
         </div>
       </div>
     </div>
