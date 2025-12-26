@@ -16,6 +16,7 @@ export interface DoctorAppointment {
   endTime: string;
   checkupType: string;
   meetingLink: string;
+  status:string;
 }
 export interface ScheduleDto {
   scheduleId: number;

@@ -20,6 +20,7 @@ import {
 } from "recharts";
 
 import { dashboardStats, getUpcomingAppointments } from "@/lib/api/doctorDashboard";
+import DoctorAppointmentsList from "./DoctorAppointmentsList";
 
 interface DoctorDashboardStats {
   totalAppointmentsToday: number;
@@ -40,7 +41,7 @@ interface DoctorAppointment {
   meetingLink: string;
 }
 
-const COLORS = ["#3b82f6", "#facc15", "#10b981", "#ef4444"]; // for pie chart
+const COLORS = ["#3b82f6", "#facc15", "#10b981", "#ef4444"]; // pie chart colors
 
 const DoctorDashboard = () => {
   const [statsData, setStatsData] = useState<DoctorDashboardStats | null>(null);
@@ -54,7 +55,6 @@ const DoctorDashboard = () => {
           dashboardStats(),
           getUpcomingAppointments(),
         ]);
-
         setStatsData(stats);
         setUpcomingAppointments(upcoming);
         setLoading(false);
@@ -63,7 +63,6 @@ const DoctorDashboard = () => {
         setLoading(false);
       }
     };
-
     fetchData();
   }, []);
 
@@ -74,32 +73,37 @@ const DoctorDashboard = () => {
           value: statsData.pendingRequests.toString(),
           change: "3 urgent",
           icon: AlertTriangle,
-          bgColor: "bg-yellow-500",
+          bgColor: "bg-yellow-400",
         },
         {
           title: "Total Patients",
           value: statsData.totalPatients.toLocaleString(),
           change: `+${statsData.totalPatientsThisWeek} this week`,
           icon: Users,
-          bgColor: "bg-green-500",
+          bgColor: "bg-green-400",
         },
         {
           title: "Reports Written",
           value: statsData.reportsThisMonth.toString(),
           change: "This month",
           icon: FileText,
-          bgColor: "bg-red-500",
+          bgColor: "bg-red-400",
+        },
+        {
+          title: "Total Patient",
+          value: statsData.totalPatients.toString(),
+          change: "",
+          icon: Users,
+          bgColor: "bg-blue-400",
         },
       ]
     : [];
 
-  // Sample weekly data (replace with backend data)
   const weeklyAppointments = Array.from({ length: 7 }).map((_, i) => ({
     name: `Day ${i + 1}`,
     appointments: Math.floor(Math.random() * 10) + 1,
   }));
 
-  // Sample pie data for patients by checkup type
   const checkupTypeData = [
     { name: "General", value: 10 },
     { name: "Dental", value: 5 },
@@ -107,75 +111,36 @@ const DoctorDashboard = () => {
     { name: "Specialist", value: 3 },
   ];
 
-  const renderAppointments = (appointments: DoctorAppointment[], badgeText: string, badgeColor: string) => {
-    if (loading) {
-      return (
-        <div className="space-y-4">
-          {Array.from({ length: 3 }).map((_, index) => (
-            <div key={index} className="animate-pulse p-4 bg-gray-50 rounded-lg"></div>
-          ))}
-        </div>
-      );
-    }
 
-    if (appointments.length === 0) {
-      return <div className="text-center py-8 text-gray-500">No upcoming appointments.</div>;
-    }
-
-    return (
-      <div className="space-y-4">
-        {appointments.map((appt) => (
-          <div
-            key={appt.appointmentId}
-            className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-          >
-            <div className="flex items-center gap-4">
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${badgeColor}-100`}>
-                <Users className={`w-6 h-6 ${badgeColor}-600`} />
-              </div>
-              <div>
-                <p className="font-semibold text-gray-900">{appt.patientName}</p>
-                <p className="text-sm text-gray-600">{appt.checkupType}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <p className="font-semibold text-gray-900">{appt.startTime}</p>
-              <Badge className={`${badgeColor}-500 hover:${badgeColor}-600`}>{badgeText}</Badge>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="min-h-screen bg-gray-50 py-4">
+      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        {/* Stats Section */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {loading
-            ? Array.from({ length: 3 }).map((_, index) => (
-                <Card key={index} className="border-0 shadow-sm">
-                  <CardContent className="p-6">
-                    <div className="animate-pulse space-y-3">
-                      <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                      <div className="h-8 bg-gray-200 rounded w-3/4"></div>
-                      <div className="h-3 bg-gray-200 rounded w-1/3"></div>
-                    </div>
-                  </CardContent>
+            ? Array.from({ length: 4 }).map((_, index) => (
+                <Card key={index} className="border-0 shadow-sm h-32 p-4">
+                  <div className="animate-pulse h-full bg-gray-200 rounded-lg"></div>
                 </Card>
               ))
             : stats.map((stat, index) => {
                 const Icon = stat.icon;
                 return (
-                  <Card key={index} className="border-0 shadow-sm hover:shadow-md transition-shadow">
-                    <CardContent className="p-6 flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-600">{stat.title}</p>
-                        <p className="text-3xl font-bold">{stat.value}</p>
-                        <p className="text-sm text-gray-500">{stat.change}</p>
+                  <Card
+                    key={index}
+                    className="relative overflow-hidden border-0 shadow-soft hover:shadow-lg transition-all duration-300"
+                  >
+                    <CardContent className="flex items-center justify-between gap-4 p-4">
+                      {/* Text on left */}
+                      <div className="flex flex-col">
+                        <p className="text-sm font-medium text-gray-600">{stat.title}</p>
+                        <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                        {stat.change && <p className="text-sm text-gray-500">{stat.change}</p>}
                       </div>
-                      <div className={`p-3 rounded-lg ${stat.bgColor}`}>
+
+                      {/* Icon on right */}
+                      <div className={`p-3 rounded-full shadow ${stat.bgColor} flex items-center justify-center`}>
                         <Icon className="w-6 h-6 text-white" />
                       </div>
                     </CardContent>
@@ -185,32 +150,36 @@ const DoctorDashboard = () => {
         </div>
 
         {/* Charts */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Line Chart */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-6 mt-20">
           <Card className="border-0 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-xl font-semibold">Weekly Appointments</CardTitle>
+              <CardTitle className="text-lg md:text-xl font-semibold">Weekly Appointments</CardTitle>
             </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
+            <CardContent className="w-full overflow-hidden">
+              <ResponsiveContainer width="100%" height={400}>
                 <LineChart data={weeklyAppointments}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
                   <Tooltip />
-                  <Line type="monotone" dataKey="appointments" stroke="#3b82f6" strokeWidth={3} activeDot={{ r: 8 }} />
+                  <Line
+                    type="monotone"
+                    dataKey="appointments"
+                    stroke="#3b82f6"
+                    strokeWidth={3}
+                    activeDot={{ r: 6 }}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
 
-          {/* Pie Chart */}
           <Card className="border-0 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-xl font-semibold">Patients by Checkup Type</CardTitle>
+              <CardTitle className="text-lg md:text-xl font-semibold">Patients by Checkup Type</CardTitle>
             </CardHeader>
-            <CardContent className="flex justify-center">
-              <ResponsiveContainer width="100%" height={250}>
+            <CardContent className="flex justify-center w-full overflow-hidden">
+              <ResponsiveContainer width="100%" height={400}>
                 <PieChart>
                   <Pie
                     data={checkupTypeData}
@@ -218,7 +187,7 @@ const DoctorDashboard = () => {
                     nameKey="name"
                     cx="50%"
                     cy="50%"
-                    outerRadius={80}
+                    outerRadius={120}
                     fill="#8884d8"
                     label
                   >
@@ -234,17 +203,9 @@ const DoctorDashboard = () => {
           </Card>
         </div>
 
-        {/* Upcoming Appointments Table */}
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="flex items-center justify-between pb-4">
-            <CardTitle className="text-xl font-semibold">Upcoming Appointments</CardTitle>
-            <Button variant="ghost" className="text-green-600 hover:text-green-700">
-              View All
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </CardHeader>
-          <CardContent>{renderAppointments(upcomingAppointments, "scheduled", "green")}</CardContent>
-        </Card>
+        <DoctorAppointmentsList upcoming={true} />
+
+ 
       </div>
     </div>
   );

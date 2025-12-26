@@ -32,12 +32,10 @@ export function DashboardStats() {
         const count = await getPendingDoctorCount();
         if (isMounted) {
           setPendingDoctorApprovals(count);
-          console.log("✅ Pending doctor count fetched:", count);
           setLoadingPending(false);
         }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : "Failed to fetch pending approvals";
-        console.error("Failed to fetch pending doctor count:", err);
         if (isMounted) {
           setError(errorMessage);
           setPendingDoctorApprovals(0);
@@ -49,49 +47,44 @@ export function DashboardStats() {
     fetchPending();
     fetchStats();
 
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, []);
 
-  const stats: StatType[] = useMemo(
-    () => [
-      {
-        title: "Total Patients",
-        value: (statsData.totalPatients ?? 0).toString(),
-        change: "+0.5%",
-        changeType: "positive",
-        icon: Users,
-        gradient: "bg-gradient-primary",
-      },
-      {
-        title: "Active Doctors",
-        value: (statsData.totalDoctors ?? 0).toString(),
-        change: "+0.5%",
-        changeType: "positive",
-        icon: UserCheck,
-        gradient: "bg-gradient-success",
-      },
-      {
-        title: "Today's Appointments",
-        value: (statsData.totalAppointmentsToday ?? 0).toString(),
-        change: "+0.1%",
-        changeType: "positive",
-        icon: Calendar,
-        gradient: "bg-gradient-card",
-      },
-      {
-        title: "Pending Doctor Approvals",
-        value: loadingPending ? "..." : pendingDoctorApprovals.toString(),
-        change: "0.4%",
-        changeType: "negative",
-        icon: TrendingUp,
-        gradient: "bg-gradient-primary",
-        isLoading: loadingPending,
-      },
-    ],
-    [statsData, pendingDoctorApprovals, loadingPending]
-  );
+  const stats: StatType[] = useMemo(() => [
+    {
+      title: "Total Patients",
+      value: (statsData.totalPatients ?? 0).toString(),
+      change: "+0.5%",
+      changeType: "positive",
+      icon: Users,
+      gradient: "bg-gradient-to-r from-blue-400 to-blue-600",
+    },
+    {
+      title: "Active Doctors",
+      value: (statsData.totalDoctors ?? 0).toString(),
+      change: "+0.5%",
+      changeType: "positive",
+      icon: UserCheck,
+      gradient: "bg-gradient-to-r from-green-400 to-green-600",
+    },
+    {
+      title: "Today's Appointments",
+      value: (statsData.totalAppointmentsToday ?? 0).toString(),
+      change: "+0.1%",
+      changeType: "positive",
+      icon: Calendar,
+      gradient: "bg-gradient-to-r from-purple-400 to-purple-600",
+    },
+    {
+      title: "Pending Doctor Approvals",
+      value: loadingPending ? "..." : pendingDoctorApprovals.toString(),
+      change: "0.4%",
+      changeType: "negative",
+      icon: TrendingUp,
+      gradient: "bg-gradient-to-r from-yellow-400 to-yellow-600",
+      isLoading: loadingPending,
+    },
+  ], [statsData, pendingDoctorApprovals, loadingPending]);
 
   return (
     <div>
@@ -100,39 +93,32 @@ export function DashboardStats() {
           <p className="text-sm text-red-700">⚠️ {error}</p>
         </div>
       )}
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat) => {
           const Icon = stat.icon;
-          const changeColor =
-            stat.changeType === "positive" ? "text-green-500" : "text-red-500";
-
           return (
             <Card
               key={stat.title}
-              className={`relative overflow-hidden border-0 shadow-soft hover:shadow-medium transition-all duration-300 ${
+              className={`relative overflow-hidden border-0 shadow-soft hover:shadow-lg transition-all duration-300 ${
                 stat.isLoading ? "opacity-60" : ""
               }`}
             >
-              <div className={`absolute inset-0 opacity-5 ${stat.gradient}`} />
               <CardHeader className="relative flex items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   {stat.title}
                 </CardTitle>
-                <div className={`p-2 rounded-lg ${stat.gradient} shadow-soft`}>
-                  <Icon className="h-4 w-4 text-white" />
-                </div>
               </CardHeader>
 
-              <CardContent className="relative">
-                <div className="text-2xl font-bold text-foreground">
+              <CardContent className="relative flex items-center justify-between">
+                {/* Value */}
+                <div className="text-2xl font-bold text-foreground flex items-center gap-2">
                   {stat.value}
                 </div>
-                <div className="flex items-center gap-1 mt-1">
-                  <span className={`text-xs font-medium ${changeColor}`}>
-                    {stat.change}
-                  </span>
-                  <span className="text-xs text-muted-foreground">from last month</span>
+
+                {/* Icon in circle */}
+                <div className={`p-3 rounded-full shadow ${stat.gradient} flex items-center justify-center`}>
+                  <Icon className="w-6 h-6 text-white" />
                 </div>
               </CardContent>
             </Card>

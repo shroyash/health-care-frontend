@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   Calendar,
@@ -22,6 +23,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 
 const navigationItems = [
@@ -37,7 +39,6 @@ const navigationItems = [
   { title: "Settings", url: "/dashboard/admin/settings", icon: Settings, group: "System" },
 ];
 
-// Group items by their "group"
 const groupedItems = navigationItems.reduce((acc, item) => {
   if (!acc[item.group]) acc[item.group] = [];
   acc[item.group].push(item);
@@ -45,19 +46,30 @@ const groupedItems = navigationItems.reduce((acc, item) => {
 }, {} as Record<string, typeof navigationItems>);
 
 export function AdminSidebar() {
+  const { setOpen } = useSidebar();
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile screen
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768); // md breakpoint
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
     <Sidebar className="w-64 flex-shrink-0 border-r border-border bg-card">
-      {/* Logo */}
       <div className="p-6 border-b border-border">
-        <h2 className="text-xl font-bold text-primary">HealthCare Admin</h2>
-        <p className="text-sm text-muted-foreground">Management System</p>
+        <h2 className="text-2xl font-bold text-primary">HealthCare Admin</h2>
+        <p className="text-base text-muted-foreground">Management System</p>
       </div>
 
-      {/* Sidebar Navigation */}
       <SidebarContent className="px-4">
         {Object.entries(groupedItems).map(([group, items]) => (
           <SidebarGroup key={group}>
-            <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            <SidebarGroupLabel className="text-[1em] font-semibold text-muted-foreground uppercase tracking-wider">
               {group}
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -67,10 +79,13 @@ export function AdminSidebar() {
                     <SidebarMenuButton asChild>
                       <Link
                         href={url}
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg text-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-200"
+                        onClick={() => {
+                          if (isMobile) setOpen(false); // ✅ close on mobile
+                        }}
+                        className="flex items-center gap-3 px-3 py-3 rounded-lg text-[1.1em] text-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-200"
                       >
-                        <Icon className="h-4 w-4" />
-                        <span className="text-sm font-medium">{title}</span>
+                        <Icon className="h-5 w-5" />
+                        <span className="font-medium">{title}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

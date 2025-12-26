@@ -1,16 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, Calendar, Clock, User, ExternalLink } from "lucide-react";
+import { Search, Clock, User, ExternalLink, Calendar } from "lucide-react";
+import { toast } from "react-toastify";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -20,8 +21,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import { getRecentAppointments } from "@/lib/api/adminDashboard";
-import { AppointmentFull } from "@/lib/type/adminDashboard";
+import { getUpcomingAppointments} from "@/lib/api/doctorDashboard";
+import { DoctorAppointment } from "@/lib/type/doctorDashboard";
 
 /* -------------------- Utils -------------------- */
 const formatDate = (date: string) =>
@@ -31,20 +32,12 @@ const formatDate = (date: string) =>
     day: "numeric",
   });
 
-const formatTime = (date: string) =>
-  new Date(date).toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-
 const getStatusColor = (status: string) => {
   switch (status) {
-    case "CONFIRMED":
-      return "bg-green-100 text-green-700 border-green-200";
     case "SCHEDULED":
       return "bg-blue-100 text-blue-700 border-blue-200";
     case "COMPLETED":
-      return "bg-gray-100 text-gray-700 border-gray-200";
+      return "bg-green-100 text-green-700 border-green-200";
     case "CANCELLED":
       return "bg-red-100 text-red-700 border-red-200";
     default:
@@ -52,51 +45,60 @@ const getStatusColor = (status: string) => {
   }
 };
 
-/* -------------------- Component -------------------- */
-export function AppointmentsList() {
-  const [appointments, setAppointments] = useState<AppointmentFull[]>([]);
+interface DoctorAppointmentsListProps {
+  upcoming?: boolean; // true = upcoming only, false = all
+}
+
+export default function DoctorAppointmentsList({ upcoming = true }: DoctorAppointmentsListProps) {
+  const [appointments, setAppointments] = useState<DoctorAppointment[]>([]);
   const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState<AppointmentFull | null>(null);
+  const [selected, setSelected] = useState<DoctorAppointment | null>(null);
 
   useEffect(() => {
     async function fetchAppointments() {
-      const data = await getRecentAppointments();
-      setAppointments(data);
+      try {
+        // Fetch all appointments
+        const data = await getUpcomingAppointments(); // backend returns all
+        setAppointments(data);
+      } catch (error) {
+        toast.error("Failed to fetch appointments");
+      }
     }
     fetchAppointments();
   }, []);
 
-  const filteredAppointments = appointments.filter((a) =>
-    `${a.patientName} ${a.doctorName}`
-      .toLowerCase()
-      .includes(search.toLowerCase())
-  );
+  const today = new Date();
+
+  const filteredAppointments = appointments
+    .filter((a) =>
+      a.patientName.toLowerCase().includes(search.toLowerCase())
+    )
+    .filter((a) => (upcoming ? new Date(a.appointmentDate) >= today : true));
 
   return (
     <>
-      <Card className="border-0 shadow-lg rounded-xl">
+      <Card className="border-0 shadow-lg rounded-xl mb-6">
         <CardHeader>
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
             <div>
-              <CardTitle className="text-2xl font-bold text-foreground">
-                Recent Appointments
+              <CardTitle className="text-2xl font-bold">
+                {upcoming ? "Upcoming Appointments" : "All Appointments"}
               </CardTitle>
-              <CardDescription className="text-muted-foreground">
-                View and manage all appointments
+              <CardDescription>
+                {upcoming
+                  ? "Manage your upcoming patient appointments"
+                  : "View all appointments"}
               </CardDescription>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="relative md:w-64">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by patient or doctor..."
-                className="pl-10 md:w-64"
+                placeholder="Search patient..."
+                className="pl-10"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
-              {/* <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /> */}
-              <Button variant="outline" size="sm">
-                View All
-              </Button>
             </div>
           </div>
         </CardHeader>
@@ -106,49 +108,36 @@ export function AppointmentsList() {
             filteredAppointments.map((appointment) => (
               <div
                 key={appointment.appointmentId}
-                className="relative bg-white rounded-xl shadow-md p-5 hover:shadow-xl transition-shadow border border-gray-100"
+                className="bg-white rounded-xl shadow-md p-5 hover:shadow-xl transition border border-gray-100"
               >
-                {/* Top info */}
+                {/* Top section */}
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <div className="p-3 rounded-full bg-blue-50">
                       <User className="h-5 w-5 text-blue-600" />
                     </div>
                     <div>
-                      <p className="font-semibold text-foreground">
-                        {appointment.patientName}
-                      </p>
+                      <p className="font-semibold">{appointment.patientName}</p>
                       <p className="text-xs text-muted-foreground">
-                        Dr. {appointment.doctorName}
+                        Appointment
                       </p>
                     </div>
                   </div>
 
                   <Badge
-                    className={`capitalize ${getStatusColor(
-                      appointment.status
-                    )}`}
+                    className={`capitalize ${getStatusColor(appointment.status)}`}
                   >
                     {appointment.status.toLowerCase()}
                   </Badge>
                 </div>
 
-                {/* Appointment details */}
-                <div className="flex flex-col gap-1 text-sm text-muted-foreground mb-3">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-3 w-3" />
-                    <span>{formatDate(appointment.appointmentDate)}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-3 w-3" />
-                    <span>{formatTime(appointment.appointmentDate)}</span>
-                  </div>
-                  <div>
-                    <strong>Checkup:</strong> {appointment.checkupType}
-                  </div>
+                {/* Start time */}
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+                  <Clock className="h-3 w-3" />
+                  <span>{appointment.startTime}</span>
                 </div>
 
-                {/* View details button */}
+                {/* View details */}
                 <Button
                   size="sm"
                   variant="outline"
@@ -167,8 +156,7 @@ export function AppointmentsList() {
         </CardContent>
       </Card>
 
-      {/* ---------------- VIEW DETAILS MODAL ---------------- */}
-
+      {/* ---------------- DETAILS MODAL ---------------- */}
       <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -182,38 +170,37 @@ export function AppointmentsList() {
               </div>
 
               <div>
-                <strong>Doctor:</strong> Dr. {selected.doctorName}
+                <strong>Appointment Date:</strong> {formatDate(selected.appointmentDate)}
               </div>
 
               <div>
-                <strong>Date:</strong> {formatDate(selected.appointmentDate)}
-              </div>
+                <strong>Start Time:</strong> {selected.startTime}</div>
 
               <div>
-                <strong>Time:</strong> {formatTime(selected.appointmentDate)}
-              </div>
+                <strong>End Time:</strong> {selected.endTime}</div>
 
               <div>
-                <strong>Checkup Type:</strong> {selected.checkupType}
-              </div>
+                <strong>Checkup Type:</strong> {selected.checkupType}</div>
 
               <div>
-                <strong>Status:</strong>{" "}
+                <strong>Status:</strong>
                 <Badge className={`ml-2 ${getStatusColor(selected.status)}`}>
                   {selected.status}
                 </Badge>
               </div>
 
-              <div>
-                <strong>Meeting Link:</strong>
-                <a
-                  href={selected.meetingLink}
-                  target="_blank"
-                  className="ml-2 text-blue-600 underline inline-flex items-center gap-1"
-                >
-                  Join Meeting <ExternalLink className="h-3 w-3" />
-                </a>
-              </div>
+              {selected.meetingLink && (
+                <div>
+                  <strong>Meeting Link:</strong>
+                  <a
+                    href={selected.meetingLink}
+                    target="_blank"
+                    className="ml-2 text-blue-600 underline inline-flex items-center gap-1"
+                  >
+                    Join Meeting <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              )}
             </div>
           )}
         </DialogContent>

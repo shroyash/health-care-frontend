@@ -11,13 +11,16 @@ export type PatientStats = {
   totalAppointments: number;
 };
 
-export type AppointmentFull = {
-  id: number;
-  patientName: string;
+export interface AppointmentFull {
+  appointmentId: number;
   doctorName: string;
-  appointmentTime: string;
-  reason: string;
-};
+  patientName: string;
+  appointmentDate: string; // ISO string
+  status: "SCHEDULED" | "CONFIRMED" | "COMPLETED" | "CANCELLED";
+  checkupType: string;
+  meetingLink: string;
+}
+
 
 export type DoctorProfile = {
   contactNumber: string;

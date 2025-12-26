@@ -13,13 +13,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Plus, Clock } from "lucide-react";
+import { Trash2, Plus, Clock, Edit2 } from "lucide-react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import {
   saveWeeklySchedule,
   getDoctorSchedule,
+  updateDoctorSchedule,
+  deleteDoctorSchedule,
 } from "@/lib/api/doctorDashboard";
 
 import {
@@ -45,14 +47,20 @@ const days = [
   "Sunday",
 ];
 
-/* ===============================
-   EXISTING DOCTOR SCHEDULE (READONLY)
-   =============================== */
-const ExistingSchedule = ({ schedules }: { schedules: TimeSlot[] }) => {
+/* ------------------- Existing Schedule ------------------- */
+const ExistingSchedule = ({
+  schedules,
+  onEdit,
+  onDelete,
+}: {
+  schedules: TimeSlot[];
+  onEdit: (slot: TimeSlot) => void;
+  onDelete: (id: number) => void;
+}) => {
   return (
-    <Card className="shadow-2xl rounded-xl h-full border-l-8 border-purple-500">
-      <CardHeader className="bg-purple-50">
-        <CardTitle className="flex items-center gap-2 text-purple-700 text-lg font-semibold">
+    <Card className="shadow-2xl rounded-xl h-full border-l-8 border-blue-300">
+      <CardHeader className="bg-blue-50">
+        <CardTitle className="flex items-center gap-2 text-blue-700 text-lg font-semibold">
           <Clock className="w-6 h-6" /> Your Schedule
         </CardTitle>
       </CardHeader>
@@ -63,13 +71,29 @@ const ExistingSchedule = ({ schedules }: { schedules: TimeSlot[] }) => {
             {schedules.map((slot) => (
               <div
                 key={slot.id}
-                className="flex justify-between items-center border border-purple-200 p-4 rounded-xl shadow-sm hover:shadow-md transition"
+                className="flex justify-between items-center border border-blue-200 p-4 rounded-xl shadow-sm hover:shadow-md transition"
               >
                 <div className="flex items-center gap-4">
-                  <Badge className="bg-purple-200 text-purple-800">{slot.day}</Badge>
+                  <Badge className="bg-blue-200 text-blue-800">{slot.day}</Badge>
                   <span className="text-gray-700 font-medium">
                     {slot.startTime} - {slot.endTime}
                   </span>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onEdit(slot)}
+                  >
+                    <Edit2 className="w-4 h-4 text-blue-600" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onDelete(slot.id)}
+                  >
+                    <Trash2 className="w-4 h-4 text-red-600" />
+                  </Button>
                 </div>
               </div>
             ))}
@@ -84,10 +108,16 @@ const ExistingSchedule = ({ schedules }: { schedules: TimeSlot[] }) => {
   );
 };
 
-/* ===============================
-   EDITABLE SCHEDULE (MULTIPLE ADD)
-   =============================== */
-const EditableSchedule = ({ onSave }: { onSave?: () => void }) => {
+/* ------------------- Editable Schedule ------------------- */
+const EditableSchedule = ({
+  onSave,
+  editSlot,
+  clearEdit,
+}: {
+  onSave?: () => void;
+  editSlot?: TimeSlot | null;
+  clearEdit?: () => void;
+}) => {
   const [newSlot, setNewSlot] = useState({
     day: "",
     startTime: "",
@@ -97,7 +127,16 @@ const EditableSchedule = ({ onSave }: { onSave?: () => void }) => {
   const [tempSlots, setTempSlots] = useState<TimeSlot[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Add slot locally
+  useEffect(() => {
+    if (editSlot) {
+      setNewSlot({
+        day: editSlot.day,
+        startTime: editSlot.startTime,
+        endTime: editSlot.endTime,
+      });
+    }
+  }, [editSlot]);
+
   const handleAddSlot = () => {
     if (!newSlot.day || !newSlot.startTime || !newSlot.endTime) {
       toast.error("Please fill all fields");
@@ -122,15 +161,37 @@ const EditableSchedule = ({ onSave }: { onSave?: () => void }) => {
     ]);
 
     setNewSlot({ day: "", startTime: "", endTime: "" });
+    if (clearEdit) clearEdit();
   };
 
-  // Delete temp slot before saving
   const handleDeleteTempSlot = (id: number) => {
     setTempSlots((prev) => prev.filter((s) => s.id !== id));
   };
 
-  // Save all temp slots to server
   const handleSaveToServer = async () => {
+    if (editSlot) {
+      // Update existing slot
+      try {
+        setLoading(true);
+        await updateDoctorSchedule({
+          scheduleId: editSlot.id,
+          dayOfWeek: newSlot.day,
+          startTime: newSlot.startTime,
+          endTime: newSlot.endTime,
+          available: true,
+        });
+        toast.success("Schedule updated successfully");
+        if (onSave) onSave();
+        setNewSlot({ day: "", startTime: "", endTime: "" });
+        if (clearEdit) clearEdit();
+      } catch (err) {
+        toast.error("Failed to update schedule");
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     if (tempSlots.length === 0) {
       toast.error("Add at least one time slot to save");
       return;
@@ -138,7 +199,6 @@ const EditableSchedule = ({ onSave }: { onSave?: () => void }) => {
 
     try {
       setLoading(true);
-
       const dto: SaveDoctorScheduleDto = {
         schedules: tempSlots.map((slot) => ({
           dayOfWeek: slot.day,
@@ -147,12 +207,10 @@ const EditableSchedule = ({ onSave }: { onSave?: () => void }) => {
           available: true,
         })),
       };
-
       await saveWeeklySchedule(dto);
       toast.success("All time slots saved successfully");
-      setTempSlots([]); // Clear after save
-
-      if (onSave) onSave(); // Refresh left side
+      setTempSlots([]);
+      if (onSave) onSave();
     } catch (err) {
       toast.error("Failed to save schedule");
     } finally {
@@ -161,10 +219,10 @@ const EditableSchedule = ({ onSave }: { onSave?: () => void }) => {
   };
 
   return (
-    <Card className="shadow-2xl rounded-xl h-full border-l-8 border-blue-500 flex flex-col">
+    <Card className="shadow-2xl rounded-xl h-full border-l-8 border-blue-300 flex flex-col">
       <CardHeader className="bg-blue-50">
         <CardTitle className="flex items-center gap-2 text-blue-700 text-lg font-semibold">
-          <Plus className="w-6 h-6" /> Add / Modify Schedule
+          <Plus className="w-6 h-6" /> {editSlot ? "Edit Schedule" : "Add / Modify Schedule"}
         </CardTitle>
       </CardHeader>
 
@@ -212,15 +270,17 @@ const EditableSchedule = ({ onSave }: { onSave?: () => void }) => {
           </div>
         </div>
 
-        <Button
-          onClick={handleAddSlot}
-          className="bg-green-600 mb-4 w-full md:w-auto"
-        >
-          <Plus className="w-4 h-4 mr-2" /> Add Slot
-        </Button>
+        {!editSlot && (
+          <Button
+            onClick={handleAddSlot}
+            className="bg-green-600 mb-4 w-full md:w-auto"
+          >
+            <Plus className="w-4 h-4 mr-2" /> Add Slot
+          </Button>
+        )}
 
         {/* TEMP SLOT LIST */}
-        {tempSlots.length > 0 && (
+        {!editSlot && tempSlots.length > 0 && (
           <div className="flex-1 overflow-y-auto mb-4">
             {tempSlots.map((slot) => (
               <div
@@ -251,18 +311,17 @@ const EditableSchedule = ({ onSave }: { onSave?: () => void }) => {
           className="bg-blue-600 w-full md:w-auto mt-auto"
           disabled={loading}
         >
-          {loading ? "Saving..." : "Save All Slots"}
+          {loading ? "Saving..." : editSlot ? "Update Slot" : "Save All Slots"}
         </Button>
       </CardContent>
     </Card>
   );
 };
 
-/* ===============================
-   MAIN SCHEDULE PAGE
-   =============================== */
+/* ------------------- Main Schedule Page ------------------- */
 const Schedule = () => {
   const [doctorSchedule, setDoctorSchedule] = useState<TimeSlot[]>([]);
+  const [editSlot, setEditSlot] = useState<TimeSlot | null>(null);
 
   const fetchSchedule = async () => {
     try {
@@ -279,20 +338,35 @@ const Schedule = () => {
     }
   };
 
-  useEffect(() => {
-    fetchSchedule();
-  }, []);
+  const handleDelete = async (id: number) => {
+    try {
+      await deleteDoctorSchedule(id);
+      toast.success("Schedule deleted successfully");
+      fetchSchedule();
+    } catch {
+      toast.error("Failed to delete schedule");
+    }
+  };
+
+  const handleEdit = (slot: TimeSlot) => setEditSlot(slot);
+  const clearEdit = () => setEditSlot(null);
 
   return (
     <div className="h-screen w-full bg-gray-50 p-8 flex flex-col md:flex-row gap-6">
-      {/* LEFT: Existing Schedule */}
       <div className="md:w-1/2 h-full">
-        <ExistingSchedule schedules={doctorSchedule} />
+        <ExistingSchedule
+          schedules={doctorSchedule}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
       </div>
 
-      {/* RIGHT: Add New Schedule */}
       <div className="md:w-1/2 h-full">
-        <EditableSchedule onSave={fetchSchedule} />
+        <EditableSchedule
+          onSave={fetchSchedule}
+          editSlot={editSlot}
+          clearEdit={clearEdit}
+        />
       </div>
     </div>
   );
