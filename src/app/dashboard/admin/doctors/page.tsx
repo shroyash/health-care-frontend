@@ -46,6 +46,7 @@ export default function DoctorManagementPage() {
           getAllDoctors(),
           getPendingDoctorCount(),
         ]);
+        console.log(allDoctors);
         setDoctors(allDoctors);
         setPendingCount(pending);
       } catch (err) {
@@ -71,7 +72,7 @@ export default function DoctorManagementPage() {
   // Suspend / Restore doctor
   const handleStatusChange = async (doctor: Doctor) => {
     try {
-      if (doctor.status === "active") {
+      if (doctor.status === "ACTIVE") {
         await suspendDoctor(doctor.doctorProfileId);
       } else {
         await restoreDoctor(doctor.doctorProfileId);
@@ -170,13 +171,13 @@ export default function DoctorManagementPage() {
 
             <Button
               className={
-                selectedDoctor.status === "active"
+                selectedDoctor.status === "ACTIVE"
                   ? "bg-red-500 hover:bg-red-600"
                   : "bg-green-600 hover:bg-green-700"
               }
               onClick={() => handleStatusChange(selectedDoctor)}
             >
-              {selectedDoctor.status === "active" ? "Suspend Doctor" : "Restore Doctor"}
+              {selectedDoctor.status === "ACTIVE" ? "Suspend Doctor" : "Restore Doctor"}
             </Button>
           </CardContent>
         </Card>

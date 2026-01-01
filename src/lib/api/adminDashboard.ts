@@ -40,24 +40,25 @@ export const getPendingDoctorCount = async (): Promise<number> => {
 
 
 export const suspendDoctor = (doctorId: number) =>
-  API.create<null, DoctorProfile>(
-    `/doctor-profiles/suspend/${doctorId}`,
+  API.putNoId<null, DoctorProfile>(
+    `/dashboard/admin/${doctorId}/suspend`,
     null
   );
 
 
+
 export const restoreDoctor = (doctorId: number) =>
-  API.create<null, DoctorProfile>(
-    `/doctor-profiles/restore/${doctorId}`,
+  API.putNoId<null, DoctorProfile>(
+    `/dashboard/admin/${doctorId}/restore`,
     null
   );
 
 export const suspendPatient = (patientId: number) =>
-  API.create<null, PatientProfile>(`/patient-profiles/suspend/${patientId}`, null);
+  API.putNoId<null, PatientProfile>(`/dashboard/admin/suspend/${patientId}`, null);
 
 
 export const restorePatient = (patientId: number) =>
-  API.create<null, PatientProfile>(`/patient-profiles/restore/${patientId}`, null);
+  API.putNoId<null, PatientProfile>(`/dashboard/admin/restore/${patientId}`, null);
 
 
 export const getAllPatients = () =>
