@@ -1,5 +1,4 @@
 import { API } from "./api";
-import api from "./api";
 import type {
   AdminDashboardStats,
   AppointmentFull,
@@ -7,25 +6,29 @@ import type {
   PatientProfile,
   DoctorRequest,
   DoctorRequestResponse,
-  PatientStats
+  PatientStats,
+  GenderCountResponse,
+  WeeklyAppointmentCountResponse
 } from "../type/adminDashboard";
 
+// Base URL for admin dashboard
+const DASHBOARD_BASE = "dashboard/admin";
 
+// Existing functions
 export const getAdminDashboardStats = () =>
-  API.getOne<AdminDashboardStats>("dashboard/admin/stats");
+  API.getOne<AdminDashboardStats>(`${DASHBOARD_BASE}/stats`);
 
 export const getRecentAppointments = () =>
-  API.getAll<AppointmentFull>("dashboard/admin/recent-appointments");
+  API.getAll<AppointmentFull>(`${DASHBOARD_BASE}/recent-appointments`);
 
 export const getAllDoctors = () =>
-  API.getAll<DoctorProfile>("dashboard/admin/doctors");
+  API.getAll<DoctorProfile>(`${DASHBOARD_BASE}/doctors`);
 
 export const getAllDoctorRequests = () =>
   API.getAll<DoctorRequest>("admin/doctor-req/all");
 
 export const getPendingDoctorRequests = () =>
   API.getAll<DoctorRequest>("admin/doctor-req/pending");
-
 
 export const approveOrRejectDoctor = (doctorReqId: number, approve: boolean) =>
   API.create<null, DoctorRequestResponse>(
@@ -34,35 +37,30 @@ export const approveOrRejectDoctor = (doctorReqId: number, approve: boolean) =>
   );
 
 export const getPendingDoctorCount = async (): Promise<number> => {
-  const res = await api.get("admin/pending-doctors-count");
-  return res.data.data; 
+  return API.getOne<number>("admin/pending-doctors-count");
 };
 
 
-export const suspendDoctor = (doctorId: number) =>
-  API.putNoId<null, DoctorProfile>(
-    `/dashboard/admin/${doctorId}/suspend`,
-    null
-  );
+export const suspendDoctor = (doctorId: string) =>
+  API.putNoId<null, DoctorProfile>(`${DASHBOARD_BASE}/${doctorId}/suspend`, null);
 
+export const restoreDoctor = (doctorId: string) =>
+  API.putNoId<null, DoctorProfile>(`${DASHBOARD_BASE}/${doctorId}/restore`, null);
 
+export const suspendPatient = (patientId: string) =>
+  API.putNoId<null, PatientProfile>(`${DASHBOARD_BASE}/suspend/${patientId}`, null);
 
-export const restoreDoctor = (doctorId: number) =>
-  API.putNoId<null, DoctorProfile>(
-    `/dashboard/admin/${doctorId}/restore`,
-    null
-  );
-
-export const suspendPatient = (patientId: number) =>
-  API.putNoId<null, PatientProfile>(`/dashboard/admin/suspend/${patientId}`, null);
-
-
-export const restorePatient = (patientId: number) =>
-  API.putNoId<null, PatientProfile>(`/dashboard/admin/restore/${patientId}`, null);
-
+export const restorePatient = (patientId: string) =>
+  API.putNoId<null, PatientProfile>(`${DASHBOARD_BASE}/restore/${patientId}`, null);
 
 export const getAllPatients = () =>
-  API.getAll<PatientProfile>("dashboard/admin/patients");
+  API.getAll<PatientProfile>(`${DASHBOARD_BASE}/patients`);
 
 export const getPatientStats = () =>
-  API.getOne<PatientStats>("dashboard/admin/patients-stats");
+  API.getOne<PatientStats>(`${DASHBOARD_BASE}/patients-stats`);
+
+export const getPatientsGenderCount = () =>
+  API.getOne<GenderCountResponse>(`${DASHBOARD_BASE}/patients/gender-count`);
+
+export const getWeeklyAppointments = () =>
+  API.getAll<WeeklyAppointmentCountResponse>(`${DASHBOARD_BASE}/patients/weekly-appointments`);

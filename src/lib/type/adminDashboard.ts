@@ -23,22 +23,30 @@ export interface AppointmentFull {
 
 
 export type DoctorProfile = {
-  contactNumber: string;
-  doctorProfileId: number;
+  doctorProfileId: string;  
   fullName: string;
   email: string;
   specialization: string;
-  yearsOfExperience:number;
+  yearsOfExperience: number;
   workingAT: string;
-  status: string; // e.g., active, pending
+  contactNumber: string;
+  dateOfBirth: string;
+  gender: string;
+  country: string;
+  profileImgUrl: string;
+  status: string;
 };
+
 // types/adminDashboard.ts
 export type PatientProfile = {
-  id: number;
+  patientId: string;
   fullName: string;
   email: string;
-  contactNumber: string;
-  status: string; // active, suspended, etc.
+  profileImgUrl:string;
+  dateOfBirth:string;
+  gender:string;
+  country:string;
+  status: string;
 };
 
 export type DoctorRequest = {
@@ -54,6 +62,16 @@ export type DoctorRequestResponse = {
   message: string;
   status: string;
 }; 
+
+export type GenderCountResponse = {
+  male: number;
+  female: number;
+};
+
+export type WeeklyAppointmentCountResponse = {
+  day: string;
+  count: number;
+};
 
 // Generic API response wrapper
 export type APIResponse<T> = { success: boolean; data: T };

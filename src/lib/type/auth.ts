@@ -1,8 +1,14 @@
+export type Gender = 'MALE' | 'FEMALE'
+
 export interface RegisterUserRequest {
   username: string;
   email: string;
   password: string;
+  gender: Gender;
+  country: string;
+  dateOfBirth: string;
 }
+
 
 export interface RegisterDoctorRequest extends RegisterUserRequest {
   license?: File;

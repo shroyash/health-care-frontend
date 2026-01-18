@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, Mail, User, Eye, ArrowLeft } from "lucide-react";
+import { Search, User, Eye, ArrowLeft } from "lucide-react";
 import {
   getAllPatients,
   getPatientStats,
@@ -18,14 +18,27 @@ import {
 } from "@/lib/type/adminDashboard";
 
 // Helper for badge colors
-const getStatusColor = (status: Patient["status"]) => {
-  switch (status) {
+const getStatusColor = (status: string) => {
+  switch (status.toLowerCase()) {
     case "active":
       return "bg-green-100 text-green-700 border-green-200";
     case "inactive":
       return "bg-gray-100 text-gray-600 border-gray-200";
     default:
       return "bg-muted text-muted-foreground";
+  }
+};
+
+// Convert gender string to display value
+const displayGender = (gender?: string | null) => {
+  if (!gender) return "N/A";
+  switch (gender.toUpperCase()) {
+    case "MALE":
+      return "Male";
+    case "FEMALE":
+      return "Female";
+    default:
+      return gender;
   }
 };
 
@@ -59,7 +72,7 @@ export default function PatientsPage() {
     fetchData();
   }, []);
 
-  // Filter patients
+  // Filter patients by search
   const filteredPatients = useMemo(() => {
     const term = searchTerm.toLowerCase();
     return patients.filter(
@@ -70,19 +83,18 @@ export default function PatientsPage() {
   }, [patients, searchTerm]);
 
   // Handle Suspend / Restore
-  const handleStatusChange = async (id: number, status: string) => {
+  const handleStatusChange = async (patientId: string, status: string) => {
     try {
-      if (status === "active") {
-        await suspendPatient(id);
+      if (status.toLowerCase() === "active") {
+        await suspendPatient(patientId);
       } else {
-        await restorePatient(id);
+        await restorePatient(patientId);
       }
-      // Refresh data after update
       const updatedPatients = await getAllPatients();
       setPatients(updatedPatients);
-      // Update selected patient if open
+
       if (selectedPatient) {
-        const updated = updatedPatients.find((p) => p.id === selectedPatient.id);
+        const updated = updatedPatients.find(p => p.patientId === selectedPatient.patientId);
         setSelectedPatient(updated || null);
       }
     } catch (err) {
@@ -164,21 +176,20 @@ export default function PatientsPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <p><strong>Gender:</strong> {selectedPatient.fullName || "N/A"}</p>
-              <p><strong>Phone:</strong> {selectedPatient.email || "N/A"}</p>
-              <p><strong>Address:</strong> {selectedPatient.contactNumber || "N/A"}</p>
-              <p><strong>Appointments:</strong> {selectedPatient.status || "N/A"}</p>
+              <p><strong>Gender:</strong> {displayGender(selectedPatient.gender)}</p>
+              <p><strong>Country:</strong> {selectedPatient.country || "N/A"}</p>
+              <p><strong>Date of Birth:</strong> {selectedPatient.dateOfBirth || "N/A"}</p>
             </div>
 
             <Button
               className={`mt-4 ${
-                selectedPatient.status === "active"
+                selectedPatient.status.toLowerCase() === "active"
                   ? "bg-destructive hover:bg-destructive/80"
                   : "bg-green-600 hover:bg-green-700"
               }`}
-              onClick={() => handleStatusChange(selectedPatient.id, selectedPatient.status)}
+              onClick={() => handleStatusChange(selectedPatient.patientId, selectedPatient.status)}
             >
-              {selectedPatient.status === "active" ? "Suspend Patient" : "Restore Patient"}
+              {selectedPatient.status.toLowerCase() === "active" ? "Suspend Patient" : "Restore Patient"}
             </Button>
           </CardContent>
         </Card>
@@ -212,7 +223,7 @@ export default function PatientsPage() {
               <div className="space-y-4">
                 {filteredPatients.map((p) => (
                   <div
-                    key={p.id}
+                    key={p.patientId}
                     className="p-4 rounded-lg border border-border hover:bg-accent/30 transition-all duration-200 flex justify-between items-center"
                   >
                     <div className="flex items-start gap-4">
@@ -222,20 +233,18 @@ export default function PatientsPage() {
                       <div>
                         <h4 className="font-semibold text-lg">{p.fullName}</h4>
                         <p className="text-sm text-muted-foreground">{p.email}</p>
+                        <Badge className={`mt-1 ${getStatusColor(p.status)}`}>{p.status}</Badge>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                      <Badge className={`mt-1 ${getStatusColor(p.status)}`}>{p.status}</Badge>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="hover:bg-accent"
-                        onClick={() => setSelectedPatient(p)}
-                      >
-                        <Eye className="h-3 w-3" />
-                      </Button>
-                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="hover:bg-accent"
+                      onClick={() => setSelectedPatient(p)}
+                    >
+                      <Eye className="h-3 w-3" />
+                    </Button>
                   </div>
                 ))}
               </div>

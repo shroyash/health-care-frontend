@@ -24,14 +24,16 @@ export const registerDoctor = async (data: RegisterDoctorRequest, file: File) =>
   formData.append("username", data.username);
   formData.append("email", data.email);
   formData.append("password", data.password);
-  formData.append("license", file); 
-
-  const res = await api.post("/auth/register/doctor", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  formData.append("dateOfBirth", data.dateOfBirth);
+  formData.append("gender", data.gender);
+  formData.append("country", data.country);
+  formData.append("license", file);
+  
+  const res = await api.post("/auth/register/doctor", formData);
 
   return res.data;
 };
+
 
 export const loginUserWeb = async (data: LoginRequest): Promise<LoginResponse> => {
   const res = await api.post("/auth/login-web", data);

@@ -3,42 +3,57 @@
 import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, User, ArrowLeft, Phone, Mail, Award, MapPin } from "lucide-react";
+import { Search, User, ArrowLeft, Award } from "lucide-react";
 import {
   getAllDoctors,
   getPendingDoctorCount,
   suspendDoctor,
   restoreDoctor,
 } from "@/lib/api/adminDashboard";
-import { DoctorProfile as Doctor } from "@/lib/type/adminDashboard";
 import { useDashboardStats } from "@/context/DashboardStatsContext";
+import { DoctorProfile } from "@/lib/type/adminDashboard";
+
+/* ------------------ Helpers ------------------ */
+
+const displayValue = (value: any, fallback = "Not provided") => {
+  if (value === null || value === undefined || value === "") return fallback;
+  return value;
+};
 
 // Status Badge Color
-const getStatusColor = (status: Doctor["status"]) => {
+const getStatusColor = (status: DoctorProfile["status"]) => {
   switch (status) {
-    case "active":
+    case "ACTIVE":
       return "bg-green-100 text-green-700 border-green-200";
-    case "pending":
-      return "bg-yellow-100 text-yellow-700 border-yellow-200";
-    case "inactive":
+    case "INACTIVE":
       return "bg-gray-100 text-gray-600 border-gray-200";
     default:
       return "bg-muted text-muted-foreground";
   }
 };
 
+/* ------------------ Component ------------------ */
+
 export default function DoctorManagementPage() {
-  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [doctors, setDoctors] = useState<DoctorProfile[]>([]);
   const [pendingCount, setPendingCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
+  const [selectedDoctor, setSelectedDoctor] =
+    useState<DoctorProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   const { statsData } = useDashboardStats();
 
-  // Fetch doctors
+  /* ------------------ Fetch Doctors ------------------ */
+
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
@@ -46,7 +61,6 @@ export default function DoctorManagementPage() {
           getAllDoctors(),
           getPendingDoctorCount(),
         ]);
-        console.log(allDoctors);
         setDoctors(allDoctors);
         setPendingCount(pending);
       } catch (err) {
@@ -58,19 +72,21 @@ export default function DoctorManagementPage() {
     fetchDoctors();
   }, []);
 
-  // Search filter
+  /* ------------------ Search Filter ------------------ */
+
   const filteredDoctors = useMemo(() => {
     const term = searchTerm.toLowerCase();
     return doctors.filter(
       (d) =>
         d.fullName.toLowerCase().includes(term) ||
         d.email.toLowerCase().includes(term) ||
-        d.specialization.toLowerCase().includes(term)
+        (d.specialization ?? "").toLowerCase().includes(term)
     );
   }, [searchTerm, doctors]);
 
-  // Suspend / Restore doctor
-  const handleStatusChange = async (doctor: Doctor) => {
+  /* ------------------ Suspend / Restore ------------------ */
+
+  const handleStatusChange = async (doctor: DoctorProfile) => {
     try {
       if (doctor.status === "ACTIVE") {
         await suspendDoctor(doctor.doctorProfileId);
@@ -78,18 +94,21 @@ export default function DoctorManagementPage() {
         await restoreDoctor(doctor.doctorProfileId);
       }
 
-      // Refresh doctor list
       const updated = await getAllDoctors();
       setDoctors(updated);
 
       if (selectedDoctor) {
-        const match = updated.find((d) => d.doctorProfileId === selectedDoctor.doctorProfileId);
+        const match = updated.find(
+          (d) => d.doctorProfileId === selectedDoctor.doctorProfileId
+        );
         setSelectedDoctor(match || null);
       }
     } catch (err) {
       console.error("Failed updating doctor status", err);
     }
   };
+
+  /* ------------------ Loading ------------------ */
 
   if (loading) {
     return (
@@ -102,71 +121,128 @@ export default function DoctorManagementPage() {
     );
   }
 
+  /* ------------------ UI ------------------ */
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold">Doctor Management</h1>
-        <p className="text-muted-foreground mt-1">Manage healthcare professionals</p>
+        <p className="text-muted-foreground mt-1">
+          Manage healthcare professionals
+        </p>
       </div>
 
-      {/* Stats (only in list view) */}
+      {/* Stats */}
       {!selectedDoctor && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card><CardContent className="p-4">
-            <div className="text-2xl font-bold text-primary">{statsData.totalDoctors}</div>
-            <p className="text-sm text-muted-foreground">Active Doctors</p>
-          </CardContent></Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="text-2xl font-bold text-primary">
+                {statsData.totalDoctors}
+              </div>
+              <p className="text-sm text-muted-foreground">Active Doctors</p>
+            </CardContent>
+          </Card>
 
-          <Card><CardContent className="p-4">
-            <div className="text-2xl font-bold text-yellow-600">{pendingCount}</div>
-            <p className="text-sm text-muted-foreground">Pending Approval</p>
-          </CardContent></Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="text-2xl font-bold text-yellow-600">
+                {pendingCount}
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Pending Approval
+              </p>
+            </CardContent>
+          </Card>
 
-          <Card><CardContent className="p-4">
-            <div className="text-2xl font-bold text-foreground">
-              {new Set(doctors.map((d) => d.specialization)).size}
-            </div>
-            <p className="text-sm text-muted-foreground">Specialties</p>
-          </CardContent></Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="text-2xl font-bold text-foreground">
+                {new Set(doctors.map((d) => d.specialization)).size}
+              </div>
+              <p className="text-sm text-muted-foreground">Specialties</p>
+            </CardContent>
+          </Card>
         </div>
       )}
 
       {/* Doctor Details */}
       {selectedDoctor ? (
-        <Card className="shadow-soft">
-          <CardHeader className="flex justify-between items-center">
+        <Card>
+          <CardHeader className="flex flex-row justify-between items-center">
             <div>
-              <CardTitle>Doctor Details</CardTitle>
-              <CardDescription>Profile overview</CardDescription>
+              <CardTitle>Doctor Profile</CardTitle>
+              <CardDescription>Complete details</CardDescription>
             </div>
-
             <Button variant="ghost" onClick={() => setSelectedDoctor(null)}>
               <ArrowLeft className="h-4 w-4 mr-1" /> Back
             </Button>
           </CardHeader>
 
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-primary/10 rounded-lg">
-                <Award className="h-6 w-6 text-primary" />
+          <CardContent className="space-y-6">
+            {/* Header */}
+            <div className="flex items-center gap-5">
+              <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                {selectedDoctor.profileImgUrl ? (
+                  <img
+                    src={selectedDoctor.profileImgUrl}
+                    alt={selectedDoctor.fullName}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <User className="h-8 w-8 text-muted-foreground" />
+                )}
               </div>
 
               <div>
-                <h2 className="text-xl font-semibold">{selectedDoctor.fullName}</h2>
-                <p className="text-muted-foreground">{selectedDoctor.specialization}</p>
-
+                <h2 className="text-2xl font-semibold">
+                  {selectedDoctor.fullName}
+                </h2>
+                <p className="text-muted-foreground">
+                  {displayValue(selectedDoctor.specialization)}
+                </p>
                 <Badge className={`mt-2 ${getStatusColor(selectedDoctor.status)}`}>
                   {selectedDoctor.status}
                 </Badge>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-              <p><strong>Email:</strong> {selectedDoctor.email}</p>
-              <p><strong>Phone:</strong> {selectedDoctor.contactNumber}</p>
-              <p><strong>Working At:</strong> {selectedDoctor.workingAT}</p>
-              <p><strong>Experience:</strong> {selectedDoctor.yearsOfExperience || "N/A"}</p>
+            {/* Details */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <ProfileField label="Email" value={selectedDoctor.email} />
+              <ProfileField
+                label="Phone"
+                value={selectedDoctor.contactNumber}
+              />
+              <ProfileField
+                label="Specialization"
+                value={selectedDoctor.specialization}
+              />
+              <ProfileField
+                label="Working At"
+                value={selectedDoctor.workingAT}
+              />
+              <ProfileField
+                label="Experience"
+                value={
+                  selectedDoctor.yearsOfExperience
+                    ? `${selectedDoctor.yearsOfExperience} years`
+                    : "Not provided"
+                }
+              />
+              <ProfileField label="Gender" value={selectedDoctor.gender} />
+              <ProfileField label="Country" value={selectedDoctor.country} />
+              <ProfileField
+                label="Date of Birth"
+                value={
+                  selectedDoctor.dateOfBirth
+                    ? new Date(
+                        selectedDoctor.dateOfBirth
+                      ).toLocaleDateString()
+                    : "Not provided"
+                }
+              />
             </div>
 
             <Button
@@ -177,7 +253,9 @@ export default function DoctorManagementPage() {
               }
               onClick={() => handleStatusChange(selectedDoctor)}
             >
-              {selectedDoctor.status === "ACTIVE" ? "Suspend Doctor" : "Restore Doctor"}
+              {selectedDoctor.status === "ACTIVE"
+                ? "Suspend Doctor"
+                : "Restore Doctor"}
             </Button>
           </CardContent>
         </Card>
@@ -185,7 +263,9 @@ export default function DoctorManagementPage() {
         <>
           {/* Search */}
           <Card>
-            <CardHeader><CardTitle>Search Doctors</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle>Search Doctors</CardTitle>
+            </CardHeader>
             <CardContent>
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -203,7 +283,9 @@ export default function DoctorManagementPage() {
           <Card>
             <CardHeader>
               <CardTitle>All Doctors ({filteredDoctors.length})</CardTitle>
-              <CardDescription>Complete list of registered doctors</CardDescription>
+              <CardDescription>
+                Complete list of registered doctors
+              </CardDescription>
             </CardHeader>
 
             <CardContent>
@@ -217,17 +299,23 @@ export default function DoctorManagementPage() {
                       <div className="p-3 rounded-lg bg-primary/10">
                         <User className="h-5 w-5 text-primary" />
                       </div>
-
                       <div>
-                        <h4 className="font-semibold text-lg">{d.fullName}</h4>
-                        <p className="text-muted-foreground text-sm">{d.email}</p>
-                        <p className="text-sm">{d.specialization}</p>
+                        <h4 className="font-semibold text-lg">
+                          {d.fullName}
+                        </h4>
+                        <p className="text-muted-foreground text-sm">
+                          {d.email}
+                        </p>
+                        <p className="text-sm">
+                          {displayValue(d.specialization)}
+                        </p>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <Badge className={getStatusColor(d.status)}>{d.status}</Badge>
-
+                      <Badge className={getStatusColor(d.status)}>
+                        {d.status}
+                      </Badge>
                       <Button
                         variant="outline"
                         size="sm"
@@ -243,6 +331,23 @@ export default function DoctorManagementPage() {
           </Card>
         </>
       )}
+    </div>
+  );
+}
+
+/* ------------------ Reusable Field ------------------ */
+
+function ProfileField({
+  label,
+  value,
+}: {
+  label: string;
+  value: any;
+}) {
+  return (
+    <div>
+      <p className="text-muted-foreground">{label}</p>
+      <p className="font-medium">{displayValue(value)}</p>
     </div>
   );
 }
