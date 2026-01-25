@@ -17,7 +17,7 @@ type StatType = {
 };
 
 export function DashboardStats() {
-  const { statsData, fetchStats } = useDashboardStats();
+  const { statsData } = useDashboardStats();
   const [pendingDoctorApprovals, setPendingDoctorApprovals] = useState<number>(0);
   const [loadingPending, setLoadingPending] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +47,6 @@ export function DashboardStats() {
     };
 
     fetchPending();
-    fetchStats();
 
     return () => {
       isMounted = false;

@@ -71,6 +71,8 @@ const [fullImageUrl, setFullImageUrl] = useState<string | null>(null);
           getAllDoctorRequests(),
           getPendingDoctorRequests(),
         ]);
+        console.log(all)
+        console.log(pending)
         setAllRequests(all);
         setPendingRequests(pending);
         console.log("Doctor requests fetched successfully", {
