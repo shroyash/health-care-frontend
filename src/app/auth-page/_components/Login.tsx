@@ -158,7 +158,7 @@ export default function Login({ setShowForgotPassword }: LoginProps) {
             className="w-full"
             size="lg"
           >
-            Sign Ins
+            Sign In
           </HealthcareButton>
         </form>
       </CardContent>
