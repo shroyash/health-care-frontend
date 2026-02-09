@@ -1,4 +1,4 @@
-"use client"; // Make this a client component since we use useState and useEffect
+"use client";
 
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
@@ -6,14 +6,50 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { CheckCircle, XCircle, Clock, Search, Users } from "lucide-react";
-import { getDoctorAppointmentRequests, updateAppointmentRequestStatus } from "@/lib/api/doctorDashboard";
+import { CheckCircle, XCircle, Clock, Search, Users, Info } from "lucide-react";
+import {
+  getDoctorAppointmentRequests,
+  updateAppointmentRequestStatus,
+} from "@/lib/api/doctorDashboard";
 import { AppointmentRequest } from "@/lib/type/doctorDashboard";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+
+// Convert backend date string to a readable format
+const formatFullDateFromBackend = (dateStr: string): string => {
+  if (!dateStr) return "";
+  const date = new Date(dateStr); // backend date string
+  if (isNaN(date.getTime())) return dateStr; // fallback if invalid
+
+  return date.toLocaleDateString("en-US", {
+    weekday: "long", // Monday, Tuesday...
+    day: "numeric",  // 1, 2, 3...
+    month: "long",   // January, February...
+    year: "numeric", // 2026
+  });
+};
+
+// Convert backend time string (HH:mm:ss) to 12-hour AM/PM
+const formatTimeFromBackend = (timeStr: string): string => {
+  if (!timeStr) return "";
+  const [hour, minute] = timeStr.split(":").map(Number);
+  if (isNaN(hour) || isNaN(minute)) return timeStr; // fallback
+
+  const ampm = hour >= 12 ? "PM" : "AM";
+  const hr = hour % 12 || 12;
+  return `${hr}:${minute.toString().padStart(2, "0")} ${ampm}`;
+};
 
 export default function AppointmentRequestPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [appointments, setAppointments] = useState<AppointmentRequest[]>([]);
+  const [selectedAppointment, setSelectedAppointment] = useState<AppointmentRequest | null>(null);
 
   useEffect(() => {
     fetchAppointments();
@@ -28,37 +64,20 @@ export default function AppointmentRequestPage() {
     }
   };
 
-const handleStatusUpdate = async (
-  id: number,
-  status: "APPROVED" | "REJECTED"
-) => {
-  console.log("🔵 handleStatusUpdate called with:", { id, status });
+  const handleStatusUpdate = async (id: number, status: "APPROVED" | "REJECTED") => {
+    try {
+      await updateAppointmentRequestStatus(id, status);
 
-  try {
-    console.log("⏳ Sending request to updateAppointmentRequestStatus...");
-    const response = await updateAppointmentRequestStatus(id, status);
+      setAppointments((prev) =>
+        prev.map((apt) => (apt.requestId === id ? { ...apt, status } : apt))
+      );
 
-    setAppointments((prev) => {
-      console.log("📌 Previous appointments:", prev);
-
-      const updated = prev.map((apt) => {
-        if (apt.requestId === id) {
-          console.log("🟢 Matching appointment found:", apt);
-          return { ...apt, status };
-        }
-        return apt;
-      });
-
-      console.log("🆕 Updated appointments:", updated);
-      return updated;
-    });
-
-    toast.success(`Appointment ${status.toLowerCase()}`);
-  } catch (error) {
-    console.error("❌ Error updating appointment:", error);
-    toast.error("Failed to update status");
-  }
-};
+      toast.success(`Appointment ${status.toLowerCase()}`);
+    } catch (error) {
+      console.error("Error updating appointment:", error);
+      toast.error("Failed to update status");
+    }
+  };
 
   const filteredAppointments = appointments.filter((apt) => {
     const matchesSearch =
@@ -99,7 +118,7 @@ const handleStatusUpdate = async (
             </div>
 
             <div className="flex gap-2">
-              {["all", "PENDING", "ACCEPTED", "REJECTED"].map((status) => (
+              {["all", "PENDING", "APPROVED", "REJECTED"].map((status) => (
                 <Button
                   key={status}
                   variant={filterStatus === status ? "default" : "outline"}
@@ -143,7 +162,8 @@ const handleStatusUpdate = async (
                       <div className="flex items-center space-x-1">
                         <Clock className="w-4 h-4" />
                         <span>
-                          {appointment.day} at {appointment.startTime}
+                          {formatFullDateFromBackend(appointment.date)} |{" "}
+                          {formatTimeFromBackend(appointment.startTime)} - {formatTimeFromBackend(appointment.endTime)}
                         </span>
                       </div>
                       <Badge className={getStatusBadge(appointment.status)}>
@@ -154,26 +174,36 @@ const handleStatusUpdate = async (
                   </div>
                 </div>
 
-                {appointment.status === "PENDING" && (
-                  <div className="flex space-x-2">
-                    <Button
-                      size="sm"
-                      onClick={() => handleStatusUpdate(appointment.requestId, "APPROVED")}
-                      className="success-button"
-                    >
-                      <CheckCircle className="w-4 h-4 mr-2" />
-                      Approve
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleStatusUpdate(appointment.requestId, "REJECTED")}
-                    >
-                      <XCircle className="w-4 h-4 mr-2" />
-                      Decline
-                    </Button>
-                  </div>
-                )}
+                <div className="flex space-x-2">
+                  {appointment.status === "PENDING" && (
+                    <>
+                      <Button
+                        size="sm"
+                        onClick={() => handleStatusUpdate(appointment.requestId, "APPROVED")}
+                        className="success-button"
+                      >
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Approve
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleStatusUpdate(appointment.requestId, "REJECTED")}
+                      >
+                        <XCircle className="w-4 h-4 mr-2" />
+                        Decline
+                      </Button>
+                    </>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setSelectedAppointment(appointment)}
+                    className="flex items-center gap-1"
+                  >
+                    <Info className="w-4 h-4" /> View Details
+                  </Button>
+                </div>
               </div>
             </div>
           ))}
@@ -186,6 +216,47 @@ const handleStatusUpdate = async (
           )}
         </CardContent>
       </Card>
+
+      {/* Modal for Appointment Details */}
+      <Dialog open={!!selectedAppointment} onOpenChange={() => setSelectedAppointment(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Appointment Details</DialogTitle>
+          </DialogHeader>
+          {selectedAppointment && (
+            <div className="space-y-2">
+              <p>
+                <strong>Patient Name:</strong> {selectedAppointment.patientName}
+              </p>
+              <p>
+                <strong>Date:</strong> {formatFullDateFromBackend(selectedAppointment.date)}
+              </p>
+              <p>
+                <strong>Start Time:</strong> {formatTimeFromBackend(selectedAppointment.startTime)}
+              </p>
+              <p>
+                <strong>End Time:</strong> {formatTimeFromBackend(selectedAppointment.endTime)}
+              </p>
+              <p>
+                <strong>Status:</strong>{" "}
+                <Badge className={getStatusBadge(selectedAppointment.status)}>
+                  {selectedAppointment.status.toLowerCase()}
+                </Badge>
+              </p>
+              {selectedAppointment.notes && (
+                <p>
+                  <strong>Notes:</strong> {selectedAppointment.notes}
+                </p>
+              )}
+            </div>
+          )}
+          <DialogFooter className="mt-4">
+            <Button onClick={() => setSelectedAppointment(null)} className="w-full">
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

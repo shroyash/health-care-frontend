@@ -24,28 +24,29 @@ export const ScheduleModal = ({ doctor, isOpen, onClose }: ScheduleModalProps) =
   const [selectedSlot, setSelectedSlot] = useState<DoctorSchedule | null>(null);
   const [sending, setSending] = useState(false);
 
-  const handleSendRequest = async () => {
-    if (!doctor || !selectedSlot) return;
+const handleSendRequest = async () => {
+  if (!doctor || !selectedSlot) return;
 
-    setSending(true);
-    try {
-      await createAppointmentRequest({
-        doctorId: doctor.doctorProfileId,
-        day: selectedSlot.dayOfWeek,
-        startTime: selectedSlot.startTime,
-        endTime: selectedSlot.endTime,
-      });
+  setSending(true);
+  try {
+    await createAppointmentRequest({
+      doctorId: doctor.doctorProfileId, 
+      date: selectedSlot.date,
+      startTime: selectedSlot.startTime,
+      endTime: selectedSlot.endTime,
+    });
 
-      toast.success("Appointment request sent!");
-      onClose();
-      setSelectedSlot(null);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to send request.");
-    } finally {
-      setSending(false);
-    }
-  };
+    toast.success("Appointment request sent!");
+    onClose();
+    setSelectedSlot(null);
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to send request.");
+  } finally {
+    setSending(false);
+  }
+};
+
 
   const handleClose = () => {
     onClose();
@@ -77,7 +78,7 @@ export const ScheduleModal = ({ doctor, isOpen, onClose }: ScheduleModalProps) =
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <Calendar className="h-5 w-5" />
-                    <span className="font-semibold">{slot.dayOfWeek}</span>
+                    {/* <span className="font-semibold">{slot.dayOfWeek}</span> */}
                     <Clock className="h-5 w-5" />
                     <span>
                       {slot.startTime} - {slot.endTime}

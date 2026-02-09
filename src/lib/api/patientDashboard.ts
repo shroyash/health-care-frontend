@@ -10,6 +10,9 @@ import type {
 export const getUpcomingAppointments = async (): Promise<PatientAppointment[]> =>
   API.getAll<PatientAppointment>("/dashboard/patient/appointments/upcoming");
 
+export const getAppointments = async (): Promise<PatientAppointment[]> =>
+  API.getAll<PatientAppointment>("/dashboard/patient/appointments");
+
 export const getPatientDashboardStats = async (): Promise<PatientDashboardStats> =>
   API.getOne<PatientDashboardStats>("/dashboard/patient/appointments/stats");
 

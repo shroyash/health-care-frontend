@@ -57,8 +57,8 @@ export const CustomRequestForm = () => {
     setLoadingSubmit(true);
     try {
       const request: CreateAppointmentRequestDto = {
-        doctorId: Number(formData.doctorProfileId),
-        day: formData.day,
+        doctorId:formData.doctorProfileId,
+        date: formData.day,
         startTime: formData.startTime,
         endTime: formData.endTime,
         notes: formData.notes,
