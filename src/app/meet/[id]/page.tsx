@@ -3,16 +3,15 @@ import { useEffect, useState } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import api from "@/lib/api/api";
 
-// ✅ Updated interface with UUID
+
 interface AppointmentAccess {
-  appointmentId: number;      // ✅ UUID instead of number
-  doctorId: string;           // ✅ UUID
-  patientId: string;          // ✅ UUID
+  appointmentId: number;
+  userId : string,             
   doctorName: string;
   patientName: string;
-  appointmentTime: string;    // ISO 8601 datetime
+  appointmentTime: string;    
   canJoin: boolean;
-  meetingToken: string;       // JWT token for this specific meeting
+  meetingToken: string;     
 }
 
 const MeetingPage: React.FC = () => {
@@ -126,7 +125,7 @@ const MeetingPage: React.FC = () => {
           {/* ✅ Show appointment ID (for debugging) */}
           <div className="flex justify-between text-xs text-gray-400">
             <span>Appointment ID</span>
-            <span className="font-mono">{appointment.appointmentId.substring(0, 8)}...</span>
+            <span className="font-mono">{appointment.appointmentId}...</span>
           </div>
         </div>
 
