@@ -20,26 +20,25 @@ export default function Chat({ appointmentId }: ChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [stompClient, setStompClient] = useState<Client | null>(null);
+  const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    const socket = new SockJS("http://localhost:8001/ws");
+    // SockJS is necessary because native WebSocket doesn't send cookies in some browsers
+    const socket = new SockJS("https://localhost:8001/ws");
 
     const client = new Client({
       webSocketFactory: () => socket as any,
       reconnectDelay: 5000,
-      connectHeaders: {
-        token: localStorage.getItem("jwt") || "",
-      },
+      debug: (str) => console.log(str),
+      // DO NOT set connectHeaders for JWT, let browser send HttpOnly cookie
       onConnect: () => {
-        console.log("Connected to WebSocket");
+        console.log("Connected to WebSocket via cookie!");
+        setConnected(true);
 
-        client.subscribe(
-          `/topic/appointment.${appointmentId}`,
-          (message) => {
-            const received: ChatMessage = JSON.parse(message.body);
-            setMessages((prev) => [...prev, received]);
-          }
-        );
+        client.subscribe(`/topic/appointment.${appointmentId}`, (message) => {
+          const received: ChatMessage = JSON.parse(message.body);
+          setMessages((prev) => [...prev, received]);
+        });
       },
       onStompError: (frame) => {
         console.error("Broker error:", frame.headers["message"]);
@@ -55,7 +54,7 @@ export default function Chat({ appointmentId }: ChatProps) {
   }, [appointmentId]);
 
   const sendMessage = () => {
-    if (!stompClient || !input.trim()) return;
+    if (!stompClient || !stompClient.connected || !input.trim()) return;
 
     const msg = {
       appointmentId,
@@ -86,8 +85,7 @@ export default function Chat({ appointmentId }: ChatProps) {
       >
         {messages.map((msg, index) => (
           <div key={index} style={{ marginBottom: "5px" }}>
-            <strong>{msg.senderId?.slice(0, 6)}:</strong>{" "}
-            {msg.content}
+            <strong>{msg.senderId?.slice(0, 6)}:</strong> {msg.content}
           </div>
         ))}
       </div>
@@ -99,7 +97,9 @@ export default function Chat({ appointmentId }: ChatProps) {
           placeholder="Type message..."
           style={{ flex: 1 }}
         />
-        <button onClick={sendMessage}>Send</button>
+        <button onClick={sendMessage} disabled={!connected}>
+          Send
+        </button>
       </div>
     </div>
   );
