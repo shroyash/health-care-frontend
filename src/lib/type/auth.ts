@@ -37,9 +37,10 @@ export interface JwtResponse {
 }
 
 export interface UserResponseDto {
-  userName: string;
+  userId : string,
+  username: string;
   email: string;
-  role: Role[];
+  roles: string[];
 }
 
 export interface ForgotPasswordRequest {

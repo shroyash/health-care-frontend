@@ -75,5 +75,5 @@ export const checkAuth = async (): Promise<boolean> => {
 
 export const getCurrentUser = async (): Promise<UserResponseDto> => {
   const res = await api.get("/users/auth/me");
-  return res.data;
+  return res.data.data;
 };
