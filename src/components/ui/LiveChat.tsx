@@ -1,6 +1,5 @@
 "use client";
 import type { RefObject } from "react";
-import { Icons } from "./Icons";
 import { formatTime } from "@/lib/utils";
 import type { ChatMessage } from "@/lib/type/communication";
 
@@ -11,27 +10,23 @@ interface LiveChatProps {
   connected: boolean;
   userId: string;
   username: string;
-  isDoctor: boolean; // ✅ added
+  isDoctor: boolean;
   sendMessage: () => void;
   messagesEndRef: RefObject<HTMLDivElement | null>;
 }
 
-function getInitial(name: string) {
-  return name ? name.charAt(0).toUpperCase() : "?";
-}
-
-function getAvatarColor(senderId: string) {
-  const colors = [
-    "bg-purple-500", "bg-pink-500", "bg-indigo-500",
-    "bg-teal-500", "bg-orange-500", "bg-cyan-500",
-  ];
-  let hash = 0;
-  for (let i = 0; i < senderId.length; i++) hash += senderId.charCodeAt(i);
-  return colors[hash % colors.length];
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 }
 
 export function LiveChat({
-  messages, input, setInput, connected, userId, username, isDoctor, sendMessage, messagesEndRef,
+  messages, input, setInput, connected, userId,
+  username, isDoctor, sendMessage, messagesEndRef,
 }: LiveChatProps) {
 
   type Group = { senderId: string; items: ChatMessage[] };
@@ -46,89 +41,50 @@ export function LiveChat({
   }, []);
 
   return (
-    <div className="flex flex-col h-full bg-slate-900">
-
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-700/60 shrink-0">
-        <div className="flex items-center gap-2">
-          <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round"
-              d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
-          </svg>
-          <span className="text-sm font-semibold text-slate-200">Live Chat</span>
-        </div>
-        <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${
-          connected
-            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
-            : "bg-red-500/10 text-red-400 border border-red-500/30"
-        }`}>
-          ● {connected ? "Live" : "Offline"}
-        </span>
-      </div>
+    <div className="flex flex-col h-full bg-white">
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-2 min-h-0">
+      <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3 min-h-0">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full gap-2">
-            <svg className="w-8 h-8 text-slate-600" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+            <svg className="w-10 h-10 text-gray-200" fill="none" stroke="currentColor" strokeWidth={1.2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round"
                 d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
             </svg>
-            <p className="text-sm text-slate-500">No messages yet</p>
+            <p className="text-sm text-gray-400">No messages yet</p>
           </div>
         )}
 
         {grouped.map((group, gi) => {
-          const isMine      = group.senderId === userId;
-          const avatarColor = getAvatarColor(group.senderId);
-
-          // ✅ Use senderName from message, fallback to role label
+          const isMine = group.senderId === userId;
           const displayName = isMine
             ? username || (isDoctor ? "Doctor" : "Patient")
             : group.items[0]?.senderName || (isDoctor ? "Patient" : "Doctor");
 
           return (
-            <div key={gi} className={`flex gap-2 ${isMine ? "flex-row-reverse" : "flex-row"}`}>
-
+            <div key={gi} className={`flex gap-2.5 ${isMine ? "flex-row-reverse" : "flex-row"}`}>
               {/* Avatar */}
-              <div className={`w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-xs font-bold text-white mt-auto ${avatarColor}`}>
-                {getInitial(displayName)}
+              <div className="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center text-white text-xs font-bold shrink-0 mt-auto">
+                {getInitials(displayName)}
               </div>
 
-              {/* Name + bubbles */}
-              <div className={`flex flex-col gap-0.5 max-w-xs ${isMine ? "items-end" : "items-start"}`}>
-
-                {/* Name */}
-                <span className={`text-xs font-semibold px-1 ${isMine ? "text-blue-400" : "text-slate-400"}`}>
-                  {displayName} {/* ✅ always clean name */}
-                </span>
-
-                {/* Bubble group */}
+              {/* Bubbles */}
+              <div className={`flex flex-col gap-1 max-w-[75%] ${isMine ? "items-end" : "items-start"}`}>
                 {group.items.map((msg, mi) => {
-                  const isFirst = mi === 0;
-                  const isLast  = mi === group.items.length - 1;
-
-                  const baseRounded = "rounded-2xl";
-                  const myCorner    = isMine
-                    ? isFirst ? "rounded-tr-sm" : isLast ? "rounded-br-sm" : "rounded-r-sm"
-                    : isFirst ? "rounded-tl-sm" : isLast ? "rounded-bl-sm" : "rounded-l-sm";
-
+                  const isLast = mi === group.items.length - 1;
                   return (
-                    <div key={msg.id ?? mi} className="flex flex-col" style={{ alignItems: isMine ? "flex-end" : "flex-start" }}>
+                    <div key={msg.id ?? mi}>
                       <div className={`
-                        px-3.5 py-2 text-sm leading-relaxed break-words
-                        ${baseRounded} ${myCorner}
+                        px-4 py-2.5 text-sm leading-relaxed break-words rounded-2xl
                         ${isMine
-                          ? "bg-blue-500 text-white"
-                          : "bg-slate-700 text-slate-100"
+                          ? "bg-blue-500 text-white rounded-tr-sm"
+                          : "bg-gray-100 text-gray-800 rounded-tl-sm"
                         }
                       `}>
                         {msg.content}
                       </div>
-
-                      {/* Timestamp only on last bubble */}
                       {isLast && (
-                        <span className="text-xs text-slate-500 px-1 mt-1">
+                        <span className={`text-xs text-gray-400 mt-1 block ${isMine ? "text-right" : "text-left"}`}>
                           {formatTime(msg.timestamp)}
                         </span>
                       )}
@@ -139,41 +95,46 @@ export function LiveChat({
             </div>
           );
         })}
-
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <div className="shrink-0 px-3 py-3 border-t border-slate-700/60">
-        <div className={`flex items-center gap-2 rounded-2xl border px-3 py-2 transition-all
-          ${connected
-            ? "bg-slate-800 border-slate-600 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500/40"
-            : "bg-slate-800/50 border-slate-700 opacity-60"
-          }`}>
-          <button className="text-slate-500 hover:text-blue-400 transition-colors shrink-0">
-            <Icons.Attachment />
+      {/* Input bar */}
+      <div className="shrink-0 px-3 py-3 border-t border-gray-100">
+        <div className={`flex items-center gap-2 rounded-2xl border px-3 py-2.5 transition-all ${
+          connected
+            ? "bg-white border-gray-200 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100"
+            : "bg-gray-50 border-gray-100 opacity-60"
+        }`}>
+          <button className="text-gray-400 hover:text-blue-500 transition-colors shrink-0">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" />
+            </svg>
           </button>
-          <button className="text-slate-500 hover:text-blue-400 transition-colors shrink-0">
-            <Icons.Emoji />
+          <button className="text-gray-400 hover:text-blue-500 transition-colors shrink-0">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z" />
+            </svg>
           </button>
           <input
-            className="flex-1 bg-transparent text-sm text-slate-100 placeholder-slate-500 outline-none"
+            className="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-            placeholder={connected ? "Type a message..." : "Connecting..."}
+            placeholder="Type a message..."
             disabled={!connected}
           />
           <button
             onClick={sendMessage}
             disabled={!connected || !input.trim()}
-            className={`shrink-0 w-8 h-8 rounded-xl flex items-center justify-center transition-all
-              ${connected && input.trim()
+            className={`shrink-0 w-8 h-8 rounded-xl flex items-center justify-center transition-all ${
+              connected && input.trim()
                 ? "bg-blue-500 text-white hover:bg-blue-600 active:scale-95"
-                : "bg-slate-700 text-slate-500 cursor-not-allowed"
-              }`}
+                : "bg-gray-100 text-gray-300 cursor-not-allowed"
+            }`}
           >
-            <Icons.Send />
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+            </svg>
           </button>
         </div>
       </div>
