@@ -18,6 +18,7 @@ export function useCurrentUser(): UserState {
   const roles    = Array.isArray(userProfile.roles) ? userProfile.roles : [];
   const isDoctor = roles.includes("ROLE_DOCTOR");
 
+
   return {
     userId:   String(userProfile.userId ?? ""),
     username: userProfile.username ?? "",

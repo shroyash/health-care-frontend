@@ -148,7 +148,7 @@ const MeetingPage: React.FC = () => {
             onClick={() => {
               // ✅ Navigate to room with UUID
               router.push(
-                `/appointment-room/${appointment.appointmentId}?token=${appointment.meetingToken}`
+                `/appointments/${appointment.appointmentId}?token=${appointment.meetingToken}`
               );
             }}
             className="mt-6 w-full py-3 rounded-xl bg-blue-600 text-white font-semibold

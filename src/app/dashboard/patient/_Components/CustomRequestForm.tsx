@@ -155,7 +155,7 @@ export const CustomRequestForm = () => {
           <Button
             type="submit"
             disabled={loadingSubmit || loadingDoctors}
-            className="w-full"
+            className="w-full bg-blue-600 text-white"
             size="lg"
           >
             {loadingSubmit ? "Sending Request..." : "Send Custom Request"}

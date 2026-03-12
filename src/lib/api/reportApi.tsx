@@ -4,7 +4,6 @@ import type { ReportRequestDto, ReportResponseDto } from "@/lib/type/report";
 const ENDPOINT = "/reports";
 
 export const reportApi = {
-
   // Doctor creates report
   create: (data: ReportRequestDto): Promise<ReportResponseDto> =>
     API.create<ReportRequestDto, ReportResponseDto>(ENDPOINT, data),
@@ -29,11 +28,11 @@ export const reportApi = {
   getByAppointment: (appointmentId: number): Promise<ReportResponseDto> =>
     API.getOne<ReportResponseDto>(`${ENDPOINT}/appointment/${appointmentId}`),
 
-  // Get all reports for a patient
-  getByPatient: (patientId: number): Promise<ReportResponseDto[]> =>
+  // Get all reports for a patient — patientId is a UUID string
+  getByPatient: (patientId: string): Promise<ReportResponseDto[]> =>
     API.getAll<ReportResponseDto>(`${ENDPOINT}/patient/${patientId}`),
 
-  // Get all reports for a doctor
-  getByDoctor: (doctorId: number): Promise<ReportResponseDto[]> =>
+  // Get all reports for a doctor — doctorId is a UUID string
+  getByDoctor: (doctorId: string): Promise<ReportResponseDto[]> =>
     API.getAll<ReportResponseDto>(`${ENDPOINT}/doctor/${doctorId}`),
 };

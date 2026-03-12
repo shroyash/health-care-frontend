@@ -21,10 +21,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import { getUpcomingAppointments} from "@/lib/api/doctorDashboard";
+import { getAppointments } from "@/lib/api/doctorDashboard";
 import { DoctorAppointment } from "@/lib/type/doctorDashboard";
 
-/* -------------------- Utils -------------------- */
 const formatDate = (date: string) =>
   new Date(date).toLocaleDateString("en-US", {
     year: "numeric",
@@ -45,20 +44,22 @@ const getStatusColor = (status: string) => {
   }
 };
 
+const STATUS_TABS = ["ALL", "SCHEDULED", "COMPLETED", "CANCELLED"];
+
 interface DoctorAppointmentsListProps {
-  upcoming?: boolean; // true = upcoming only, false = all
+  upcoming?: boolean;
 }
 
 export default function DoctorAppointmentsList({ upcoming = true }: DoctorAppointmentsListProps) {
   const [appointments, setAppointments] = useState<DoctorAppointment[]>([]);
   const [search, setSearch] = useState("");
+  const [activeTab, setActiveTab] = useState("ALL");
   const [selected, setSelected] = useState<DoctorAppointment | null>(null);
 
   useEffect(() => {
     async function fetchAppointments() {
       try {
-        // Fetch all appointments
-        const data = await getUpcomingAppointments(); // backend returns all
+        const data = await getAppointments();
         setAppointments(data);
       } catch (error) {
         toast.error("Failed to fetch appointments");
@@ -70,10 +71,10 @@ export default function DoctorAppointmentsList({ upcoming = true }: DoctorAppoin
   const today = new Date();
 
   const filteredAppointments = appointments
-    .filter((a) =>
-      a.patientName.toLowerCase().includes(search.toLowerCase())
-    )
-    .filter((a) => (upcoming ? new Date(a.appointmentDate) >= today : true));
+    .filter((a) => a.patientName.toLowerCase().includes(search.toLowerCase()))
+    .filter((a) => (upcoming ? new Date(a.appointmentDate) >= today : true))
+    .filter((a) => (upcoming ? a.status !== "CANCELLED" : true))
+    .filter((a) => (!upcoming && activeTab !== "ALL" ? a.status === activeTab : true));
 
   return (
     <>
@@ -87,7 +88,7 @@ export default function DoctorAppointmentsList({ upcoming = true }: DoctorAppoin
               <CardDescription>
                 {upcoming
                   ? "Manage your upcoming patient appointments"
-                  : "View all appointments"}
+                  : "View all your appointments"}
               </CardDescription>
             </div>
 
@@ -101,6 +102,25 @@ export default function DoctorAppointmentsList({ upcoming = true }: DoctorAppoin
               />
             </div>
           </div>
+
+          {/* Status Filter Tabs — only shown when upcoming is false */}
+          {!upcoming && (
+            <div className="flex gap-2 flex-wrap mt-2">
+              {STATUS_TABS.map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 ${
+                    activeTab === tab
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : "bg-white text-gray-600 border-gray-200 hover:border-blue-400 hover:text-blue-600"
+                  }`}
+                >
+                  {tab === "ALL" ? "All" : tab.charAt(0) + tab.slice(1).toLowerCase()}
+                </button>
+              ))}
+            </div>
+          )}
         </CardHeader>
 
         <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -110,7 +130,6 @@ export default function DoctorAppointmentsList({ upcoming = true }: DoctorAppoin
                 key={appointment.appointmentId}
                 className="bg-white rounded-xl shadow-md p-5 hover:shadow-xl transition border border-gray-100"
               >
-                {/* Top section */}
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <div className="p-3 rounded-full bg-blue-50">
@@ -118,26 +137,26 @@ export default function DoctorAppointmentsList({ upcoming = true }: DoctorAppoin
                     </div>
                     <div>
                       <p className="font-semibold">{appointment.patientName}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Appointment
+                      <p className="text-xs text-muted-foreground capitalize">
+                        {appointment.checkupType.toLowerCase()} checkup
                       </p>
                     </div>
                   </div>
-
-                  <Badge
-                    className={`capitalize ${getStatusColor(appointment.status)}`}
-                  >
+                  <Badge className={`capitalize ${getStatusColor(appointment.status)}`}>
                     {appointment.status.toLowerCase()}
                   </Badge>
                 </div>
 
-                {/* Start time */}
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-                  <Clock className="h-3 w-3" />
-                  <span>{appointment.startTime}</span>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                  <Calendar className="h-3 w-3" />
+                  <span>{formatDate(appointment.appointmentDate)}</span>
                 </div>
 
-                {/* View details */}
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+                  <Clock className="h-3 w-3" />
+                  <span>{appointment.startTime} - {appointment.endTime}</span>
+                </div>
+
                 <Button
                   size="sm"
                   variant="outline"
@@ -149,46 +168,42 @@ export default function DoctorAppointmentsList({ upcoming = true }: DoctorAppoin
               </div>
             ))
           ) : (
-            <p className="text-center text-sm text-muted-foreground col-span-full">
+            <p className="text-center text-sm text-muted-foreground col-span-full py-10">
               No appointments found.
             </p>
           )}
         </CardContent>
       </Card>
 
-      {/* ---------------- DETAILS MODAL ---------------- */}
       <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Appointment Details</DialogTitle>
           </DialogHeader>
-
           {selected && (
             <div className="space-y-4 text-sm">
               <div>
                 <strong>Patient:</strong> {selected.patientName}
               </div>
-
-              <div>
-                <strong>Appointment Date:</strong> {formatDate(selected.appointmentDate)}
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <strong>Date:</strong>
+                <span className="ml-1">{formatDate(selected.appointmentDate)}</span>
               </div>
-
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                <strong>Time:</strong>
+                <span className="ml-1">{selected.startTime} - {selected.endTime}</span>
+              </div>
               <div>
-                <strong>Start Time:</strong> {selected.startTime}</div>
-
-              <div>
-                <strong>End Time:</strong> {selected.endTime}</div>
-
-              <div>
-                <strong>Checkup Type:</strong> {selected.checkupType}</div>
-
+                <strong>Checkup Type:</strong> {selected.checkupType}
+              </div>
               <div>
                 <strong>Status:</strong>
                 <Badge className={`ml-2 ${getStatusColor(selected.status)}`}>
                   {selected.status}
                 </Badge>
               </div>
-
               {selected.meetingLink && (
                 <div>
                   <strong>Meeting Link:</strong>

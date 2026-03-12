@@ -26,8 +26,8 @@ const navigation = [
   { name: "Schedule", href: "/dashboard/doctor/schedule", icon: Calendar },
   { name: "Appointments", href: "/dashboard/doctor/appointments", icon: Clock },
   { name: "Appointments Request", href: "/dashboard/doctor/appointments-request", icon: Clock },
-  { name: "Patients", href: "/dashboard/doctor/patients", icon: Users },
-  { name: "Reports", href: "/dashboard/doctor/reports", icon: FileText },
+    { name: "Appointments History", href: "/dashboard/doctor/appointments-history", icon: Calendar },
+  { name: "Reports", href: "/dashboard/doctor/report", icon: FileText },
 ];
 
 export default function SideNavBar({ isOpen, toggleSidebar }: SideNavBarProps) {

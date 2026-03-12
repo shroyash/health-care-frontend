@@ -1,27 +1,32 @@
-
+// lib/api/doctorDashboard.ts
 import { API } from "./api";
 import type {
   DoctorDashboardStats,
   DoctorAppointment,
   SaveDoctorScheduleDto,
   AppointmentRequest,
+  DailyAppointmentCount,
+  CheckupTypeCountDto,
+  DoctorScheduleResponseDto,
 } from "../type/doctorDashboard";
 import api from "./api";
-import { DoctorScheduleResponseDto } from "../type/doctorDashboard";
 import { ApiResponse } from "./api";
 
-export const dashboardStats = async () => {
-  const res = await API.getOne<DoctorDashboardStats>("/dashboard/doctor");
-  return res;
+// ----- Dashboard Stats -----
+export const dashboardStats = async (): Promise<DoctorDashboardStats> => {
+  return API.getOne<DoctorDashboardStats>("/dashboard/doctor");
 };
 
+// ----- Appointments -----
 export const getUpcomingAppointments = async (): Promise<DoctorAppointment[]> => {
-  const res = await API.getAll<DoctorAppointment>(
-    "/dashboard/doctor/upcomming-appointments"
-  );
-  return res;
+  return API.getAll<DoctorAppointment>("/dashboard/doctor/upcoming-appointments");
 };
 
+export const getAppointments = async (): Promise<DoctorAppointment[]> => {
+  return API.getAll<DoctorAppointment>("/dashboard/doctor/appointments");
+};
+
+// ----- Doctor Schedule -----
 export const saveWeeklySchedule = async (
   dto: SaveDoctorScheduleDto
 ): Promise<void> => {
@@ -29,13 +34,11 @@ export const saveWeeklySchedule = async (
 };
 
 export const getDoctorSchedule = async (): Promise<DoctorScheduleResponseDto> => {
-  const response = await api.get<ApiResponse<DoctorScheduleResponseDto>>(
-    "/schedules"
-  );
+  const response = await api.get<ApiResponse<DoctorScheduleResponseDto>>("/schedules");
   return response.data.data;
 };
 
-
+// ----- Appointment Requests -----
 export const getDoctorAppointmentRequests = () =>
   API.getAll<AppointmentRequest>("/appointments/doctor");
 
@@ -45,6 +48,15 @@ export const updateAppointmentRequestStatus = (
 ) =>
   API.patch<null, AppointmentRequest>(
     `/appointments/update-status/${requestId}?status=${status}`,
-    null,
-    
+    null
   );
+
+// ----- New Chart APIs -----
+
+// Weekly Appointments
+export const getDoctorWeeklyAppointmentCount = (): Promise<DailyAppointmentCount[]> =>
+  API.getAll<DailyAppointmentCount>("/dashboard/doctor/weekly-count");
+
+// Checkup Type Counts
+export const getCheckupTypeCount = (): Promise<CheckupTypeCountDto[]> =>
+  API.getAll<CheckupTypeCountDto>("/dashboard/doctor/checkup-count");

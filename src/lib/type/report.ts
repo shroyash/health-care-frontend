@@ -23,8 +23,8 @@ export interface ReportRequestDto {
 export interface ReportResponseDto {
   id: number;
   appointmentId: number;
-  patientId: number;
-  doctorId: number;
+  patientId: string;
+  doctorId: string;
   title: string;
   diagnosis: string;
   symptoms: string;

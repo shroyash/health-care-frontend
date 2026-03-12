@@ -20,26 +20,22 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 
-// Convert backend date string to a readable format
 const formatFullDateFromBackend = (dateStr: string): string => {
   if (!dateStr) return "";
-  const date = new Date(dateStr); // backend date string
-  if (isNaN(date.getTime())) return dateStr; // fallback if invalid
-
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
   return date.toLocaleDateString("en-US", {
-    weekday: "long", // Monday, Tuesday...
-    day: "numeric",  // 1, 2, 3...
-    month: "long",   // January, February...
-    year: "numeric", // 2026
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
   });
 };
 
-// Convert backend time string (HH:mm:ss) to 12-hour AM/PM
 const formatTimeFromBackend = (timeStr: string): string => {
   if (!timeStr) return "";
   const [hour, minute] = timeStr.split(":").map(Number);
-  if (isNaN(hour) || isNaN(minute)) return timeStr; // fallback
-
+  if (isNaN(hour) || isNaN(minute)) return timeStr;
   const ampm = hour >= 12 ? "PM" : "AM";
   const hr = hour % 12 || 12;
   return `${hr}:${minute.toString().padStart(2, "0")} ${ampm}`;
@@ -67,11 +63,9 @@ export default function AppointmentRequestPage() {
   const handleStatusUpdate = async (id: number, status: "APPROVED" | "REJECTED") => {
     try {
       await updateAppointmentRequestStatus(id, status);
-
       setAppointments((prev) =>
         prev.map((apt) => (apt.requestId === id ? { ...apt, status } : apt))
       );
-
       toast.success(`Appointment ${status.toLowerCase()}`);
     } catch (error) {
       console.error("Error updating appointment:", error);
@@ -83,21 +77,19 @@ export default function AppointmentRequestPage() {
     const matchesSearch =
       apt.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (apt.notes?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
-
     const matchesStatus =
       filterStatus === "all" || apt.status.toLowerCase() === filterStatus.toLowerCase();
-
     return matchesSearch && matchesStatus;
   });
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "APPROVED":
-        return "status-approved";
+        return "bg-green-100 text-green-700 border-green-200";
       case "REJECTED":
-        return "status-declined";
+        return "bg-red-100 text-red-700 border-red-200";
       default:
-        return "status-pending";
+        return "bg-yellow-100 text-yellow-700 border-yellow-200";
     }
   };
 
@@ -113,20 +105,23 @@ export default function AppointmentRequestPage() {
                 placeholder="Search patients or notes..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 medical-input"
+                className="pl-10"
               />
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               {["all", "PENDING", "APPROVED", "REJECTED"].map((status) => (
-                <Button
+                <button
                   key={status}
-                  variant={filterStatus === status ? "default" : "outline"}
-                  size="sm"
                   onClick={() => setFilterStatus(status)}
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 ${
+                    filterStatus === status
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : "bg-white text-gray-600 border-gray-200 hover:border-blue-400 hover:text-blue-600"
+                  }`}
                 >
                   {status === "all" ? "All" : status.charAt(0) + status.slice(1).toLowerCase()}
-                </Button>
+                </button>
               ))}
             </div>
           </div>
@@ -139,7 +134,7 @@ export default function AppointmentRequestPage() {
           <CardTitle className="flex items-center space-x-2">
             <Clock className="w-5 h-5" />
             <span>Appointment Requests</span>
-            <Badge className="status-pending">
+            <Badge className="bg-yellow-100 text-yellow-700 border-yellow-200">
               {appointments.filter((apt) => apt.status === "PENDING").length} Pending
             </Badge>
           </CardTitle>
@@ -148,12 +143,12 @@ export default function AppointmentRequestPage() {
           {filteredAppointments.map((appointment) => (
             <div
               key={appointment.requestId}
-              className="p-4 rounded-lg border border-border hover:shadow-[var(--shadow-card)] transition-[var(--transition-smooth)]"
+              className="p-4 rounded-lg border border-border hover:shadow-md transition-all duration-200"
             >
               <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
                 <div className="flex items-start space-x-4">
-                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                    <Users className="w-6 h-6 text-primary" />
+                  <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center">
+                    <Users className="w-6 h-6 text-blue-600" />
                   </div>
 
                   <div className="flex-1">
@@ -163,46 +158,45 @@ export default function AppointmentRequestPage() {
                         <Clock className="w-4 h-4" />
                         <span>
                           {formatFullDateFromBackend(appointment.date)} |{" "}
-                          {formatTimeFromBackend(appointment.startTime)} - {formatTimeFromBackend(appointment.endTime)}
+                          {formatTimeFromBackend(appointment.startTime)} -{" "}
+                          {formatTimeFromBackend(appointment.endTime)}
                         </span>
                       </div>
                       <Badge className={getStatusBadge(appointment.status)}>
                         {appointment.status.toLowerCase()}
                       </Badge>
                     </div>
-                    {appointment.notes && <p className="text-sm mt-2">{appointment.notes}</p>}
+                    {appointment.notes && (
+                      <p className="text-sm mt-2">{appointment.notes}</p>
+                    )}
                   </div>
                 </div>
 
                 <div className="flex space-x-2">
                   {appointment.status === "PENDING" && (
                     <>
-                      <Button
-                        size="sm"
+                      <button
                         onClick={() => handleStatusUpdate(appointment.requestId, "APPROVED")}
-                        className="success-button"
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium bg-green-500 hover:bg-green-600 text-white transition-all duration-200"
                       >
-                        <CheckCircle className="w-4 h-4 mr-2" />
+                        <CheckCircle className="w-4 h-4" />
                         Approve
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
+                      </button>
+                      <button
                         onClick={() => handleStatusUpdate(appointment.requestId, "REJECTED")}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium bg-red-500 hover:bg-red-600 text-white transition-all duration-200"
                       >
-                        <XCircle className="w-4 h-4 mr-2" />
+                        <XCircle className="w-4 h-4" />
                         Decline
-                      </Button>
+                      </button>
                     </>
                   )}
-                  <Button
-                    size="sm"
-                    variant="outline"
+                  <button
                     onClick={() => setSelectedAppointment(appointment)}
-                    className="flex items-center gap-1"
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition-all duration-200"
                   >
                     <Info className="w-4 h-4" /> View Details
-                  </Button>
+                  </button>
                 </div>
               </div>
             </div>
@@ -217,43 +211,36 @@ export default function AppointmentRequestPage() {
         </CardContent>
       </Card>
 
-      {/* Modal for Appointment Details */}
+      {/* Modal */}
       <Dialog open={!!selectedAppointment} onOpenChange={() => setSelectedAppointment(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Appointment Details</DialogTitle>
           </DialogHeader>
           {selectedAppointment && (
-            <div className="space-y-2">
-              <p>
-                <strong>Patient Name:</strong> {selectedAppointment.patientName}
-              </p>
-              <p>
-                <strong>Date:</strong> {formatFullDateFromBackend(selectedAppointment.date)}
-              </p>
-              <p>
-                <strong>Start Time:</strong> {formatTimeFromBackend(selectedAppointment.startTime)}
-              </p>
-              <p>
-                <strong>End Time:</strong> {formatTimeFromBackend(selectedAppointment.endTime)}
-              </p>
+            <div className="space-y-2 text-sm">
+              <p><strong>Patient Name:</strong> {selectedAppointment.patientName}</p>
+              <p><strong>Date:</strong> {formatFullDateFromBackend(selectedAppointment.date)}</p>
+              <p><strong>Start Time:</strong> {formatTimeFromBackend(selectedAppointment.startTime)}</p>
+              <p><strong>End Time:</strong> {formatTimeFromBackend(selectedAppointment.endTime)}</p>
               <p>
                 <strong>Status:</strong>{" "}
-                <Badge className={getStatusBadge(selectedAppointment.status)}>
+                <Badge className={`ml-1 ${getStatusBadge(selectedAppointment.status)}`}>
                   {selectedAppointment.status.toLowerCase()}
                 </Badge>
               </p>
               {selectedAppointment.notes && (
-                <p>
-                  <strong>Notes:</strong> {selectedAppointment.notes}
-                </p>
+                <p><strong>Notes:</strong> {selectedAppointment.notes}</p>
               )}
             </div>
           )}
           <DialogFooter className="mt-4">
-            <Button onClick={() => setSelectedAppointment(null)} className="w-full">
+            <button
+              onClick={() => setSelectedAppointment(null)}
+              className="w-full py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition-all duration-200"
+            >
               Close
-            </Button>
+            </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

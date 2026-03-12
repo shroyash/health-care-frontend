@@ -1,14 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, Clock, User, ExternalLink } from "lucide-react";
+import { Search, Clock, User, ExternalLink, Calendar } from "lucide-react";
 import { toast } from "react-toastify";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 import { getAppointments } from "@/lib/api/patientDashboard";
 import { PatientAppointment } from "@/lib/type/patientDashboard";
@@ -23,22 +34,23 @@ const formatDate = (date: string) =>
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case "CONFIRMED":
-      return "bg-green-100 text-green-700 border-green-200";
-    case "PENDING":
-      return "bg-yellow-100 text-yellow-700 border-yellow-200";
-    case "CANCELLED":
-      return "bg-red-100 text-red-700 border-red-200";
     case "SCHEDULED":
       return "bg-blue-100 text-blue-700 border-blue-200";
+    case "COMPLETED":
+      return "bg-green-100 text-green-700 border-green-200";
+    case "CANCELLED":
+      return "bg-red-100 text-red-700 border-red-200";
     default:
       return "bg-muted text-muted-foreground";
   }
 };
 
+const STATUS_TABS = ["ALL", "SCHEDULED", "CANCELLED", "COMPLETED"];
+
 export default function PatientAppointmentsList() {
   const [appointments, setAppointments] = useState<PatientAppointment[]>([]);
   const [search, setSearch] = useState("");
+  const [activeTab, setActiveTab] = useState("ALL");
   const [selected, setSelected] = useState<PatientAppointment | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -61,7 +73,6 @@ export default function PatientAppointmentsList() {
           meetingLink: a.meetingLink || a.meeting_link,
         }));
 
-        console.log("Mapped appointments:", mapped);
         setAppointments(mapped);
       } catch (error) {
         toast.error("Failed to fetch appointments");
@@ -73,10 +84,13 @@ export default function PatientAppointmentsList() {
     fetchAppointments();
   }, []);
 
-  // Filter by search input
-  const filteredAppointments = appointments.filter((a) =>
-    a.doctorName.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredAppointments = appointments
+    .filter((a) =>
+      a.doctorName.toLowerCase().includes(search.toLowerCase())
+    )
+    .filter((a) =>
+      activeTab === "ALL" ? true : a.status === activeTab
+    );
 
   return (
     <>
@@ -85,10 +99,10 @@ export default function PatientAppointmentsList() {
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
             <div>
               <CardTitle className="text-2xl font-bold">
-                All Appointments
+                Appointments
               </CardTitle>
               <CardDescription>
-                Manage all your doctor appointments
+                Manage your appointments
               </CardDescription>
             </div>
 
@@ -101,6 +115,23 @@ export default function PatientAppointmentsList() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
+          </div>
+
+          {/* Status Tabs */}
+          <div className="flex gap-2 flex-wrap mt-4">
+            {STATUS_TABS.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 ${
+                  activeTab === tab
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-white text-gray-600 border-gray-200 hover:border-blue-400 hover:text-blue-600"
+                }`}
+              >
+                {tab === "ALL" ? "All" : tab.charAt(0) + tab.slice(1).toLowerCase()}
+              </button>
+            ))}
           </div>
         </CardHeader>
 
@@ -115,7 +146,6 @@ export default function PatientAppointmentsList() {
                 key={appointment.appointmentId}
                 className="bg-white rounded-xl shadow-md p-5 hover:shadow-xl transition border border-gray-100"
               >
-                {/* Top section */}
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <div className="p-3 rounded-full bg-blue-50">
@@ -123,28 +153,26 @@ export default function PatientAppointmentsList() {
                     </div>
                     <div>
                       <p className="font-semibold">{appointment.doctorName}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground capitalize">
                         {appointment.checkupType}
                       </p>
                     </div>
                   </div>
-
-                  <Badge
-                    className={`capitalize ${getStatusColor(appointment.status)}`}
-                  >
+                  <Badge className={`capitalize ${getStatusColor(appointment.status)}`}>
                     {appointment.status.toLowerCase()}
                   </Badge>
                 </div>
 
-                {/* Appointment time */}
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-                  <Clock className="h-3 w-3" />
-                  <span>
-                    {formatDate(appointment.appointmentDate)} | {appointment.startTime} - {appointment.endTime}
-                  </span>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                  <Calendar className="h-3 w-3" />
+                  <span>{formatDate(appointment.appointmentDate)}</span>
                 </div>
 
-                {/* View details */}
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+                  <Clock className="h-3 w-3" />
+                  <span>{appointment.startTime} - {appointment.endTime}</span>
+                </div>
+
                 <Button
                   size="sm"
                   variant="outline"
@@ -156,14 +184,14 @@ export default function PatientAppointmentsList() {
               </div>
             ))
           ) : (
-            <p className="text-center text-sm text-muted-foreground col-span-full">
+            <p className="text-center text-sm text-muted-foreground col-span-full py-10">
               No appointments found.
             </p>
           )}
         </CardContent>
       </Card>
 
-      {/* ---------------- DETAILS MODAL ---------------- */}
+      {/* Details Modal */}
       <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -175,30 +203,25 @@ export default function PatientAppointmentsList() {
               <div>
                 <strong>Doctor:</strong> {selected.doctorName}
               </div>
-
-              <div>
-                <strong>Appointment Date:</strong> {formatDate(selected.appointmentDate)}
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <strong>Date:</strong>
+                <span className="ml-1">{formatDate(selected.appointmentDate)}</span>
               </div>
-
-              <div>
-                <strong>Start Time:</strong> {selected.startTime}
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                <strong>Time:</strong>
+                <span className="ml-1">{selected.startTime} - {selected.endTime}</span>
               </div>
-
-              <div>
-                <strong>End Time:</strong> {selected.endTime}
-              </div>
-
               <div>
                 <strong>Checkup Type:</strong> {selected.checkupType}
               </div>
-
               <div>
                 <strong>Status:</strong>
                 <Badge className={`ml-2 ${getStatusColor(selected.status)}`}>
                   {selected.status}
                 </Badge>
               </div>
-
               {selected.meetingLink && (
                 <div>
                   <strong>Meeting Link:</strong>

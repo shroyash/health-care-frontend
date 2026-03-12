@@ -129,12 +129,13 @@ export default function DoctorProfilePage() {
       .finally(() => setUploading(false));
   };
 
-  const handleSave = async () => {
-    if (!profile) return;
-    const updated = await updateDoctorProfile(formData);
-    setProfile((p) => (p ? { ...p, ...updated } : p));
-    setIsEditing(false);
-  };
+const handleSave = async () => {
+  if (!profile) return;
+  const updated = await updateDoctorProfile(formData);
+  setProfile((p) => (p ? { ...p, ...updated } : p));
+  setIsEditing(false);
+  window.location.reload();
+};
 
   if (!profile)
     return <p className="text-center mt-20 text-gray-500">Loading…</p>;

@@ -24,9 +24,9 @@ export function VideoCall({
   const isActive = callState === "calling" || callState === "connected";
 
   return (
-    <div className="relative w-full h-full bg-gray-900 overflow-hidden rounded-b-none">
+    <div className="relative w-full h-full bg-gray-900 overflow-hidden">
 
-      {/* ── Remote video ───────────────────────────────────────────── */}
+      {/* ── Remote video ── */}
       <video
         ref={remoteVideoRef}
         autoPlay
@@ -34,8 +34,8 @@ export function VideoCall({
         className="w-full h-full object-cover"
       />
 
-      {/* ── Local PiP — bottom right ────────────────────────────────── */}
-      <div className="absolute bottom-20 right-3 flex flex-col items-center gap-1">
+      {/* ── Local PiP — bottom right ── */}
+      <div className="absolute bottom-20 right-4 flex flex-col items-center gap-1.5">
         <video
           ref={localVideoRef}
           autoPlay
@@ -43,14 +43,13 @@ export function VideoCall({
           muted
           className="w-28 h-20 rounded-xl object-cover bg-gray-800 border border-white/10 shadow-xl"
         />
-        <span className="text-white/70 text-[10px] font-medium">You</span>
+        <span className="text-white/60 text-[10px] font-medium tracking-wide">You</span>
       </div>
 
-      {/* ── IDLE: not started ──────────────────────────────────────── */}
+      {/* ── IDLE ── */}
       {callState === "idle" && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-5">
-          {/* Doctor avatar placeholder */}
-          <div className="flex flex-col items-center gap-2">
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-6">
+          <div className="flex flex-col items-center gap-2.5">
             <div className="w-20 h-20 rounded-full bg-teal-700/60 border-2 border-teal-400/30 flex items-center justify-center text-white text-2xl font-bold shadow-xl">
               {username?.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2) || "DR"}
             </div>
@@ -75,7 +74,7 @@ export function VideoCall({
         </div>
       )}
 
-      {/* ── JOINING ─────────────────────────────────────────────────── */}
+      {/* ── JOINING ── */}
       {callState === "joining" && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
           <div className="w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
@@ -83,7 +82,7 @@ export function VideoCall({
         </div>
       )}
 
-      {/* ── CALLING: waiting for other party ────────────────────────── */}
+      {/* ── CALLING ── */}
       {callState === "calling" && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/50 backdrop-blur-md rounded-full px-4 py-2">
           <div className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
@@ -91,7 +90,7 @@ export function VideoCall({
         </div>
       )}
 
-      {/* ── ENDED ───────────────────────────────────────────────────── */}
+      {/* ── ENDED ── */}
       {callState === "ended" && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gray-900/80">
           <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center">
@@ -109,7 +108,7 @@ export function VideoCall({
         </div>
       )}
 
-      {/* ── BUSY ────────────────────────────────────────────────────── */}
+      {/* ── BUSY ── */}
       {callState === "busy" && (
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="bg-black/60 backdrop-blur-md rounded-2xl px-6 py-4 text-center">
@@ -119,12 +118,12 @@ export function VideoCall({
         </div>
       )}
 
-      {/* ── ACTIVE CONTROLS ─────────────────────────────────────────── */}
+      {/* ── ACTIVE CONTROLS ── */}
       {isActive && (
         <div className="absolute bottom-4 inset-x-0 flex items-center justify-center gap-3 px-4">
 
           {/* Timer pill */}
-          <div className="flex items-center gap-1.5 bg-black/50 backdrop-blur-md rounded-full px-3 py-1.5 text-white text-xs font-semibold tabular-nums mr-1">
+          <div className="flex items-center gap-1.5 bg-black/50 backdrop-blur-md rounded-full px-3.5 py-1.5 text-white text-xs font-semibold tabular-nums mr-1">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             <CallTimer active={isActive} />
           </div>
@@ -140,12 +139,10 @@ export function VideoCall({
             }`}
           >
             {isMuted ? (
-              /* mic off */
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 9.75L19.5 12m0 0l2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-6l4.72-4.72a.75.75 0 011.28.531V19.94a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.506-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.395C2.806 8.757 3.63 8.25 4.51 8.25H6.75z" />
               </svg>
             ) : (
-              /* mic on */
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
               </svg>
@@ -183,7 +180,7 @@ export function VideoCall({
             </svg>
           </button>
 
-          {/* End call — red, prominent */}
+          {/* End call */}
           <button
             onClick={leaveCall}
             title="End call"

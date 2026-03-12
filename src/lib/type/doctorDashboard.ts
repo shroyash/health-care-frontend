@@ -1,11 +1,10 @@
 // types.ts
-export type DoctorDashboardStats = {
-  totalAppointmentsToday: number;
-  pendingRequests: number;
-  totalPatients: number;
-  totalPatientsThisWeek: number;
-  reportsThisMonth: number;
-};
+export interface DoctorDashboardStats {
+  totalAppointmentsToday: number
+  pendingRequests: number
+  totalPatients: number
+  reportsTaken: number
+}
 
 export interface DoctorAppointment {
   appointmentId: number;
@@ -62,4 +61,14 @@ export interface AppointmentRequest {
   endTime: string;
   status: "PENDING" | "APPROVED" | "REJECTED";
   notes?: string;
+}
+
+export interface DailyAppointmentCount {
+  count: number
+    date: string
+}
+
+ export interface CheckupTypeCountDto {
+  checkupType: "GENERAL" | "DENTAL" | "EYE" | "SPECIALIST"; // or enum
+  count: number;
 }

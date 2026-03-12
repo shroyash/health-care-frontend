@@ -15,10 +15,9 @@ export default function AppointmentRoomPage() {
 
   const { userId, username, isDoctor, ready } = useCurrentUser();
   const [showReport, setShowReport] = useState(false);
-  const [activeTab, setActiveTab] = useState<"notes" | "files" | "vitals">(
-    "notes",
-  );
-  const [notes, setNotes] = useState("");
+
+  // Mobile: which tab is active — "video" | "chat"
+  const [mobileTab, setMobileTab] = useState<"video" | "chat">("video");
 
   const {
     messages,
@@ -51,94 +50,88 @@ export default function AppointmentRoomPage() {
     : "DR";
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-gray-50">
-      {/* ── LEFT COLUMN ──────────────────────────────────────────────── */}
-      <div className="flex flex-col flex-1 overflow-hidden min-w-0">
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-100 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-teal-600 flex items-center justify-center text-white text-sm font-bold shrink-0">
+    /**
+     * Mobile  : single-column, stacked — p-0, no gap, bg-white
+     * Desktop : two-column side-by-side — p-3, gap-3, bg-gray-100
+     */
+    <div className="flex h-screen w-screen overflow-hidden
+                    flex-col
+                    lg:flex-row lg:bg-gray-100 lg:p-6 lg:gap-4">
+
+      {/* ════════════════════════════════════════════════════════════
+          LEFT COLUMN  (video + how-to)
+          Mobile : fills screen when mobileTab === "video"
+          Desktop: flex-1 card
+      ════════════════════════════════════════════════════════════ */}
+      <div className={`
+        flex flex-col overflow-hidden min-w-0 bg-white
+        ${mobileTab === "video" ? "flex-1" : "hidden"}
+        lg:flex lg:flex-1 lg:rounded-2xl lg:shadow-sm
+      `}>
+
+        {/* ── Header ── */}
+        <div className="flex items-center justify-between
+                        px-4 py-3
+                        sm:px-6 sm:py-3.5
+                        bg-white border-b border-gray-100 shrink-0
+                        lg:rounded-t-2xl">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-teal-600
+                            flex items-center justify-center
+                            text-white text-xs sm:text-sm font-bold shrink-0">
               {doctorInitials}
             </div>
             <div>
-              <div className="text-[15px] font-semibold text-gray-800 leading-tight">
+              <div className="text-[14px] sm:text-[15px] font-semibold text-gray-950 leading-tight">
                 {username || "Doctor"}
               </div>
-              <div className="text-xs text-gray-400 mt-0.5">
+              <div className="text-[11px] sm:text-xs text-gray-600 mt-0.5">
                 General Physician
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 border border-gray-200 rounded-full px-3 py-1.5 bg-white">
-              <span
-                className={`w-2 h-2 rounded-full shrink-0 ${connected ? "bg-emerald-400 animate-pulse" : "bg-red-400"}`}
-              />
-              <span className="text-xs font-semibold text-gray-600">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* Live pill */}
+            <div className="flex items-center gap-1.5 border border-gray-200 rounded-full px-2.5 py-1.5 sm:px-3 bg-white">
+              <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full shrink-0 ${connected ? "bg-emerald-400 animate-pulse" : "bg-red-400"}`} />
+              <span className="text-[11px] sm:text-xs font-semibold text-gray-800 tabular-nums">
                 {connected ? "Live" : "Offline"}
               </span>
             </div>
-            <button className="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 transition-colors">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={1.8}
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"
-                />
+
+            {/* Chat tab toggle — mobile only */}
+            <button
+              className="lg:hidden w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 transition-colors relative"
+              onClick={() => setMobileTab("chat")}
+              title="Open chat"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
               </svg>
+              {messages.length > 0 && (
+                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-blue-500" />
+              )}
             </button>
-            <button className="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 transition-colors">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={1.8}
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-            </button>
+
+
+
             {isDoctor && (
               <button
                 onClick={() => setShowReport(true)}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-all active:scale-95 shadow-sm ml-1"
+                className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-all active:scale-95 shadow-sm ml-1"
               >
-                <svg
-                  className="w-3.5 h-3.5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                Generate Report
+                <span className="hidden sm:inline">Generate Report</span>
+                <span className="sm:hidden">Report</span>
               </button>
             )}
           </div>
         </div>
 
-        {/* Video — takes all remaining space */}
+        {/* ── Video ── */}
         <div className="flex-1 overflow-hidden relative min-h-0">
           <VideoCall
             stompClient={stompClient}
@@ -149,18 +142,89 @@ export default function AppointmentRoomPage() {
             isDoctor={isDoctor}
           />
         </div>
-      </div>
 
-      {/* ── RIGHT COLUMN: Chat ─────────────────────────────────────── */}
-      <div className="w-80 shrink-0 flex flex-col bg-white border-l border-gray-100">
-        <div className="px-5 py-4 border-b border-gray-100 shrink-0">
-          <div className="text-[15px] font-semibold text-gray-800">
-            Messages
-          </div>
-          <div className="text-xs text-gray-400 mt-0.5">
-            Live consultation chat
+        {/* ── How to use panel — hidden on very small screens to save space ── */}
+        <div className="shrink-0 bg-white border-t border-gray-100 px-4 py-3 sm:px-6 sm:py-4 lg:rounded-b-2xl">
+          <p className="text-sm font-semibold text-gray-950 mb-2 sm:mb-3">
+            How to use your consultation
+          </p>
+          <div className="flex flex-col gap-2 sm:gap-2.5">
+            {[
+              {
+                icon: (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
+                  </svg>
+                ),
+                title: "Video Call",
+                desc: "Use the controls below the video to mute, toggle camera, share screen, or end the call.",
+              },
+              {
+                icon: (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+                  </svg>
+                ),
+                title: "Chat",
+                desc: "Send messages, share files, or medical images with your doctor in real-time.",
+              },
+              {
+                icon: (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                ),
+                title: "Generate Report",
+                desc: "Only the doctor can generate the medical report & prescription after the consultation ends.",
+              },
+            ].map((item, i) => (
+              <div key={i} className="flex items-start gap-2.5 sm:gap-3">
+                <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-blue-50 border border-blue-100
+                                flex items-center justify-center text-blue-600
+                                shrink-0 text-[10px] sm:text-xs font-bold mt-0.5">
+                  {i + 1}
+                </div>
+                <div className="flex items-start gap-1.5 sm:gap-2">
+                  <span className="text-blue-400 mt-0.5 shrink-0">{item.icon}</span>
+                  <div>
+                    <span className="text-xs sm:text-sm font-semibold text-gray-900">{item.title} </span>
+                    <span className="text-[11px] sm:text-xs text-gray-700">{item.desc}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
+      </div>
+
+      {/* ════════════════════════════════════════════════════════════
+          RIGHT COLUMN  (chat)
+          Mobile : fills full screen when mobileTab === "chat"
+          Desktop: fixed-width sidebar card
+      ════════════════════════════════════════════════════════════ */}
+      <div className={`
+        flex flex-col bg-white overflow-hidden
+        ${mobileTab === "chat" ? "flex-1" : "hidden"}
+        lg:flex lg:flex-none lg:w-96 lg:rounded-2xl lg:shadow-sm lg:border lg:border-gray-100
+      `}>
+        {/* Chat header */}
+        <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-gray-100 shrink-0 flex items-center gap-3">
+          {/* Back to video — mobile only */}
+          <button
+            className="lg:hidden w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500 transition-colors shrink-0"
+            onClick={() => setMobileTab("video")}
+            title="Back to video"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            </svg>
+          </button>
+          <div>
+            <div className="text-[15px] font-semibold text-gray-950">Messages</div>
+            <div className="text-xs text-gray-600 mt-0.5">Live consultation chat</div>
+          </div>
+        </div>
+
         <div className="flex-1 overflow-hidden">
           <LiveChat
             messages={messages}
@@ -179,28 +243,20 @@ export default function AppointmentRoomPage() {
       {/* ── REPORT MODAL ──────────────────────────────────────────── */}
       {showReport && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm"
           onClick={(e) => {
             if (e.target === e.currentTarget) setShowReport(false);
           }}
         >
-          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white shadow-2xl">
+          {/* On mobile slides up from bottom; on desktop it's a centred dialog */}
+          <div className="relative w-full sm:max-w-2xl max-h-[92vh] overflow-y-auto
+                          rounded-t-3xl sm:rounded-3xl bg-white shadow-2xl">
             <button
               onClick={() => setShowReport(false)}
               className="absolute top-4 right-4 z-10 rounded-full p-2 text-gray-400 hover:bg-gray-100 transition-colors"
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M6 18L18 6M6 6l12 12"
-                />
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
             <MedicalReportPanel
@@ -209,7 +265,6 @@ export default function AppointmentRoomPage() {
               onClose={() => setShowReport(false)}
               onSaved={(report) => {
                 console.log("Report saved:", report);
-                // optionally close modal on finalize
                 if (report.status === "FINALIZED") setShowReport(false);
               }}
             />

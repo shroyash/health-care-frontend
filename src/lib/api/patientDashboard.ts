@@ -5,6 +5,8 @@ import type {
   CreateAppointmentRequestDto,
   AppointmentRequest,
   PatientAppointment,
+  DailyAppointmentCount,
+  AppointmentStatusCount
 } from "../type/patientDashboard";
 
 export const getUpcomingAppointments = async (): Promise<PatientAppointment[]> =>
@@ -34,3 +36,10 @@ export const getDoctorScheduleById = async (doctorProfileId: number): Promise<Do
   const res = await API.getOne<DoctorWithSchedule>(`/schedules/${doctorProfileId}`);
   return res;
 };
+
+
+export const getPatientWeeklyCount = (): Promise<DailyAppointmentCount[]> =>
+  API.getAll<DailyAppointmentCount>("/dashboard/patient/weekly-count");
+
+export const getPatientStatusCount = (): Promise<AppointmentStatusCount[]> =>
+  API.getAll<AppointmentStatusCount>("/dashboard/patient/status-count");

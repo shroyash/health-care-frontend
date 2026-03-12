@@ -15,6 +15,7 @@ export interface PatientAppointment {
 export interface PatientDashboardStats {
   totalUpcomingAppointments: number;
   totalActiveDoctor: number;
+  totalReportWritten : number;
 }
 
 // List of upcoming appointments
@@ -62,4 +63,14 @@ export interface AppointmentRequest{
   appointmentId?: number | null;
   meetingLink?: string | null;
   meetingToken?: string | null;
+}
+
+export interface DailyAppointmentCount {
+  date: string;
+  count: number;
+}
+
+export interface AppointmentStatusCount {
+  status: string;
+  count: number;
 }

@@ -37,11 +37,11 @@ function MedicineRow({
   onChange: (field: keyof MedicineForm, value: string) => void;
 }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-3 flex flex-col gap-2">
+    <div className="rounded-xl border border-slate-300 bg-white p-3 flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-slate-400">Medicine #{index + 1}</span>
+        <span className="text-xs font-semibold text-slate-700">Medicine #{index + 1}</span>
         {!disabled && (
-          <button onClick={onDelete} className="text-slate-400 hover:text-red-500 transition">
+          <button onClick={onDelete} className="text-slate-500 hover:text-red-500 transition">
             <TrashIcon />
           </button>
         )}
@@ -52,35 +52,35 @@ function MedicineRow({
           placeholder="Medicine name *"
           value={medicine.name}
           onChange={(e) => onChange("name", e.target.value)}
-          className="col-span-2 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="col-span-2 rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
         />
         <input
           disabled={disabled}
           placeholder="Dosage (e.g. 500mg)"
           value={medicine.dosage}
           onChange={(e) => onChange("dosage", e.target.value)}
-          className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
         />
         <input
           disabled={disabled}
           placeholder="Frequency (e.g. twice a day)"
           value={medicine.frequency}
           onChange={(e) => onChange("frequency", e.target.value)}
-          className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
         />
         <input
           disabled={disabled}
           placeholder="Duration (e.g. 7 days)"
           value={medicine.duration}
           onChange={(e) => onChange("duration", e.target.value)}
-          className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
         />
         <input
           disabled={disabled}
           placeholder="Instructions (e.g. after food)"
           value={medicine.instructions}
           onChange={(e) => onChange("instructions", e.target.value)}
-          className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
         />
       </div>
     </div>
@@ -118,7 +118,6 @@ export function MedicalReportPanel({
   const mark = () => setHasUnsaved(true);
   const isFinalized = savedReport?.status === "FINALIZED";
 
-  // ── Medicine handlers ──────────────────────────────
   const addMedicine = () => {
     setMedicines((prev) => [
       ...prev,
@@ -139,7 +138,6 @@ export function MedicalReportPanel({
     mark();
   };
 
-  // ── Save Draft ─────────────────────────────────────
   const handleSave = async () => {
     if (!title.trim()) { setError("Title is required"); return; }
     setError(null);
@@ -155,11 +153,9 @@ export function MedicalReportPanel({
         reportType,
         medicines,
       };
-
       const report = savedReport
         ? await reportApi.update(savedReport.id, payload)
         : await reportApi.create(payload);
-
       setSavedReport(report);
       setHasUnsaved(false);
       onSaved?.(report);
@@ -170,7 +166,6 @@ export function MedicalReportPanel({
     }
   };
 
-  // ── Finalize ───────────────────────────────────────
   const handleFinalize = async () => {
     if (!savedReport) { setError("Save the report first before finalizing"); return; }
     setError(null);
@@ -191,20 +186,20 @@ export function MedicalReportPanel({
     <aside className="flex flex-col w-full h-full">
 
       {/* Header */}
-      <div className="px-6 py-5 border-b border-slate-100 bg-slate-50 rounded-t-2xl">
+      <div className="px-6 py-5 border-b border-slate-200 bg-slate-50 rounded-t-2xl">
         <div className="flex items-start justify-between">
           <div>
-            <h2 className="text-base font-semibold text-slate-800">Medical Consultation Report</h2>
-            <p className="text-xs text-slate-400 mt-0.5">APT-{appointmentId} · {doctorName}</p>
+            <h2 className="text-base font-semibold text-slate-950">Medical Consultation Report</h2>
+            <p className="text-xs text-slate-600 mt-0.5">APT-{appointmentId} · {doctorName}</p>
           </div>
           <div className="flex items-center gap-2">
             {isFinalized && (
-              <span className="text-xs font-medium text-green-600 bg-green-50 border border-green-200 rounded-full px-3 py-1 flex items-center gap-1">
+              <span className="text-xs font-semibold text-green-700 bg-green-50 border border-green-300 rounded-full px-3 py-1 flex items-center gap-1">
                 <CheckIcon /> Finalized
               </span>
             )}
             {hasUnsaved && !isFinalized && (
-              <span className="text-xs font-medium text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-3 py-1">
+              <span className="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-300 rounded-full px-3 py-1">
                 Unsaved changes
               </span>
             )}
@@ -217,14 +212,14 @@ export function MedicalReportPanel({
 
         {/* Error */}
         {error && (
-          <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-xs text-red-600 font-medium">
+          <div className="rounded-xl bg-red-50 border border-red-300 px-4 py-3 text-xs text-red-700 font-semibold">
             {error}
           </div>
         )}
 
         {/* Report Type */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Report Type</label>
+          <label className="text-xs font-bold text-slate-700 uppercase tracking-wide">Report Type</label>
           <div className="flex gap-2">
             {(["CONSULTATION", "LAB", "DISCHARGE"] as const).map((type) => (
               <button
@@ -234,7 +229,7 @@ export function MedicalReportPanel({
                 className={`flex-1 rounded-xl border py-2 text-xs font-semibold transition ${
                   reportType === type
                     ? "bg-blue-600 border-blue-600 text-white"
-                    : "border-slate-200 text-slate-500 hover:border-blue-300 hover:text-blue-500"
+                    : "border-slate-300 text-slate-700 hover:border-blue-400 hover:text-blue-600"
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {type}
@@ -245,73 +240,73 @@ export function MedicalReportPanel({
 
         {/* Title */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-            Title <span className="text-red-400">*</span>
+          <label className="text-xs font-bold text-slate-700 uppercase tracking-wide">
+            Title <span className="text-red-500">*</span>
           </label>
           <input
             disabled={isFinalized}
             placeholder="e.g. Fever Consultation"
             value={title}
             onChange={(e) => { setTitle(e.target.value); mark(); }}
-            className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
           />
         </div>
 
         {/* Symptoms */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Symptoms</label>
+          <label className="text-xs font-bold text-slate-700 uppercase tracking-wide">Symptoms</label>
           <textarea
             disabled={isFinalized}
             placeholder="Describe patient symptoms..."
             rows={3}
             value={symptoms}
             onChange={(e) => { setSymptoms(e.target.value); mark(); }}
-            className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-800 placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder-slate-500 resize-none focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
           />
         </div>
 
         {/* Diagnosis */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Diagnosis</label>
+          <label className="text-xs font-bold text-slate-700 uppercase tracking-wide">Diagnosis</label>
           <textarea
             disabled={isFinalized}
             placeholder="Enter diagnosis..."
             rows={2}
             value={diagnosis}
             onChange={(e) => { setDiagnosis(e.target.value); mark(); }}
-            className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-800 placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder-slate-500 resize-none focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
           />
         </div>
 
         {/* Treatment Plan */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Treatment Plan</label>
+          <label className="text-xs font-bold text-slate-700 uppercase tracking-wide">Treatment Plan</label>
           <textarea
             disabled={isFinalized}
             placeholder="Describe treatment plan..."
             rows={2}
             value={treatmentPlan}
             onChange={(e) => { setTreatmentPlan(e.target.value); mark(); }}
-            className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-800 placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder-slate-500 resize-none focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
           />
         </div>
 
         {/* Notes */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Notes</label>
+          <label className="text-xs font-bold text-slate-700 uppercase tracking-wide">Notes</label>
           <textarea
             disabled={isFinalized}
             placeholder="Additional notes..."
             rows={2}
             value={notes}
             onChange={(e) => { setNotes(e.target.value); mark(); }}
-            className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-800 placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder-slate-500 resize-none focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
           />
         </div>
 
         {/* Medicines */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Medicines</label>
+          <label className="text-xs font-bold text-slate-700 uppercase tracking-wide">Medicines</label>
           <div className="flex flex-col gap-2">
             {medicines.map((medicine, index) => (
               <MedicineRow
@@ -326,7 +321,7 @@ export function MedicalReportPanel({
             {!isFinalized && (
               <button
                 onClick={addMedicine}
-                className="flex items-center gap-1.5 text-xs font-semibold text-blue-500 hover:text-blue-700 transition w-fit mt-1"
+                className="flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-800 transition w-fit mt-1"
               >
                 <PlusIcon /> Add medicine
               </button>
@@ -349,7 +344,7 @@ export function MedicalReportPanel({
               <button
                 onClick={handleFinalize}
                 disabled={finalizing}
-                className="w-full rounded-xl border-2 border-green-500 py-3 text-sm font-semibold text-green-600 hover:bg-green-50 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full rounded-xl border-2 border-green-600 py-3 text-sm font-semibold text-green-700 hover:bg-green-50 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {finalizing ? "Finalizing..." : "Finalize Report"}
               </button>
@@ -358,7 +353,7 @@ export function MedicalReportPanel({
         )}
 
         {isFinalized && (
-          <div className="rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-xs text-green-700 font-medium text-center">
+          <div className="rounded-xl bg-green-50 border border-green-300 px-4 py-3 text-xs text-green-800 font-semibold text-center">
             ✓ This report has been finalized and cannot be edited
           </div>
         )}

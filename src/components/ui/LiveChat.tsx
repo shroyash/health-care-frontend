@@ -44,7 +44,7 @@ export function LiveChat({
     <div className="flex flex-col h-full bg-white">
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3 min-h-0">
+      <div className="flex-1 overflow-y-auto px-4 py-5 flex flex-col gap-4 min-h-0">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full gap-2">
             <svg className="w-10 h-10 text-gray-200" fill="none" stroke="currentColor" strokeWidth={1.2} viewBox="0 0 24 24">
@@ -64,7 +64,7 @@ export function LiveChat({
           return (
             <div key={gi} className={`flex gap-2.5 ${isMine ? "flex-row-reverse" : "flex-row"}`}>
               {/* Avatar */}
-              <div className="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center text-white text-xs font-bold shrink-0 mt-auto">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 mt-auto ${isMine ? "bg-blue-500" : "bg-teal-600"}`}>
                 {getInitials(displayName)}
               </div>
 
@@ -84,7 +84,7 @@ export function LiveChat({
                         {msg.content}
                       </div>
                       {isLast && (
-                        <span className={`text-xs text-gray-400 mt-1 block ${isMine ? "text-right" : "text-left"}`}>
+                        <span className={`text-[11px] text-gray-400 mt-1 block ${isMine ? "text-right pr-1" : "text-left pl-1"}`}>
                           {formatTime(msg.timestamp)}
                         </span>
                       )}
@@ -99,7 +99,7 @@ export function LiveChat({
       </div>
 
       {/* Input bar */}
-      <div className="shrink-0 px-3 py-3 border-t border-gray-100">
+      <div className="shrink-0 px-4 py-3 border-t border-gray-100">
         <div className={`flex items-center gap-2 rounded-2xl border px-3 py-2.5 transition-all ${
           connected
             ? "bg-white border-gray-200 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100"
