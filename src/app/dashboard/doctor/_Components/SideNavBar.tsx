@@ -9,6 +9,8 @@ import {
   Clock,
   LayoutDashboard,
   X,
+  Pi,
+  Pill
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -27,6 +29,7 @@ const navigation = [
   { name: "Appointments", href: "/dashboard/doctor/appointments", icon: Clock },
   { name: "Appointments Request", href: "/dashboard/doctor/appointments-request", icon: Clock },
     { name: "Appointments History", href: "/dashboard/doctor/appointments-history", icon: Calendar },
+    { name: "Medicine Section", href: "/dashboard/doctor/medicine", icon: Pill },
   { name: "Reports", href: "/dashboard/doctor/report", icon: FileText },
 ];
 

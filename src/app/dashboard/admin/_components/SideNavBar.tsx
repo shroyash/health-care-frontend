@@ -12,6 +12,7 @@ import {
   Bell,
   FileText,
   Settings,
+  Pill
 } from "lucide-react";
 
 import {
@@ -32,6 +33,7 @@ const navigationItems = [
   { title: "Doctors", url: "/dashboard/admin/doctors", icon: UserCheck, group: "Management" },
   { title: "Doctor Requests", url: "/dashboard/admin/doctors-requests", icon: FileText, group: "Management" },
   { title: "Patients", url: "/dashboard/admin/patients", icon: Users, group: "Management" },
+  { title: "Medicines Section", url: "/dashboard/admin/medicine", icon: Pill, group: "Management" },
   { title: "Analytics", url: "/dashboard/admin/analytics", icon: BarChart3, group: "Reports" },
   { title: "Reports", url: "/dashboard/admin/reports", icon: FileText, group: "Reports" },
   { title: "System Monitor", url: "/dashboard/admin/monitor", icon: Activity, group: "System" },

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Calendar, FileText, CalendarPlus } from "lucide-react";
+import { LayoutDashboard, Calendar, FileText, CalendarPlus,Pill } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getPatientProfile } from "@/lib/api/patientProfileApi";
 import type { PatientProfileDTO } from "@/lib/api/patientProfileApi";
@@ -13,6 +13,7 @@ const navigation = [
   { name: "Appointments", href: "/dashboard/patient/appointments", icon: Calendar },
   { name: "Request Appointment", href: "/dashboard/patient/request-appointments", icon: CalendarPlus },
   { name: "Appointments History", href: "/dashboard/patient/appointments-history", icon: Calendar },
+   { name: "Medicines Section", href: "/dashboard/patient/medicine", icon: Pill },
   { name: "Report", href: "/dashboard/patient/report", icon: FileText },
 ];
 
