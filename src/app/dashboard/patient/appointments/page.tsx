@@ -25,12 +25,23 @@ import { getAppointments } from "@/lib/api/patientDashboard";
 import { PatientAppointment } from "@/lib/type/patientDashboard";
 
 /* -------------------- Utils -------------------- */
+
+// ✅ "Sat, Mar 21, 2026"
 const formatDate = (date: string) =>
   new Date(date).toLocaleDateString("en-US", {
+    weekday: "short",
     year: "numeric",
     month: "short",
     day: "numeric",
   });
+
+// ✅ "10:10 AM" from "10:10:00" or "10:10"
+const formatTime = (time: string) => {
+  const [h, m] = time.split(":").map(Number);
+  const d = new Date();
+  d.setHours(h, m, 0, 0);
+  return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+};
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -60,7 +71,6 @@ export default function PatientAppointmentsList() {
         setLoading(true);
         const data = await getAppointments();
 
-        // Map backend fields to frontend
         const mapped: PatientAppointment[] = data.map((a: any) => ({
           appointmentId: a.appointmentId || a.appointment_id,
           doctorId: a.doctorId || a.doctor_id,
@@ -85,12 +95,8 @@ export default function PatientAppointmentsList() {
   }, []);
 
   const filteredAppointments = appointments
-    .filter((a) =>
-      a.doctorName.toLowerCase().includes(search.toLowerCase())
-    )
-    .filter((a) =>
-      activeTab === "ALL" ? true : a.status === activeTab
-    );
+    .filter((a) => a.doctorName.toLowerCase().includes(search.toLowerCase()))
+    .filter((a) => activeTab === "ALL" ? true : a.status === activeTab);
 
   return (
     <>
@@ -98,12 +104,8 @@ export default function PatientAppointmentsList() {
         <CardHeader>
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
             <div>
-              <CardTitle className="text-2xl font-bold">
-                Appointments
-              </CardTitle>
-              <CardDescription>
-                Manage your appointments
-              </CardDescription>
+              <CardTitle className="text-2xl font-bold">Appointments</CardTitle>
+              <CardDescription>Manage your appointments</CardDescription>
             </div>
 
             <div className="relative md:w-64">
@@ -163,14 +165,16 @@ export default function PatientAppointmentsList() {
                   </Badge>
                 </div>
 
+                {/* ✅ "Sat, Mar 21, 2026" */}
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
                   <Calendar className="h-3 w-3" />
                   <span>{formatDate(appointment.appointmentDate)}</span>
                 </div>
 
+                {/* ✅ "10:10 AM — 11:10 AM" */}
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
                   <Clock className="h-3 w-3" />
-                  <span>{appointment.startTime} - {appointment.endTime}</span>
+                  <span>{formatTime(appointment.startTime)} — {formatTime(appointment.endTime)}</span>
                 </div>
 
                 <Button
@@ -203,15 +207,17 @@ export default function PatientAppointmentsList() {
               <div>
                 <strong>Doctor:</strong> {selected.doctorName}
               </div>
+              {/* ✅ "Sat, Mar 21, 2026" in modal */}
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
                 <strong>Date:</strong>
                 <span className="ml-1">{formatDate(selected.appointmentDate)}</span>
               </div>
+              {/* ✅ "10:10 AM — 11:10 AM" in modal */}
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-muted-foreground" />
                 <strong>Time:</strong>
-                <span className="ml-1">{selected.startTime} - {selected.endTime}</span>
+                <span className="ml-1">{formatTime(selected.startTime)} — {formatTime(selected.endTime)}</span>
               </div>
               <div>
                 <strong>Checkup Type:</strong> {selected.checkupType}

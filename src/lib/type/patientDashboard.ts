@@ -25,6 +25,7 @@ export type PatientUpcomingAppointments = PatientAppointment[];
 export interface DoctorWithSchedule {
   doctorProfileId: string;  // UUID
   name: string;
+  profileUrl: string;
   specialty: string;
   email: string;
   phone: string;

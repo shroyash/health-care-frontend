@@ -42,8 +42,8 @@ export default function PatientReportsPage() {
       error={error}
       onRetry={fetchReports}
       // Patient's view — show doctor ID so patient knows who wrote it
-      idLabel="Doctor ID"
-      getId={(r) => r.doctorId}
+      idLabel="Doctor Name"
+      getId={(r) => r.doctorName || r.doctorId}
     />
   );
 }

@@ -43,8 +43,8 @@ export default function DoctorReportsPage() {
       error={error}
       onRetry={fetchReports}
       // Doctor's view — show patient ID on each card so doctor knows who it's for
-      idLabel="Patient ID"
-      getId={(r) => r.patientId}
+      idLabel="Patient Name"
+      getId={(r) => r.patientName || r.patientId }
     />
   );
 }

@@ -1,17 +1,22 @@
 import { API } from "./api";
 
 export interface PatientProfileDTO {
-  patientId: number;
+  patientId: string;        
   fullName: string;
   email: string;
   contactNumber: string;
   status: string;
-  profileImgUrl?: string;
+  profileImgUrl?: string | null;
+  dateOfBirth?: string | null;  
+  gender?: string | null;      
+  country?: string | null;   
 }
 
 export interface PatientProfileUpdateDto {
   fullname: string;
   contactNumber: string;
+  country: string;
+  dateOfBirth: string;    
 }
 
 const ENDPOINT = "/patient-profiles";
@@ -28,7 +33,7 @@ export const updatePatientProfile = async (
   return API.putNoId<PatientProfileUpdateDto, void>(ENDPOINT, data);
 };
 export const uploadPatientProfileImage = async (
-  patientId: number,
+  patientId: string,
   file: File
 ): Promise<string> => {
   if (!process.env.NEXT_PUBLIC_API_URL) {

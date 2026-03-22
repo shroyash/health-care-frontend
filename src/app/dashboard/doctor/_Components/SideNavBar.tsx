@@ -16,7 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { getDoctorProfile } from "@/lib/api/doctorProfileApi";
-import type { DoctorProfileUpdateDto } from "@/lib/api/doctorProfileApi";
+import type { DoctorProfileDTO } from "@/lib/api/doctorProfileApi";
 
 interface SideNavBarProps {
   isOpen: boolean;
@@ -36,12 +36,13 @@ const navigation = [
 export default function SideNavBar({ isOpen, toggleSidebar }: SideNavBarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [profile, setProfile] = useState<DoctorProfileUpdateDto | null>(null);
+  const [profile, setProfile] = useState<DoctorProfileDTO | null>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const data = await getDoctorProfile();
+        console.log("Fetched profile:", data);
         setProfile(data);
       } catch (err) {
         console.error("Error fetching profile:", err);
@@ -112,12 +113,14 @@ export default function SideNavBar({ isOpen, toggleSidebar }: SideNavBarProps) {
         {/* Footer/Profile at bottom */}
         <div className="p-4 border-t border-border mt-auto">
           <div className="flex flex-col items-center gap-2">
-            <Avatar>
-              <AvatarImage src="/doctor.png" />
-              <AvatarFallback className="medical-gradient text-white bg-blue-600 border-2 p-2">
-                DR
-              </AvatarFallback>
-            </Avatar>
+           <Avatar>
+  <AvatarImage src={profile.profileImgUrl ? `http://localhost:8004${profile.profileImgUrl}` : undefined} />
+  <AvatarFallback className="medical-gradient text-white bg-blue-600 border-2 p-2">
+    {profile.fullName
+      ? profile.fullName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
+      : "DR"}
+  </AvatarFallback>
+</Avatar>
             <p className="font-medium text-card-foreground text-center">
               {profile.fullName}
             </p>

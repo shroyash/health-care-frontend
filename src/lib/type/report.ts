@@ -25,6 +25,8 @@ export interface ReportResponseDto {
   appointmentId: number;
   patientId: string;
   doctorId: string;
+  patientName: string;
+  doctorName: string;
   title: string;
   diagnosis: string;
   symptoms: string;

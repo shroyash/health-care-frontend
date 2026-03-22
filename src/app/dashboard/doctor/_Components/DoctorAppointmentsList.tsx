@@ -24,12 +24,22 @@ import {
 import { getAppointments } from "@/lib/api/doctorDashboard";
 import { DoctorAppointment } from "@/lib/type/doctorDashboard";
 
+// ✅ "Sat, Mar 21, 2026"
 const formatDate = (date: string) =>
   new Date(date).toLocaleDateString("en-US", {
+    weekday: "short",
     year: "numeric",
     month: "short",
     day: "numeric",
   });
+
+// ✅ "10:10 AM" from "10:10:00" or "10:10"
+const formatTime = (time: string) => {
+  const [h, m] = time.split(":").map(Number);
+  const d = new Date();
+  d.setHours(h, m, 0, 0);
+  return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+};
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -147,14 +157,16 @@ export default function DoctorAppointmentsList({ upcoming = true }: DoctorAppoin
                   </Badge>
                 </div>
 
+                {/* ✅ "Sat, Mar 21, 2026" */}
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
                   <Calendar className="h-3 w-3" />
                   <span>{formatDate(appointment.appointmentDate)}</span>
                 </div>
 
+                {/* ✅ "10:10 AM — 11:10 AM" */}
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
                   <Clock className="h-3 w-3" />
-                  <span>{appointment.startTime} - {appointment.endTime}</span>
+                  <span>{formatTime(appointment.startTime)} — {formatTime(appointment.endTime)}</span>
                 </div>
 
                 <Button
@@ -185,15 +197,17 @@ export default function DoctorAppointmentsList({ upcoming = true }: DoctorAppoin
               <div>
                 <strong>Patient:</strong> {selected.patientName}
               </div>
+              {/* ✅ "Sat, Mar 21, 2026" in modal too */}
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
                 <strong>Date:</strong>
                 <span className="ml-1">{formatDate(selected.appointmentDate)}</span>
               </div>
+              {/* ✅ "10:10 AM — 11:10 AM" in modal too */}
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-muted-foreground" />
                 <strong>Time:</strong>
-                <span className="ml-1">{selected.startTime} - {selected.endTime}</span>
+                <span className="ml-1">{formatTime(selected.startTime)} — {formatTime(selected.endTime)}</span>
               </div>
               <div>
                 <strong>Checkup Type:</strong> {selected.checkupType}

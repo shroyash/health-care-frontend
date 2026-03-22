@@ -1,23 +1,30 @@
 // lib/api/doctorProfileApi.ts
 import { API } from "./api";
 
+// In doctorProfileApi.ts — make optional fields optional in UpdateDto
 export interface DoctorProfileUpdateDto {
   fullName: string;
-  email: string;
+  email?: string;        // ✅ optional
   specialization: string;
   yearsOfExperience: number;
   workingAT: string;
   contactNumber: string;
-  profileImgUrl?: string; // Changed from String to string (primitive type)
-  doctorProfileId?: number; // Add this to match backend response
-  id?: number; // Alternative field name
+  dateOfBirth?: string;  // ✅ optional
+  gender?: string;       // ✅ optional
+  country?: string;      // ✅ optional
+}
+
+export interface DoctorProfileDTO extends DoctorProfileUpdateDto {
+  doctorProfileId: string;  // ✅ UUID string not number
+  profileImgUrl?: string | null;
+  status?: string;
 }
 
 // GET logged-in doctor's profile
 export const getDoctorProfile = async () => {
   try {
     // /doctor-profiles/me expects cookie for auth
-    const profile = await API.getOne<DoctorProfileUpdateDto>("/doctor-profiles/me");
+    const profile = await API.getOne<DoctorProfileDTO>("/doctor-profiles/me");
     console.log("Doctor profile fetched:", profile);
     return profile;
   } catch (err) {
@@ -41,7 +48,7 @@ export const updateDoctorProfile = async (data: DoctorProfileUpdateDto) => {
 };
 
 // POST upload doctor profile image
-export const uploadDoctorProfileImage = async (doctorId: number, file: File): Promise<string> => {
+export const uploadDoctorProfileImage = async (doctorId: string, file: File): Promise<string> => {
   const formData = new FormData();
   formData.append("file", file);
 

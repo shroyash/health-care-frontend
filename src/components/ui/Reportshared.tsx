@@ -103,9 +103,23 @@ export function ReportDetailModal({
               <span className="text-xs text-slate-600">
                 · APT <span className="font-semibold text-slate-800">#{report.appointmentId}</span>
               </span>
+              {/* ✅ Show name instead of ID */}
               <span className="text-xs text-slate-600">
                 · {idLabel}: <span className="font-semibold text-slate-800">{idValue}</span>
               </span>
+            </div>
+            {/* ✅ Show both doctor and patient names in modal */}
+            <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
+              {report.patientName && (
+                <span className="text-xs text-slate-600">
+                  Patient: <span className="font-semibold text-slate-800">{report.patientName}</span>
+                </span>
+              )}
+              {report.doctorName && (
+                <span className="text-xs text-slate-600">
+                  · Doctor: <span className="font-semibold text-slate-800">{report.doctorName}</span>
+                </span>
+              )}
             </div>
           </div>
           <button
@@ -210,8 +224,9 @@ export function ReportCard({
               <span className="text-xs text-slate-600 flex items-center gap-1">
                 <ClockIcon /> {formatDate(report.createdAt)}
               </span>
+              {/* ✅ Show name instead of UUID */}
               <span className="text-xs text-slate-500">
-                · {idLabel} ID: <span className="font-semibold text-slate-700">{idValue}</span>
+                · {idLabel}: <span className="font-semibold text-slate-700">{idValue}</span>
               </span>
             </div>
           </div>
@@ -278,16 +293,18 @@ export function ReportListLayout({
   const filtered = reports.filter((r) => {
     const matchType   = filterType   === "ALL" || r.reportType === filterType;
     const matchStatus = filterStatus === "ALL" || r.status     === filterStatus;
+    // ✅ Also search by patientName and doctorName
     const matchSearch = !search.trim() ||
       r.title?.toLowerCase().includes(search.toLowerCase()) ||
       r.diagnosis?.toLowerCase().includes(search.toLowerCase()) ||
       r.symptoms?.toLowerCase().includes(search.toLowerCase()) ||
-      r.treatmentPlan?.toLowerCase().includes(search.toLowerCase());
+      r.treatmentPlan?.toLowerCase().includes(search.toLowerCase()) ||
+      r.patientName?.toLowerCase().includes(search.toLowerCase()) ||
+      r.doctorName?.toLowerCase().includes(search.toLowerCase());
     return matchType && matchStatus && matchSearch;
   });
 
   return (
-    // ↓ removed min-h-screen and max-w-3xl — fills parent container fully
     <div className="w-full h-full bg-gray-50">
       <div className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
 
@@ -306,7 +323,7 @@ export function ReportListLayout({
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by title, diagnosis, symptoms..."
+              placeholder="Search by title, diagnosis, symptoms, name..."
               className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 placeholder-slate-500 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition"
             />
           </div>

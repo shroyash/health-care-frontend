@@ -2,110 +2,152 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import {
+  Calendar,
+  Users,
+  FileText,
+  LayoutDashboard,
+  CalendarPlus,
+  Pill,
+} from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Calendar, FileText, CalendarPlus,Pill } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getPatientProfile } from "@/lib/api/patientProfileApi";
 import type { PatientProfileDTO } from "@/lib/api/patientProfileApi";
 
+interface SideNavBarProps {
+  isOpen: boolean;
+  toggleSidebar: () => void;
+}
+
 const navigation = [
-  { name: "Dashboard", href: "/dashboard/patient", icon: LayoutDashboard },
-  { name: "Appointments", href: "/dashboard/patient/appointments", icon: Calendar },
-  { name: "Request Appointment", href: "/dashboard/patient/request-appointments", icon: CalendarPlus },
-  { name: "Appointments History", href: "/dashboard/patient/appointments-history", icon: Calendar },
-   { name: "Medicines Section", href: "/dashboard/patient/medicine", icon: Pill },
-  { name: "Report", href: "/dashboard/patient/report", icon: FileText },
+  { name: "Dashboard",            href: "/dashboard/patient",                      icon: LayoutDashboard },
+  { name: "Appointments",         href: "/dashboard/patient/appointments",          icon: Calendar },
+  { name: "Request Appointment",  href: "/dashboard/patient/request-appointments",  icon: CalendarPlus },
+  { name: "Appointments History", href: "/dashboard/patient/appointments-history",  icon: Calendar },
+  { name: "Medicines Section",    href: "/dashboard/patient/medicine",              icon: Pill },
+  { name: "Report",               href: "/dashboard/patient/report",                icon: FileText },
 ];
 
-export default function PatientSideNav({
-  isOpen,
-  setIsOpen,
-}: {
-  isOpen?: boolean;
-  setIsOpen?: (val: boolean) => void;
-}) {
+export default function PatientSideNav({ isOpen, toggleSidebar }: SideNavBarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [profile, setProfile] = useState<PatientProfileDTO | null>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getPatientProfile()
-      .then(setProfile)
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    const fetchProfile = async () => {
+      try {
+        const data = await getPatientProfile();
+        setProfile(data);
+      } catch (err) {
+        console.error("Error fetching profile:", err);
+      }
+    };
+    fetchProfile();
   }, []);
 
-  const letter = profile?.email?.charAt(0).toUpperCase() || "P";
+  const isActive = (path: string) => pathname === path;
 
-  const sidebarClasses = `
-    fixed inset-y-0 left-0 w-64 bg-white border-r flex flex-col
-    transform transition-transform duration-300 ease-in-out shadow-lg
-    z-50 md:static md:translate-x-0
-    ${isOpen ? "translate-x-0" : "-translate-x-full"}
-  `;
-
-  const overlayClasses = `
-    fixed inset-0 bg-white z-40 md:hidden
-    ${isOpen ? "block" : "hidden"}
-  `;
+  if (!profile) return <div className="h-screen p-6">Loading sidebar...</div>;
 
   return (
     <>
-      {/* Mobile overlay */}
-      {isOpen && <div className={overlayClasses} onClick={() => setIsOpen && setIsOpen(false)} />}
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={toggleSidebar}
+        />
+      )}
 
       {/* Sidebar */}
-      <aside className={sidebarClasses}>
-        {/* Header */}
-        <div className="p-6 border-b flex flex-col items-center justify-center">
-          <h2 className="text-xl font-bold">MediCare</h2>
-          <p className="text-sm text-gray-500">Patient Portal</p>
+      <div
+        className={`
+          fixed top-0 left-0 h-screen w-64 bg-card border-r border-border z-50
+          transform transition-transform duration-300 ease-in-out
+          ${isOpen ? "translate-x-0" : "-translate-x-full"}
+          md:translate-x-0 md:static md:flex
+          flex flex-col
+        `}
+      >
+        {/* Logo */}
+        <div className="p-6 border-b border-border">
+          <div className="flex items-center space-x-3">
+            <div className="medical-gradient w-10 h-10 rounded-lg flex items-center justify-center">
+              <Users className="w-5 h-5 text-primary-foreground" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-card-foreground">Patient Portal</h2>
+              <p className="text-sm text-muted-foreground">Medical Dashboard</p>
+            </div>
+          </div>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1">
-          {navigation.map((item) => {
-            const active = pathname === item.href;
-            return (
-              <Link key={item.name} href={item.href}>
-                <div
-                  className={`flex items-center gap-3 px-4 py-2 rounded-lg transition cursor-pointer ${
-                    active ? "bg-blue-600 text-white" : "hover:bg-gray-100"
-                  }`}
-                  onClick={() => setIsOpen && setIsOpen(false)}
-                >
-                  <item.icon className="w-5 h-5" />
-                  {item.name}
-                </div>
-              </Link>
-            );
-          })}
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+          {navigation.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={toggleSidebar}
+            >
+              <div
+                className={`flex items-center px-4 py-2 rounded-lg cursor-pointer ${
+                  isActive(item.href)
+                    ? "bg-blue-600 text-white"
+                    : "text-card-foreground hover:bg-muted"
+                }`}
+              >
+                <item.icon className="w-5 h-5 mr-3" />
+                {item.name}
+              </div>
+            </Link>
+          ))}
         </nav>
 
-        {/* Profile Footer */}
-        <div className="p-4 border-t">
-          <div className="flex items-center gap-3 mb-3">
+        {/* Footer / Profile */}
+        <div className="p-4 border-t border-border mt-auto">
+          <div className="flex flex-col items-center gap-2">
             <Avatar>
-              <AvatarFallback className="bg-blue-600 text-white">{letter}</AvatarFallback>
+              <AvatarImage
+                src={
+                  profile.profileImgUrl
+                    ? `http://localhost:8004${profile.profileImgUrl}`
+                    : undefined
+                }
+              />
+              <AvatarFallback className="medical-gradient text-white bg-blue-600 border-2 p-2">
+                {profile.fullName
+                  ? profile.fullName
+                      .split(" ")
+                      .map((n: string) => n[0])
+                      .join("")
+                      .toUpperCase()
+                      .slice(0, 2)
+                  : "PT"}
+              </AvatarFallback>
             </Avatar>
-
-            <div className="min-w-0">
-              <p className="font-medium text-sm truncate">
-                {loading ? "Loading..." : profile?.fullName || "Patient"}
-              </p>
-              <p className="text-xs text-gray-500">Patient</p>
-            </div>
+            <p className="font-medium text-card-foreground text-center">
+              {profile.fullName}
+            </p>
+            <p className="text-sm text-muted-foreground text-center">
+              Patient
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full mt-2"
+              onClick={() => {
+                router.push("/dashboard/patient/profile");
+                toggleSidebar();
+              }}
+            >
+              View Profile
+            </Button>
           </div>
-
-          <button
-            onClick={() => router.push("/dashboard/patient/profile")}
-            className="w-full text-sm text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-md transition"
-          >
-            View Profile
-          </button>
         </div>
-      </aside>
+      </div>
     </>
   );
 }

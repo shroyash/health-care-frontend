@@ -92,7 +92,7 @@ function ReportFetchModal({
     <ReportDetailModal
       report={report}
       idLabel={idLabel}
-      idValue={idLabel === "Doctor ID" ? report.doctorId : report.patientId}
+      idValue={idLabel === "Doctor Name" ? report.doctorName : report.patientName}
       onClose={onClose}
     />
   );
@@ -304,7 +304,7 @@ export default function AppointmentHistoryPage({
       {selectedId !== null && (
         <ReportFetchModal
           appointmentId={selectedId}
-          idLabel={isDoctor ? "Patient ID" : "Doctor ID"}
+          idLabel={isDoctor ? "Patient Name" : "Doctor Name"}
           onClose={() => setSelectedId(null)}
         />
       )}
