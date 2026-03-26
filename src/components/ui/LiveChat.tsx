@@ -70,6 +70,11 @@ export function LiveChat({
 
               {/* Bubbles */}
               <div className={`flex flex-col gap-1 max-w-[75%] ${isMine ? "items-end" : "items-start"}`}>
+                {/* Full name label */}
+                <span className={`text-xs text-gray-500 font-medium mb-0.5 ${isMine ? "text-right" : "text-left"}`}>
+                  {displayName}
+                </span>
+
                 {group.items.map((msg, mi) => {
                   const isLast = mi === group.items.length - 1;
                   return (

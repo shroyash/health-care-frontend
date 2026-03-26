@@ -36,9 +36,6 @@ const navigationItems = [
   { title: "Medicines Section", url: "/dashboard/admin/medicine", icon: Pill, group: "Management" },
   { title: "Analytics", url: "/dashboard/admin/analytics", icon: BarChart3, group: "Reports" },
   { title: "Reports", url: "/dashboard/admin/reports", icon: FileText, group: "Reports" },
-  { title: "System Monitor", url: "/dashboard/admin/monitor", icon: Activity, group: "System" },
-  { title: "Notifications", url: "/dashboard/admin/notifications", icon: Bell, group: "System" },
-  { title: "Settings", url: "/dashboard/admin/settings", icon: Settings, group: "System" },
 ];
 
 const groupedItems = navigationItems.reduce((acc, item) => {

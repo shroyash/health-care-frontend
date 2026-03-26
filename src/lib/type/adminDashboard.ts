@@ -74,4 +74,4 @@ export type WeeklyAppointmentCountResponse = {
 };
 
 // Generic API response wrapper
-export type APIResponse<T> = { success: boolean; data: T };
+export type APIResponse<T> = { success: boolean; data: T };/*  */

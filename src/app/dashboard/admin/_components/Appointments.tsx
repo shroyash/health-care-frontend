@@ -24,15 +24,11 @@ import { getRecentAppointments } from "@/lib/api/adminDashboard";
 import { AppointmentFull } from "@/lib/type/adminDashboard";
 
 /* -------------------- Utils -------------------- */
-const formatDate = (date: string) =>
-  new Date(date).toLocaleDateString("en-US", {
+const formatDateTime = (date: string) =>
+  new Date(date).toLocaleString("en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
-  });
-
-const formatTime = (date: string) =>
-  new Date(date).toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -93,7 +89,6 @@ export function AppointmentsList() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
-              {/* <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /> */}
               <Button variant="outline" size="sm">
                 View All
               </Button>
@@ -125,9 +120,7 @@ export function AppointmentsList() {
                   </div>
 
                   <Badge
-                    className={`capitalize ${getStatusColor(
-                      appointment.status
-                    )}`}
+                    className={`capitalize ${getStatusColor(appointment.status)}`}
                   >
                     {appointment.status.toLowerCase()}
                   </Badge>
@@ -137,11 +130,7 @@ export function AppointmentsList() {
                 <div className="flex flex-col gap-1 text-sm text-muted-foreground mb-3">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-3 w-3" />
-                    <span>{formatDate(appointment.appointmentDate)}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-3 w-3" />
-                    <span>{formatTime(appointment.appointmentDate)}</span>
+                    <span>{formatDateTime(appointment.appointmentDate)}</span>
                   </div>
                   <div>
                     <strong>Checkup:</strong> {appointment.checkupType}
@@ -168,7 +157,6 @@ export function AppointmentsList() {
       </Card>
 
       {/* ---------------- VIEW DETAILS MODAL ---------------- */}
-
       <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -180,30 +168,21 @@ export function AppointmentsList() {
               <div>
                 <strong>Patient:</strong> {selected.patientName}
               </div>
-
               <div>
                 <strong>Doctor:</strong> Dr. {selected.doctorName}
               </div>
-
               <div>
-                <strong>Date:</strong> {formatDate(selected.appointmentDate)}
+                <strong>Date & Time:</strong> {formatDateTime(selected.appointmentDate)}
               </div>
-
-              <div>
-                <strong>Time:</strong> {formatTime(selected.appointmentDate)}
-              </div>
-
               <div>
                 <strong>Checkup Type:</strong> {selected.checkupType}
               </div>
-
               <div>
                 <strong>Status:</strong>{" "}
                 <Badge className={`ml-2 ${getStatusColor(selected.status)}`}>
                   {selected.status}
                 </Badge>
               </div>
-
               <div>
                 <strong>Meeting Link:</strong>
                 <a

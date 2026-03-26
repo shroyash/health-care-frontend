@@ -40,7 +40,7 @@ export interface UserResponseDto {
   userId : string,
   username: string;
   email: string;
-  roles: string[];
+  role: Role[];
 }
 
 export interface ForgotPasswordRequest {

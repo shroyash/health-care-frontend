@@ -31,7 +31,7 @@ interface ApiErrorResponse {
 export interface LoginResponse {
   message: string;
   status: string;
-  data: UserResponseDto; // Single user object
+  data: UserResponseDto;
 }
 
 export default function Login({ setShowForgotPassword }: LoginProps) {
@@ -49,8 +49,8 @@ export default function Login({ setShowForgotPassword }: LoginProps) {
       switch (status) {
         case 400: return data?.message || "Invalid email or password format.";
         case 401:
-        case 403: return data?.message || data?.error || "Invalid credentials.";
-        case 404: return "Account not found.";
+        case 403: return "Invalid email or password.";
+        case 404: return "Invalid email or password.";
         case 500: return "Server error. Please try again later.";
         default: return data?.message || "Login failed. Please try again.";
       }
@@ -73,7 +73,7 @@ export default function Login({ setShowForgotPassword }: LoginProps) {
         password: formData.password,
       });
 
-      const userData = res.data; 
+      const userData = res.data;
       console.log("Logged in user:", userData);
 
       const roles = userData.role?.map(r => r.name);
@@ -81,7 +81,6 @@ export default function Login({ setShowForgotPassword }: LoginProps) {
 
       localStorage.setItem("user", JSON.stringify(userData));
 
-  
       if (roles.includes("ROLE_DOCTOR")) router.push("/dashboard/doctor");
       else if (roles.includes("ROLE_PATIENT")) router.push("/dashboard/patient");
       else if (roles.includes("ROLE_ADMIN")) router.push("/dashboard/admin");
@@ -148,7 +147,6 @@ export default function Login({ setShowForgotPassword }: LoginProps) {
             >
               Forgot password?
             </button>
-        
           </div>
 
           <HealthcareButton

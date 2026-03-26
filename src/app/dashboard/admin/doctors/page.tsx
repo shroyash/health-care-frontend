@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, User, ArrowLeft, Award } from "lucide-react";
+import { Search, User, ArrowLeft } from "lucide-react";
 import {
   getAllDoctors,
   getPendingDoctorCount,
@@ -28,7 +28,6 @@ const displayValue = (value: any, fallback = "Not provided") => {
   return value;
 };
 
-// Status Badge Color
 const getStatusColor = (status: DoctorProfile["status"]) => {
   switch (status) {
     case "ACTIVE":
@@ -46,13 +45,10 @@ export default function DoctorManagementPage() {
   const [doctors, setDoctors] = useState<DoctorProfile[]>([]);
   const [pendingCount, setPendingCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedDoctor, setSelectedDoctor] =
-    useState<DoctorProfile | null>(null);
+  const [selectedDoctor, setSelectedDoctor] = useState<DoctorProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   const { statsData } = useDashboardStats();
-
-  /* ------------------ Fetch Doctors ------------------ */
 
   useEffect(() => {
     const fetchDoctors = async () => {
@@ -72,8 +68,6 @@ export default function DoctorManagementPage() {
     fetchDoctors();
   }, []);
 
-  /* ------------------ Search Filter ------------------ */
-
   const filteredDoctors = useMemo(() => {
     const term = searchTerm.toLowerCase();
     return doctors.filter(
@@ -83,8 +77,6 @@ export default function DoctorManagementPage() {
         (d.specialization ?? "").toLowerCase().includes(term)
     );
   }, [searchTerm, doctors]);
-
-  /* ------------------ Suspend / Restore ------------------ */
 
   const handleStatusChange = async (doctor: DoctorProfile) => {
     try {
@@ -108,8 +100,6 @@ export default function DoctorManagementPage() {
     }
   };
 
-  /* ------------------ Loading ------------------ */
-
   if (loading) {
     return (
       <div className="flex min-h-screen justify-center items-center">
@@ -120,8 +110,6 @@ export default function DoctorManagementPage() {
       </div>
     );
   }
-
-  /* ------------------ UI ------------------ */
 
   return (
     <div className="space-y-6">
@@ -150,9 +138,7 @@ export default function DoctorManagementPage() {
               <div className="text-2xl font-bold text-yellow-600">
                 {pendingCount}
               </div>
-              <p className="text-sm text-muted-foreground">
-                Pending Approval
-              </p>
+              <p className="text-sm text-muted-foreground">Pending Approval</p>
             </CardContent>
           </Card>
 
@@ -183,10 +169,10 @@ export default function DoctorManagementPage() {
           <CardContent className="space-y-6">
             {/* Header */}
             <div className="flex items-center gap-5">
-              <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+              <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
                 {selectedDoctor.profileImgUrl ? (
                   <img
-                    src={selectedDoctor.profileImgUrl}
+                    src={`http://localhost:8004${selectedDoctor.profileImgUrl}`}
                     alt={selectedDoctor.fullName}
                     className="w-full h-full object-cover"
                   />
@@ -211,18 +197,9 @@ export default function DoctorManagementPage() {
             {/* Details */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <ProfileField label="Email" value={selectedDoctor.email} />
-              <ProfileField
-                label="Phone"
-                value={selectedDoctor.contactNumber}
-              />
-              <ProfileField
-                label="Specialization"
-                value={selectedDoctor.specialization}
-              />
-              <ProfileField
-                label="Working At"
-                value={selectedDoctor.workingAT}
-              />
+              <ProfileField label="Phone" value={selectedDoctor.contactNumber} />
+              <ProfileField label="Specialization" value={selectedDoctor.specialization} />
+              <ProfileField label="Working At" value={selectedDoctor.workingAT} />
               <ProfileField
                 label="Experience"
                 value={
@@ -237,9 +214,7 @@ export default function DoctorManagementPage() {
                 label="Date of Birth"
                 value={
                   selectedDoctor.dateOfBirth
-                    ? new Date(
-                        selectedDoctor.dateOfBirth
-                      ).toLocaleDateString()
+                    ? new Date(selectedDoctor.dateOfBirth).toLocaleDateString()
                     : "Not provided"
                 }
               />
@@ -295,20 +270,24 @@ export default function DoctorManagementPage() {
                     key={d.doctorProfileId}
                     className="p-4 border rounded-lg hover:bg-accent/30 transition flex justify-between items-center"
                   >
-                    <div className="flex items-start gap-4">
-                      <div className="p-3 rounded-lg bg-primary/10">
-                        <User className="h-5 w-5 text-primary" />
+                    <div className="flex items-center gap-4">
+                      {/* Profile Image */}
+                      <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                        {d.profileImgUrl ? (
+                          <img
+                            src={`http://localhost:8004${d.profileImgUrl}`}
+                            alt={d.fullName}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <User className="h-5 w-5 text-muted-foreground" />
+                        )}
                       </div>
+
                       <div>
-                        <h4 className="font-semibold text-lg">
-                          {d.fullName}
-                        </h4>
-                        <p className="text-muted-foreground text-sm">
-                          {d.email}
-                        </p>
-                        <p className="text-sm">
-                          {displayValue(d.specialization)}
-                        </p>
+                        <h4 className="font-semibold text-lg">{d.fullName}</h4>
+                        <p className="text-muted-foreground text-sm">{d.email}</p>
+                        <p className="text-sm">{displayValue(d.specialization)}</p>
                       </div>
                     </div>
 
@@ -337,13 +316,7 @@ export default function DoctorManagementPage() {
 
 /* ------------------ Reusable Field ------------------ */
 
-function ProfileField({
-  label,
-  value,
-}: {
-  label: string;
-  value: any;
-}) {
+function ProfileField({ label, value }: { label: string; value: any }) {
   return (
     <div>
       <p className="text-muted-foreground">{label}</p>

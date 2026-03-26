@@ -29,10 +29,10 @@ export const reportApi = {
     API.getOne<ReportResponseDto>(`${ENDPOINT}/appointment/${appointmentId}`),
 
   // Get all reports for a patient — patientId is a UUID string
-  getByPatient: (patientId: string): Promise<ReportResponseDto[]> =>
-    API.getAll<ReportResponseDto>(`${ENDPOINT}/patient/${patientId}`),
+  getByPatient: (): Promise<ReportResponseDto[]> =>
+    API.getAll<ReportResponseDto>(`${ENDPOINT}/patient`),
 
   // Get all reports for a doctor — doctorId is a UUID string
-  getByDoctor: (doctorId: string): Promise<ReportResponseDto[]> =>
-    API.getAll<ReportResponseDto>(`${ENDPOINT}/doctor/${doctorId}`),
+  getByDoctor: (): Promise<ReportResponseDto[]> =>
+    API.getAll<ReportResponseDto>(`${ENDPOINT}/doctor`),
 };

@@ -1,14 +1,13 @@
 "use client";
-
 import { useState } from "react";
 import SideNavBar from "./_Components/SideNavBar";
 import { Menu } from "lucide-react";
 
 export default function DoctorLayout({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
+  
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="h-screen flex overflow-hidden bg-background">
       {/* Sidebar */}
       <SideNavBar
         isOpen={isSidebarOpen}
@@ -16,9 +15,9 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col md:ml-0">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="h-16 flex items-center justify-between px-4 md:px-6 border-b border-border bg-card/50">
+        <header className="h-16 flex-shrink-0 flex items-center justify-between px-4 md:px-6 border-b border-border bg-card/50">
           <button
             className="md:hidden text-muted-foreground hover:text-foreground"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -36,7 +35,7 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-4 md:p-6 overflow-auto">{children}</main>
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto">{children}</main>
       </div>
     </div>
   );

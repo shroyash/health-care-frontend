@@ -2,7 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,8 +20,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "react-toastify";
-import { getAllAvailableDoctors , createAppointmentRequest } from "@/lib/api/patientDashboard";
-import { DoctorWithSchedule ,CreateAppointmentRequestDto} from "@/lib/type/patientDashboard";
+
+import {
+  getAllAvailableDoctors,
+  createAppointmentRequest,
+} from "@/lib/api/patientDashboard";
+
+import {
+  DoctorWithSchedule,
+  CreateAppointmentRequestDto,
+} from "@/lib/type/patientDashboard";
 
 export const CustomRequestForm = () => {
   const [doctors, setDoctors] = useState<DoctorWithSchedule[]>([]);
@@ -30,34 +44,55 @@ export const CustomRequestForm = () => {
     notes: "",
   });
 
-  // Fetch available doctors
+  // ✅ Fetch doctors
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
         setLoadingDoctors(true);
         const res = await getAllAvailableDoctors();
         setDoctors(res);
-      } catch (err) {
-        toast.error("Failed to fetch doctors. Please try again.");
+      } catch (err: any) {
+        const message =
+          err?.response?.data?.message ||
+          "Failed to fetch doctors. Please try again.";
+        toast.error(message);
       } finally {
         setLoadingDoctors(false);
       }
     };
+
     fetchDoctors();
   }, []);
 
+  // ✅ Submit handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.doctorProfileId || !formData.day || !formData.startTime || !formData.endTime) {
+    // 🔴 Required validation
+    if (
+      !formData.doctorProfileId ||
+      !formData.day ||
+      !formData.startTime ||
+      !formData.endTime
+    ) {
       toast.error("Please fill in all required fields");
       return;
     }
 
+    // 🔴 Time validation
+    if (formData.startTime >= formData.endTime) {
+      toast.error("End time must be after start time");
+      return;
+    }
+
+    // 🔴 Prevent double click
+    if (loadingSubmit) return;
+
     setLoadingSubmit(true);
+
     try {
       const request: CreateAppointmentRequestDto = {
-        doctorId:formData.doctorProfileId,
+        doctorId: formData.doctorProfileId,
         date: formData.day,
         startTime: formData.startTime,
         endTime: formData.endTime,
@@ -67,9 +102,31 @@ export const CustomRequestForm = () => {
       await createAppointmentRequest(request);
 
       toast.success("Appointment request sent successfully!");
-      setFormData({ doctorProfileId: "", day: "", startTime: "", endTime: "", notes: "" });
-    } catch (error) {
-      toast.error("Failed to send request. Please try again.");
+
+      // ✅ Reset form
+      setFormData({
+        doctorProfileId: "",
+        day: "",
+        startTime: "",
+        endTime: "",
+        notes: "",
+      });
+    } catch (error: any) {
+      const status = error?.response?.status;
+      const message =
+        error?.response?.data?.message ||
+        "Failed to send request. Please try again.";
+
+      // 🔥 Specific handling
+      if (status === 409) {
+        toast.error(message); // "You already requested this slot"
+      } else if (status === 400) {
+        toast.error(message); // validation error from backend
+      } else if (status === 500) {
+        toast.error("Server error. Please try again later.");
+      } else {
+        toast.error(message);
+      }
     } finally {
       setLoadingSubmit(false);
     }
@@ -78,26 +135,40 @@ export const CustomRequestForm = () => {
   return (
     <Card className="w-full max-w-2xl mx-auto border-border bg-gradient-to-br from-card to-card/95">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold text-foreground">Request Custom Appointment</CardTitle>
-        <CardDescription className="text-muted-foreground">
+        <CardTitle className="text-2xl font-bold">
+          Request Custom Appointment
+        </CardTitle>
+        <CardDescription>
           Can't find a suitable time? Request a custom appointment time
         </CardDescription>
       </CardHeader>
+
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Doctor Select */}
           <div className="space-y-2">
-            <Label htmlFor="doctor" className="text-foreground font-medium">Select Doctor *</Label>
+            <Label>Select Doctor *</Label>
             <Select
               value={formData.doctorProfileId}
-              onValueChange={(value) => setFormData({ ...formData, doctorProfileId: value })}
+              onValueChange={(value) =>
+                setFormData({ ...formData, doctorProfileId: value })
+              }
               disabled={loadingDoctors}
             >
-              <SelectTrigger id="doctor" className="bg-background border-input">
-                <SelectValue placeholder={loadingDoctors ? "Loading doctors..." : "Choose a doctor"} />
+              <SelectTrigger>
+                <SelectValue
+                  placeholder={
+                    loadingDoctors ? "Loading..." : "Choose a doctor"
+                  }
+                />
               </SelectTrigger>
-              <SelectContent className="bg-popover border-border">
+
+              <SelectContent>
                 {doctors.map((doctor) => (
-                  <SelectItem key={doctor.doctorProfileId} value={doctor.doctorProfileId.toString()}>
+                  <SelectItem
+                    key={doctor.doctorProfileId}
+                    value={doctor.doctorProfileId.toString()}
+                  >
                     {doctor.name} - {doctor.specialty}
                   </SelectItem>
                 ))}
@@ -105,64 +176,65 @@ export const CustomRequestForm = () => {
             </Select>
           </div>
 
+          {/* Date + Time */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="day" className="text-foreground font-medium">Day *</Label>
+            <div>
+              <Label>Day *</Label>
               <Input
-                id="day"
                 type="date"
                 value={formData.day}
-                onChange={(e) => setFormData({ ...formData, day: e.target.value })}
-                className="bg-background border-input"
                 min={new Date().toISOString().split("T")[0]}
+                onChange={(e) =>
+                  setFormData({ ...formData, day: e.target.value })
+                }
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="startTime" className="text-foreground font-medium">Start Time *</Label>
+            <div>
+              <Label>Start Time *</Label>
               <Input
-                id="startTime"
                 type="time"
                 value={formData.startTime}
-                onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                className="bg-background border-input"
+                onChange={(e) =>
+                  setFormData({ ...formData, startTime: e.target.value })
+                }
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="endTime" className="text-foreground font-medium">End Time *</Label>
+            <div>
+              <Label>End Time *</Label>
               <Input
-                id="endTime"
                 type="time"
                 value={formData.endTime}
-                onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                className="bg-background border-input"
+                onChange={(e) =>
+                  setFormData({ ...formData, endTime: e.target.value })
+                }
               />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="notes" className="text-foreground font-medium">Notes / Reason (Optional)</Label>
+          {/* Notes */}
+          <div>
+            <Label>Notes (Optional)</Label>
             <Textarea
-              id="notes"
-              placeholder="Describe your symptoms or reason for appointment..."
+              placeholder="Describe your symptoms..."
               value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              className="bg-background border-input min-h-[120px] resize-none"
+              onChange={(e) =>
+                setFormData({ ...formData, notes: e.target.value })
+              }
             />
           </div>
 
+          {/* Submit */}
           <Button
             type="submit"
             disabled={loadingSubmit || loadingDoctors}
             className="w-full bg-blue-600 text-white"
-            size="lg"
           >
-            {loadingSubmit ? "Sending Request..." : "Send Custom Request"}
+            {loadingSubmit ? "Sending..." : "Send Request"}
           </Button>
         </form>
       </CardContent>
     </Card>
   );
 };
-

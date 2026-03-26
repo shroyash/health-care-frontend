@@ -25,7 +25,7 @@ export default function DoctorReportsPage() {
     try {
       // GET /reports/doctor/{doctorId}
       // userId is a UUID string — pass it directly, no Number() conversion needed
-      const data = await reportApi.getByDoctor(userId);
+      const data = await reportApi.getByDoctor();
       setReports(data);
     } catch (err: any) {
       setError(err?.response?.data?.message || "Failed to load reports");

@@ -17,7 +17,6 @@ import {
   PatientStats as PatientDashboardStats,
 } from "@/lib/type/adminDashboard";
 
-// Helper for badge colors
 const getStatusColor = (status: string) => {
   switch (status.toLowerCase()) {
     case "active":
@@ -29,16 +28,12 @@ const getStatusColor = (status: string) => {
   }
 };
 
-// Convert gender string to display value
 const displayGender = (gender?: string | null) => {
   if (!gender) return "N/A";
   switch (gender.toUpperCase()) {
-    case "MALE":
-      return "Male";
-    case "FEMALE":
-      return "Female";
-    default:
-      return gender;
+    case "MALE": return "Male";
+    case "FEMALE": return "Female";
+    default: return gender;
   }
 };
 
@@ -53,7 +48,6 @@ export default function PatientsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 
-  // Fetch patients + stats
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -72,7 +66,6 @@ export default function PatientsPage() {
     fetchData();
   }, []);
 
-  // Filter patients by search
   const filteredPatients = useMemo(() => {
     const term = searchTerm.toLowerCase();
     return patients.filter(
@@ -82,7 +75,6 @@ export default function PatientsPage() {
     );
   }, [patients, searchTerm]);
 
-  // Handle Suspend / Restore
   const handleStatusChange = async (patientId: string, status: string) => {
     try {
       if (status.toLowerCase() === "active") {
@@ -132,14 +124,12 @@ export default function PatientsPage() {
               <div className="text-sm text-muted-foreground">Active Patients</div>
             </CardContent>
           </Card>
-
           <Card className="shadow-soft border-0">
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-foreground">{stats.totalPatients}</div>
               <div className="text-sm text-muted-foreground">Total Patients</div>
             </CardContent>
           </Card>
-
           <Card className="shadow-soft border-0">
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-success">{stats.totalAppointments}</div>
@@ -163,8 +153,17 @@ export default function PatientsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-primary-light">
-                <User className="h-5 w-5 text-primary" />
+              {/* Profile Image */}
+              <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                {selectedPatient.profileImgUrl ? (
+                  <img
+                    src={`http://localhost:8004${selectedPatient.profileImgUrl}`}
+                    alt={selectedPatient.fullName}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <User className="h-8 w-8 text-muted-foreground" />
+                )}
               </div>
               <div>
                 <h2 className="text-xl font-semibold">{selectedPatient.fullName}</h2>
@@ -226,9 +225,18 @@ export default function PatientsPage() {
                     key={p.patientId}
                     className="p-4 rounded-lg border border-border hover:bg-accent/30 transition-all duration-200 flex justify-between items-center"
                   >
-                    <div className="flex items-start gap-4">
-                      <div className="p-3 rounded-lg bg-primary-light">
-                        <User className="h-5 w-5 text-primary" />
+                    <div className="flex items-center gap-4">
+                      {/* Profile Image */}
+                      <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                        {p.profileImgUrl ? (
+                          <img
+                            src={`http://localhost:8004${p.profileImgUrl}`}
+                            alt={p.fullName}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <User className="h-5 w-5 text-muted-foreground" />
+                        )}
                       </div>
                       <div>
                         <h4 className="font-semibold text-lg">{p.fullName}</h4>

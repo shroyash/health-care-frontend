@@ -62,14 +62,26 @@ export default function AppointmentRequestPage() {
 
   const handleStatusUpdate = async (id: number, status: "APPROVED" | "REJECTED") => {
     try {
-      await updateAppointmentRequestStatus(id, status);
+      const response = await updateAppointmentRequestStatus(id, status);
+
+      // Handle API-level errors (e.g. { status: false, message: "Cannot approve an appointment in the past" })
+      if (response?.status === false) {
+        toast.error(response.message || "Failed to update status");
+        return;
+      }
+
       setAppointments((prev) =>
         prev.map((apt) => (apt.requestId === id ? { ...apt, status } : apt))
       );
       toast.success(`Appointment ${status.toLowerCase()}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating appointment:", error);
-      toast.error("Failed to update status");
+      // Extract message from Axios/fetch error response body if available
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to update status";
+      toast.error(message);
     }
   };
 
