@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, Calendar, Clock, User, ExternalLink } from "lucide-react";
+import { Search, Calendar, Clock, User } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -182,16 +182,6 @@ export function AppointmentsList() {
                 <Badge className={`ml-2 ${getStatusColor(selected.status)}`}>
                   {selected.status}
                 </Badge>
-              </div>
-              <div>
-                <strong>Meeting Link:</strong>
-                <a
-                  href={selected.meetingLink}
-                  target="_blank"
-                  className="ml-2 text-blue-600 underline inline-flex items-center gap-1"
-                >
-                  Join Meeting <ExternalLink className="h-3 w-3" />
-                </a>
               </div>
             </div>
           )}

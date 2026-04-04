@@ -9,12 +9,14 @@ import {
   LayoutDashboard,
   CalendarPlus,
   Pill,
+  LogOut,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { getPatientProfile } from "@/lib/api/patientProfileApi";
 import type { PatientProfileDTO } from "@/lib/api/patientProfileApi";
+import { logout } from "@/lib/api/auth";
 
 interface SideNavBarProps {
   isOpen: boolean;
@@ -34,6 +36,7 @@ export default function PatientSideNav({ isOpen, toggleSidebar }: SideNavBarProp
   const pathname = usePathname();
   const router = useRouter();
   const [profile, setProfile] = useState<PatientProfileDTO | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -48,6 +51,18 @@ export default function PatientSideNav({ isOpen, toggleSidebar }: SideNavBarProp
   }, []);
 
   const isActive = (path: string) => pathname === path;
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      await logout();
+      router.push("/auth-page");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   if (!profile) return <div className="h-screen p-6">Loading sidebar...</div>;
 
@@ -131,9 +146,7 @@ export default function PatientSideNav({ isOpen, toggleSidebar }: SideNavBarProp
             <p className="font-medium text-card-foreground text-center">
               {profile.fullName}
             </p>
-            <p className="text-sm text-muted-foreground text-center">
-              Patient
-            </p>
+            <p className="text-sm text-muted-foreground text-center">Patient</p>
             <Button
               variant="outline"
               size="sm"
@@ -144,6 +157,16 @@ export default function PatientSideNav({ isOpen, toggleSidebar }: SideNavBarProp
               }}
             >
               View Profile
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full text-destructive hover:bg-destructive/10 hover:text-destructive"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              {isLoggingOut ? "Logging out..." : "Logout"}
             </Button>
           </div>
         </div>

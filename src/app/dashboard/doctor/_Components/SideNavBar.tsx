@@ -10,13 +10,15 @@ import {
   LayoutDashboard,
   X,
   Pi,
-  Pill
+  Pill,
+  LogOut,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { getDoctorProfile } from "@/lib/api/doctorProfileApi";
 import type { DoctorProfileDTO } from "@/lib/api/doctorProfileApi";
+import { logout } from "@/lib/api/auth";
 
 interface SideNavBarProps {
   isOpen: boolean;
@@ -28,8 +30,8 @@ const navigation = [
   { name: "Schedule", href: "/dashboard/doctor/schedule", icon: Calendar },
   { name: "Appointments", href: "/dashboard/doctor/appointments", icon: Clock },
   { name: "Appointments Request", href: "/dashboard/doctor/appointments-request", icon: Clock },
-    { name: "Appointments History", href: "/dashboard/doctor/appointments-history", icon: Calendar },
-    { name: "Medicine Section", href: "/dashboard/doctor/medicine", icon: Pill },
+  { name: "Appointments History", href: "/dashboard/doctor/appointments-history", icon: Calendar },
+  { name: "Medicine Section", href: "/dashboard/doctor/medicine", icon: Pill },
   { name: "Reports", href: "/dashboard/doctor/report", icon: FileText },
 ];
 
@@ -37,12 +39,12 @@ export default function SideNavBar({ isOpen, toggleSidebar }: SideNavBarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [profile, setProfile] = useState<DoctorProfileDTO | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const data = await getDoctorProfile();
-        console.log("Fetched profile:", data);
         setProfile(data);
       } catch (err) {
         console.error("Error fetching profile:", err);
@@ -52,6 +54,18 @@ export default function SideNavBar({ isOpen, toggleSidebar }: SideNavBarProps) {
   }, []);
 
   const isActive = (path: string) => pathname === path;
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      await logout();
+      router.push("/auth-page");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   if (!profile) return <div className="h-screen p-6">Loading sidebar...</div>;
 
@@ -94,7 +108,7 @@ export default function SideNavBar({ isOpen, toggleSidebar }: SideNavBarProps) {
             <Link
               key={item.href}
               href={item.href}
-              onClick={toggleSidebar} // close on mobile
+              onClick={toggleSidebar}
             >
               <div
                 className={`flex items-center px-4 py-2 rounded-lg cursor-pointer ${
@@ -113,14 +127,25 @@ export default function SideNavBar({ isOpen, toggleSidebar }: SideNavBarProps) {
         {/* Footer/Profile at bottom */}
         <div className="p-4 border-t border-border mt-auto">
           <div className="flex flex-col items-center gap-2">
-           <Avatar>
-  <AvatarImage src={profile.profileImgUrl ? `http://localhost:8004${profile.profileImgUrl}` : undefined} />
-  <AvatarFallback className="medical-gradient text-white bg-blue-600 border-2 p-2">
-    {profile.fullName
-      ? profile.fullName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
-      : "DR"}
-  </AvatarFallback>
-</Avatar>
+            <Avatar>
+              <AvatarImage
+                src={
+                  profile.profileImgUrl
+                    ? `http://localhost:8004${profile.profileImgUrl}`
+                    : undefined
+                }
+              />
+              <AvatarFallback className="medical-gradient text-white bg-blue-600 border-2 p-2">
+                {profile.fullName
+                  ? profile.fullName
+                      .split(" ")
+                      .map((n: string) => n[0])
+                      .join("")
+                      .toUpperCase()
+                      .slice(0, 2)
+                  : "DR"}
+              </AvatarFallback>
+            </Avatar>
             <p className="font-medium text-card-foreground text-center">
               {profile.fullName}
             </p>
@@ -137,6 +162,16 @@ export default function SideNavBar({ isOpen, toggleSidebar }: SideNavBarProps) {
               }}
             >
               View Profile
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full text-destructive hover:bg-destructive/10 hover:text-destructive"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              {isLoggingOut ? "Logging out..." : "Logout"}
             </Button>
           </div>
         </div>
