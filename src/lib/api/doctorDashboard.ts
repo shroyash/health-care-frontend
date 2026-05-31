@@ -1,62 +1,69 @@
-// lib/api/doctorDashboard.ts
+/**
+ * Doctor dashboard API — compatibility shim mapping to existing
+ * structured API modules (doctor.api, appointment.api, dashboard.api).
+ */
+
+import api from "./api";
 import { API } from "./api";
 import type {
   DoctorDashboardStats,
   DoctorAppointment,
-  SaveDoctorScheduleDto,
   AppointmentRequest,
-  DailyAppointmentCount,
   CheckupTypeCountDto,
+  DailyAppointmentCount,
+  SaveDoctorScheduleDto,
   DoctorScheduleResponseDto,
 } from "../type/doctorDashboard";
-import api from "./api";
-import { ApiResponse } from "./api";
 
-// ----- Dashboard Stats -----
-export const dashboardStats = async (): Promise<DoctorDashboardStats> => {
-  return API.getOne<DoctorDashboardStats>("/dashboard/doctor");
-};
+// ── Dashboard Stats ────────────────────────────────────────────────
+export async function dashboardStats(): Promise<DoctorDashboardStats> {
+  return API.getOne<DoctorDashboardStats>("/api/dashboard/doctor/stats");
+}
 
-// ----- Appointments -----
-export const getUpcomingAppointments = async (): Promise<DoctorAppointment[]> => {
-  return API.getAll<DoctorAppointment>("/dashboard/doctor/upcoming-appointments");
-};
+// ── Appointments ───────────────────────────────────────────────────
+export async function getUpcomingAppointments(): Promise<DoctorAppointment[]> {
+  return API.getAll<DoctorAppointment>("/api/appointments/doctor/upcoming");
+}
 
-export const getAppointments = async (): Promise<DoctorAppointment[]> => {
-  return API.getAll<DoctorAppointment>("/dashboard/doctor/appointments");
-};
-
-// ----- Doctor Schedule -----
-export const saveWeeklySchedule = async (
-  dto: SaveDoctorScheduleDto
-): Promise<void> => {
-  await API.create<SaveDoctorScheduleDto, void>("/schedules/weekly", dto);
-};
-
-export const getDoctorSchedule = async (): Promise<DoctorScheduleResponseDto> => {
-  const response = await api.get<ApiResponse<DoctorScheduleResponseDto>>("/schedules");
-  return response.data.data;
-};
-
-// ----- Appointment Requests -----
-export const getDoctorAppointmentRequests = () =>
-  API.getAll<AppointmentRequest>("/appointments/doctor");
-
-export const updateAppointmentRequestStatus = (
-  requestId: number,
-  status: "APPROVED" | "REJECTED"
-) =>
-  API.patch<null, AppointmentRequest>(
-    `/appointments/update-status/${requestId}?status=${status}`,
-    null
+export async function getAppointments(): Promise<DoctorAppointment[]> {
+  // Returns all doctor appointments (both upcoming and past)
+  const res = await API.getOne<{ content: DoctorAppointment[] }>(
+    "/api/appointments/doctor?page=0&size=100"
   );
+  return res.content ?? [];
+}
 
-// ----- New Chart APIs -----
+// ── Weekly / Checkup Charts ───────────────────────────────────────
+export async function getDoctorWeeklyAppointmentCount(): Promise<DailyAppointmentCount[]> {
+  return API.getAll<DailyAppointmentCount>(
+    "/api/appointments/doctor/range?range=weekly"
+  );
+}
 
-// Weekly Appointments
-export const getDoctorWeeklyAppointmentCount = (): Promise<DailyAppointmentCount[]> =>
-  API.getAll<DailyAppointmentCount>("/dashboard/doctor/weekly-count");
+export async function getCheckupTypeCount(): Promise<CheckupTypeCountDto[]> {
+  return API.getAll<CheckupTypeCountDto>(
+    "/api/appointments/doctor/checkup-count"
+  );
+}
 
-// Checkup Type Counts
-export const getCheckupTypeCount = (): Promise<CheckupTypeCountDto[]> =>
-  API.getAll<CheckupTypeCountDto>("/dashboard/doctor/checkup-count");
+// ── Appointment Requests ──────────────────────────────────────────
+export async function getDoctorAppointmentRequests(): Promise<AppointmentRequest[]> {
+  return API.getAll<AppointmentRequest>("/api/appointments/doctor/requests");
+}
+
+export async function updateAppointmentRequestStatus(
+  id: number,
+  status: "APPROVED" | "REJECTED"
+): Promise<any> {
+  const res = await api.patch(`/api/appointments/doctor/requests/${id}/status`, { status });
+  return res.data;
+}
+
+// ── Schedule ──────────────────────────────────────────────────────
+export async function saveWeeklySchedule(dto: SaveDoctorScheduleDto): Promise<void> {
+  await api.post("/api/schedules/weekly", dto);
+}
+
+export async function getDoctorSchedule(): Promise<DoctorScheduleResponseDto> {
+  return API.getOne<DoctorScheduleResponseDto>("/api/schedules");
+}

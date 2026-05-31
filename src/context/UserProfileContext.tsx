@@ -1,8 +1,8 @@
 "use client";
 
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { getCurrentUser } from '@/lib/api/auth';
-import { UserResponseDto } from '@/lib/type/auth';
+import { getCurrentUser } from '@/lib/api/auth.api';
+import { UserResponseDto } from '@/lib/type/auth.type';
 
 
 export type User = {

@@ -1,77 +1,69 @@
-export type AdminDashboardStats = {
-  totalAppointmentsToday: number;
-  totalDoctors: number;
-  totalPatients: number;
-  pendingDoctorApprovals: number;
-};
+/**
+ * Compatibility shim: re-exports and defines types that admin components
+ * expect from "@/lib/type/adminDashboard". These map to types in the
+ * structured domain type files.
+ */
 
-export type PatientStats = {
+// ── Dashboard Stats ────────────────────────────────────────────────
+export interface AdminDashboardStats {
+  totalPatients: number;
+  totalDoctors: number;
+  totalAppointmentsToday: number;
+  pendingDoctorApprovals: number;
+}
+
+// ── Doctor ────────────────────────────────────────────────────────
+export interface DoctorProfile {
+  doctorProfileId: string;
+  fullName: string;
+  email: string;
+  specialization?: string;
+  contactNumber?: string;
+  workingAT?: string;
+  yearsOfExperience?: number;
+  gender?: string;
+  country?: string;
+  dateOfBirth?: string;
+  profileImgUrl?: string;
+  status: "ACTIVE" | "INACTIVE" | string;
+}
+
+// ── Patient ───────────────────────────────────────────────────────
+export interface PatientProfile {
+  patientId: string;
+  fullName: string;
+  email: string;
+  gender?: string | null;
+  country?: string;
+  dateOfBirth?: string;
+  profileImgUrl?: string;
+  status: string;
+}
+
+export interface PatientStats {
   activePatients: number;
   totalPatients: number;
   totalAppointments: number;
-};
+}
 
+// ── Appointment ───────────────────────────────────────────────────
 export interface AppointmentFull {
   appointmentId: number;
   doctorName: string;
   patientName: string;
-  appointmentDate: string; // ISO string
-  status: "SCHEDULED" | "CONFIRMED" | "COMPLETED" | "CANCELLED";
+  appointmentDate: string;
+  status: string;
   checkupType: string;
-  meetingLink: string;
+  meetingLink?: string;
 }
 
-
-export type DoctorProfile = {
-  doctorProfileId: string;  
-  fullName: string;
-  email: string;
-  specialization: string;
-  yearsOfExperience: number;
-  workingAT: string;
-  contactNumber: string;
-  dateOfBirth: string;
-  gender: string;
-  country: string;
-  profileImgUrl: string;
-  status: string;
-};
-
-// types/adminDashboard.ts
-export type PatientProfile = {
-  patientId: string;
-  fullName: string;
-  email: string;
-  profileImgUrl:string;
-  dateOfBirth:string;
-  gender:string;
-  country:string;
-  status: string;
-};
-
-export type DoctorRequest = {
-  doctorReqId: number;
-  userName: string;
-  email: string;
-  doctorLicence: string; 
-  status: string;
-};
-
-export type DoctorRequestResponse = {
-  id: number;
-  message: string;
-  status: string;
-}; 
-
-export type GenderCountResponse = {
-  male: number;
-  female: number;
-};
-
-export type WeeklyAppointmentCountResponse = {
+// ── Charts / Analytics ────────────────────────────────────────────
+export interface WeeklyAppointmentCountResponse {
   day: string;
   count: number;
-};
+}
 
-// Generic API response wrapper
-export type APIResponse<T> = { success: boolean; data: T };/*  */
+export interface GenderCountResponse {
+  male: number;
+  female: number;
+}

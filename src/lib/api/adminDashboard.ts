@@ -1,66 +1,71 @@
+/**
+ * Compatibility shim: re-exports admin API functions that admin components
+ * expect from "@/lib/api/adminDashboard". These map to the structured
+ * domain API files (dashboard.api, doctor.api, patient.api, appointment.api).
+ */
+
+import api from "./api";
 import { API } from "./api";
 import type {
   AdminDashboardStats,
-  AppointmentFull,
   DoctorProfile,
   PatientProfile,
-  DoctorRequest,
-  DoctorRequestResponse,
   PatientStats,
+  AppointmentFull,
+  WeeklyAppointmentCountResponse,
   GenderCountResponse,
-  WeeklyAppointmentCountResponse
 } from "../type/adminDashboard";
 
-// Base URL for admin dashboard
-const DASHBOARD_BASE = "dashboard/admin";
+// ── Dashboard Stats ────────────────────────────────────────────────
+export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
+  return API.getOne<AdminDashboardStats>("/api/dashboard/admin/stats");
+}
 
-// Existing functions
-export const getAdminDashboardStats = () =>
-  API.getOne<AdminDashboardStats>(`${DASHBOARD_BASE}/stats`);
+// ── Weekly Appointments ───────────────────────────────────────────
+export async function getWeeklyAppointments(): Promise<WeeklyAppointmentCountResponse[]> {
+  return API.getAll<WeeklyAppointmentCountResponse>("/api/dashboard/admin/weekly-appointments");
+}
 
-export const getRecentAppointments = () =>
-  API.getAll<AppointmentFull>(`${DASHBOARD_BASE}/recent-appointments`);
+// ── Recent Appointments ───────────────────────────────────────────
+export async function getRecentAppointments(): Promise<AppointmentFull[]> {
+  return API.getAll<AppointmentFull>("/api/appointments/admin/recent");
+}
 
-export const getAllDoctors = () =>
-  API.getAll<DoctorProfile>(`${DASHBOARD_BASE}/doctors`);
+// ── Doctor Management ──────────────────────────────────────────────
+export async function getPendingDoctorCount(): Promise<number> {
+  return API.getOne<number>("/api/admin/doctor-requests/pending-count");
+}
 
-export const getAllDoctorRequests = () =>
-  API.getAll<DoctorRequest>("admin/doctor-req/all");
+export async function getAllDoctors(): Promise<DoctorProfile[]> {
+  return API.getAll<DoctorProfile>("/api/dashboard/admin/doctors");
+}
 
-export const getPendingDoctorRequests = () =>
-  API.getAll<DoctorRequest>("admin/doctor-req/pending");
+export async function suspendDoctor(doctorId: string): Promise<void> {
+  await api.put(`/api/dashboard/admin/doctors/${doctorId}/suspend`);
+}
 
-export const approveOrRejectDoctor = (doctorReqId: number, approve: boolean) =>
-  API.create<null, DoctorRequestResponse>(
-    `admin/doctor-req/approve?doctorReqId=${doctorReqId}&approve=${approve}`,
-    null
-  );
+export async function restoreDoctor(doctorId: string): Promise<void> {
+  await api.put(`/api/dashboard/admin/doctors/${doctorId}/restore`);
+}
 
-export const getPendingDoctorCount = async (): Promise<number> => {
-  return API.getOne<number>("admin/pending-doctors-count");
-};
+// ── Patient Management ────────────────────────────────────────────
+export async function getAllPatients(): Promise<PatientProfile[]> {
+  return API.getAll<PatientProfile>("/api/dashboard/admin/patients");
+}
 
+export async function getPatientStats(): Promise<PatientStats> {
+  return API.getOne<PatientStats>("/api/dashboard/admin/patients/stats");
+}
 
-export const suspendDoctor = (doctorId: string) =>
-  API.putNoId<null, DoctorProfile>(`${DASHBOARD_BASE}/${doctorId}/suspend`, null);
+export async function suspendPatient(patientId: string): Promise<void> {
+  await api.put(`/api/dashboard/admin/patients/${patientId}/suspend`);
+}
 
-export const restoreDoctor = (doctorId: string) =>
-  API.putNoId<null, DoctorProfile>(`${DASHBOARD_BASE}/${doctorId}/restore`, null);
+export async function restorePatient(patientId: string): Promise<void> {
+  await api.put(`/api/dashboard/admin/patients/${patientId}/restore`);
+}
 
-export const suspendPatient = (patientId: string) =>
-  API.putNoId<null, PatientProfile>(`${DASHBOARD_BASE}/suspend/${patientId}`, null);
-
-export const restorePatient = (patientId: string) =>
-  API.putNoId<null, PatientProfile>(`${DASHBOARD_BASE}/restore/${patientId}`, null);
-
-export const getAllPatients = () =>
-  API.getAll<PatientProfile>(`${DASHBOARD_BASE}/patients`);
-
-export const getPatientStats = () =>
-  API.getOne<PatientStats>(`${DASHBOARD_BASE}/patients-stats`);
-
-export const getPatientsGenderCount = () =>
-  API.getOne<GenderCountResponse>(`${DASHBOARD_BASE}/patients/gender-count`);
-
-export const getWeeklyAppointments = () =>
-  API.getAll<WeeklyAppointmentCountResponse>(`${DASHBOARD_BASE}/patients/weekly-appointments`);
+// ── Gender Stats ──────────────────────────────────────────────────
+export async function getPatientsGenderCount(): Promise<GenderCountResponse> {
+  return API.getOne<GenderCountResponse>("/api/dashboard/admin/patients/gender-count");
+}

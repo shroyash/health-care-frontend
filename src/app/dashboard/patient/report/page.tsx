@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
-import { reportApi } from "@/lib/api/reportApi";
-import type { ReportResponseDto } from "@/lib/type/report";
+import { patientReportApi } from "@/lib/api/report.api";
+import type { ReportResponseDto } from "@/lib/type/report.types";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { ReportListLayout } from "@/components/ui/Reportshared";
 
@@ -23,8 +23,8 @@ export default function PatientReportsPage() {
     setLoading(true);
     setError(null);
     try {
-      // GET /reports/patient/{patientId}  — userId is a UUID string, no Number() needed
-      const data = await reportApi.getByPatient();
+      // GET /reports/patient — get all reports for current patient
+      const data = await patientReportApi.getMyReports();
       setReports(data);
     } catch (err: any) {
       setError(err?.response?.data?.message || "Failed to load reports");

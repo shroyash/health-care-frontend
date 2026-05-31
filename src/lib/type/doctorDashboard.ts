@@ -1,74 +1,65 @@
-// types.ts
+/** Types used by Doctor dashboard components */
+
 export interface DoctorDashboardStats {
-  totalAppointmentsToday: number
-  pendingRequests: number
-  totalPatients: number
-  reportsTaken: number
+  totalAppointmentsToday: number;
+  totalPatients: number;
+  pendingRequests: number;
+  reportsTaken: number;
 }
 
 export interface DoctorAppointment {
   appointmentId: number;
-  patientId: number;
+  patientId: string;
   patientName: string;
-  appointmentDate: string; // ISO date string e.g. "2026-02-04"
+  appointmentDate: string;
   startTime: string;
   endTime: string;
   checkupType: string;
-  meetingLink: string;
+  meetingLink?: string;
   status: string;
 }
 
-// Updated to use actual date instead of dayOfWeek
-export interface ScheduleDto {
-  scheduleId: number;
-  scheduleDate: string; // "YYYY-MM-DD"
+export interface AppointmentRequest {
+  requestId: number;
+  patientName: string;
+  date: string;
   startTime: string;
   endTime: string;
-  available: boolean;
-  isLocked: boolean;
-  createdAt: string;
-  updatedAt: string;
+  notes?: string;
+  status: "PENDING" | "APPROVED" | "REJECTED" | string;
 }
 
-// types.ts
-export interface SaveScheduleDto {
-  scheduleDate: string; 
+export interface CheckupTypeCountDto {
+  checkupType: string;
+  count: number;
+}
+
+export interface DailyAppointmentCount {
+  date: string;
+  count: number;
+}
+
+// ── Schedule types ─────────────────────────────────────────────────
+
+export interface ScheduleDto {
+  scheduleId: number;
+  scheduleDate: string;
   startTime: string;
   endTime: string;
   available: boolean;
 }
 
 export interface SaveDoctorScheduleDto {
-  schedules: SaveScheduleDto[];
+  schedules: {
+    scheduleDate: string;
+    startTime: string;
+    endTime: string;
+    available: boolean;
+  }[];
 }
 
 export interface DoctorScheduleResponseDto {
+  doctorProfileId: string;
   doctorName: string;
-  email: string;
-  specialization: string;
-  contactNumber: string;
   schedules: ScheduleDto[];
-}
-
-// types/appointmentRequest.ts
-export interface AppointmentRequest {
-  requestId: number;
-  doctorId: number;
-  doctorName: string;
-  patientName: string;
-  date: string; 
-  startTime: string;
-  endTime: string;
-  status: "PENDING" | "APPROVED" | "REJECTED";
-  notes?: string;
-}
-
-export interface DailyAppointmentCount {
-  count: number
-    date: string
-}
-
- export interface CheckupTypeCountDto {
-  checkupType: "GENERAL" | "DENTAL" | "EYE" | "SPECIALIST"; // or enum
-  count: number;
 }

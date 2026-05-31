@@ -2,8 +2,8 @@
 import { useState } from "react";
 import { reportApi } from "@/lib/api/reportApi";
 import { ReportDetailModal } from "@/components/ui/Reportshared";
-import type { ReportResponseDto } from "@/lib/type/report";
-import type { PatientAppointmentDto, DoctorAppointmentDto } from "@/lib/type/appointment";
+import type { ReportResponseDto } from "@/lib/type/report.types";
+import type { PatientAppointmentDto, DoctorAppointmentDto } from "@/lib/type/appointment.types";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 function formatDate(d: string) {

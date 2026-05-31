@@ -12,7 +12,8 @@ import {
 import { FormInput } from "./form-input";
 import { HealthcareButton } from "./healthcare-button";
 import { Mail, CheckCircle, AlertCircle, Key } from "lucide-react";
-import { forgotPassword, verifyResetToken, resetPassword } from "@/lib/api/auth";
+import { authApi } from "@/lib/api/auth.api";
+const { forgotPassword, verifyResetToken, resetPassword } = authApi;
 
 interface ForgotPasswordModalProps {
   open: boolean;

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState, useCallback } from "react";
 import type { Client } from "@stomp/stompjs";
-import type { CallState, SignalMessage } from "@/lib/type/communication";
+import type { CallState, SignalMessage } from "@/lib/type/communication.type";
 
 export function useWebRTC(
   stompClient: Client | null,

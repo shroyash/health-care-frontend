@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { Client } from "@stomp/stompjs";
-import type { ChatMessage } from "@/lib/type/communication";
+import type { ChatMessage } from "@/lib/type/communication.type";
 
 export function useChat(appointmentId: number, token: string, username: string) { // ✅ add username
   const [messages, setMessages]       = useState<ChatMessage[]>([]);
@@ -15,7 +15,7 @@ export function useChat(appointmentId: number, token: string, username: string) 
   }, [messages]);
 
   useEffect(() => {
-    fetch(`/api/communication/appointments/${appointmentId}/messages`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/communication/appointments/${appointmentId}/messages`, {
       credentials: "include",
     })
       .then((r) => (r.ok ? r.json() : []))

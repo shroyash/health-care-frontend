@@ -23,7 +23,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { logout } from "@/lib/api/auth";
+import { logout } from "@/lib/api/auth.api";
 
 const navigationItems = [
   { title: "Admin Dashboard", url: "/dashboard/admin", icon: LayoutDashboard, group: "Overview" },

@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { getCurrentUser } from "./api/auth";
+import { getCurrentUser } from "./api/auth.api";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

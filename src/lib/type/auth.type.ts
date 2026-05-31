@@ -19,25 +19,13 @@ export interface LoginRequest {
   password: string;
 }
 
-export interface LoginResponse {
-  message: string;
-  status: string;
-  data: UserResponseDto;
-}
 export interface Role {
   id: number;
   name: string;
 }
 
-export interface JwtResponse {
-  token: string;
-  type: string;
-  username: string;
-  email: string;
-}
-
 export interface UserResponseDto {
-  userId : string,
+  userId: string;
   username: string;
   email: string;
   role: Role[];
@@ -49,12 +37,12 @@ export interface ForgotPasswordRequest {
 
 export interface VerifyResetTokenRequest {
   email: string;
-  token: string; // NOT otp
+  token: string;
 }
 
 export interface ResetPasswordRequest {
   email: string;
-  token: string; // NOT otp
+  token: string;
   newPassword: string;
 }
 
@@ -63,4 +51,3 @@ export interface ChangePasswordRequest {
   oldPassword: string;
   newPassword: string;
 }
-

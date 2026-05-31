@@ -1,3 +1,4 @@
+
 export type ReportType = "CONSULTATION" | "LAB" | "DISCHARGE";
 export type ReportStatus = "DRAFT" | "FINALIZED";
 
@@ -9,15 +10,8 @@ export interface MedicineForm {
   instructions: string;
 }
 
-export interface ReportRequestDto {
-  appointmentId: number;
-  title: string;
-  diagnosis: string;
-  symptoms: string;
-  treatmentPlan: string;
-  notes: string;
-  reportType: ReportType;
-  medicines: MedicineForm[];
+export interface ReportMedicineDto extends MedicineForm {
+  id?: number;
 }
 
 export interface ReportResponseDto {
@@ -34,9 +28,20 @@ export interface ReportResponseDto {
   notes: string;
   reportType: ReportType;
   status: ReportStatus;
-  reportUrl: string | null;
-  medicines: MedicineForm[];
-  finalizedAt: string | null;
+  reportUrl?: string;
+  medicines: ReportMedicineDto[];
+  finalizedAt?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ReportRequestDto {
+  appointmentId: number;
+  title: string;
+  diagnosis: string;
+  symptoms: string;
+  treatmentPlan: string;
+  notes: string;
+  reportType: ReportType;
+  medicines: MedicineForm[];
 }

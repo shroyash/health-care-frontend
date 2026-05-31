@@ -2,12 +2,10 @@
 
 import { useEffect, useState, Fragment } from "react";
 import {
-  getPatientProfile,
-  updatePatientProfile,
-  uploadPatientProfileImage,
+  patientProfileApi,
   PatientProfileDTO,
   PatientProfileUpdateDto,
-} from "@/lib/api/patientProfileApi";
+} from "@/lib/api/patient.api";
 import { Dialog, Transition } from "@headlessui/react";
 import { Button } from "@/components/ui/button";
 import { Edit, Camera, Phone, Mail, MapPin, Calendar, User } from "lucide-react";
@@ -51,14 +49,14 @@ const InfoRow = ({
 
 /* ── Profile Image ── */
 const ProfileImage = ({
-  profileImgUrl,
+  profileImage,
   previewImage,
   firstLetter,
   onFileChange,
   uploading,
   imageKey,
 }: any) => {
-  const fullImageUrl = profileImgUrl ? `${STATIC_BASE_URL}${profileImgUrl}` : null;
+  const fullImageUrl = profileImage ? `${STATIC_BASE_URL}${profileImage}` : null;
 
   return (
     <div className="relative">
@@ -89,7 +87,7 @@ export default function PatientProfilePage() {
 
   // ✅ All 4 fields matching PatientProfileUpdateDto
   const [form, setForm] = useState<PatientProfileUpdateDto>({
-    fullname: "",
+    fullName: "",
     contactNumber: "",
     country: "",
     dateOfBirth: "",
@@ -101,11 +99,11 @@ export default function PatientProfilePage() {
   const [imageKey, setImageKey] = useState(0);
 
   useEffect(() => {
-    getPatientProfile().then((data: any) => {
+    patientProfileApi.getMyProfile().then((data: any) => {
       setProfile(data);
       // ✅ Populate all fields from API response
       setForm({
-        fullname: data.fullName ?? "",
+        fullName: data.fullName ?? "",
         contactNumber: data.contactNumber ?? "",
         country: data.country ?? "",
         dateOfBirth: data.dateOfBirth ?? "",
@@ -115,12 +113,12 @@ export default function PatientProfilePage() {
 
   const handleImageChange = (e: any) => {
     const file = e.target.files?.[0];
-    if (!file || !profile) return;
+    if (!file) return;
     setUploading(true);
     setPreviewImage(URL.createObjectURL(file));
-    uploadPatientProfileImage(profile.patientId, file)
-      .then((url) => {
-        setProfile((p) => (p ? { ...p, profileImgUrl: url } : p));
+    patientProfileApi.uploadProfileImage(file)
+      .then((response: any) => {
+        setProfile((p) => (p ? { ...p, profileImage: response.profileImage } : p));
         setImageKey((k) => k + 1);
         setPreviewImage(null);
       })
@@ -129,13 +127,13 @@ export default function PatientProfilePage() {
 
   const handleSave = async () => {
     if (!profile) return;
-    await updatePatientProfile(form);
+    await patientProfileApi.updateProfile(form);
     // ✅ Update all fields locally
     setProfile((p) =>
       p
         ? {
             ...p,
-            fullName: form.fullname,
+            fullName: form.fullName,
             contactNumber: form.contactNumber,
             country: form.country,
             dateOfBirth: form.dateOfBirth,

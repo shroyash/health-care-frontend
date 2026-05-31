@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
-import { reportApi } from "@/lib/api/reportApi";
-import type { MedicineForm, ReportRequestDto, ReportResponseDto, ReportType } from "@/lib/type/report";
+import { reportApi } from "@/lib/api/report.api";
+import type { MedicineForm, ReportRequestDto, ReportResponseDto, ReportType } from "@/lib/type/report.types";
 
 // ── Icons ──────────────────────────────────────────────
 const PlusIcon = () => (

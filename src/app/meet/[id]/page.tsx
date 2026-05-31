@@ -1,11 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
-import api from "@/lib/api/api";
+import { API } from "@/lib/api/api";
 
 
 interface AppointmentAccess {
-  appointmentId: number;
+  appointmentId: string;
   userId : string,             
   doctorName: string;
   patientName: string;
@@ -19,8 +19,8 @@ const MeetingPage: React.FC = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  // ✅ Get UUID appointment ID from URL
-  const appointmentId = Array.isArray(params.id) ? params.id[0] : params.id;
+  // ✅ Get numerical appointment ID from URL
+  const appointmentId = Number(Array.isArray(params.id) ? params.id[0] : params.id);
   const token = searchParams.get("token") || "";
 
   const [appointment, setAppointment] = useState<AppointmentAccess | null>(null);
@@ -30,23 +30,16 @@ const MeetingPage: React.FC = () => {
   useEffect(() => {
     const fetchAppointment = async () => {
       try {
-        // ✅ Call backend with UUID
-        const res = await api.get<AppointmentAccess>(
-          `/appointments/${appointmentId}/access`,  // ✅ UUID in URL
-          { 
-            params: { token },
-            headers: {
-              // If using Bearer token:
-              // "Authorization": `Bearer ${token}`
-            }
-          }
+        // ✅ Use API helper for correct response wrapping and UUID URL
+        const data = await API.getOne<AppointmentAccess>(
+          `/api/appointments/${appointmentId}/access?token=${token}`
         );
 
-        setAppointment(res.data);
+        setAppointment(data);
         
         // ✅ Store JWT token if provided
-        if (res.data.meetingToken) {
-          localStorage.setItem('jwt', res.data.meetingToken);
+        if (data.meetingToken) {
+          localStorage.setItem('jwt', data.meetingToken);
         }
 
       } catch (err: any) {

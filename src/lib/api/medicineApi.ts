@@ -1,17 +1,46 @@
 import { API } from "./api";
-import type { Medicine, MedicineRequestDto } from "../type/medicine";
 
-export const getAllMedicines = (): Promise<Medicine[]> =>
-  API.getAll<Medicine>("/medicines");
+export interface Medicine {
+  id: number;
+  name: string;
+  description: string;
+  dosage: string;
+  category: string;
+  sideEffects: string;
+  manufacturer: string;
+  addedByDoctorId: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
-export const getMedicineById = (id: number): Promise<Medicine> =>
-  API.getById<Medicine>("/medicines", id);
+export interface MedicineRequestDto {
+  name: string;
+  description: string;
+  dosage: string;
+  category: string;
+  sideEffects: string;
+  manufacturer: string;
+}
 
-export const addMedicine = (dto: MedicineRequestDto): Promise<Medicine> =>
-  API.create<MedicineRequestDto, Medicine>("/medicines", dto);
+export async function getAllMedicines(): Promise<Medicine[]> {
+  return API.getAll<Medicine>("/api/medicines");
+}
 
-export const updateMedicine = (id: number, dto: MedicineRequestDto): Promise<Medicine> =>
-  API.update<MedicineRequestDto, Medicine>("/medicines", id, dto);
+export async function addMedicine(data: MedicineRequestDto): Promise<Medicine> {
+  return API.create<MedicineRequestDto, Medicine>("/api/medicines", data);
+}
 
-export const deleteMedicine = async (id: number): Promise<void> =>
-  API.remove("/medicines", id);
+export async function updateMedicine(
+  medicineId: number,
+  data: MedicineRequestDto
+): Promise<Medicine> {
+  return API.update<MedicineRequestDto, Medicine>(
+    "/api/medicines",
+    medicineId,
+    data
+  );
+}
+
+export async function deleteMedicine(medicineId: number): Promise<void> {
+  return API.remove("/api/medicines", medicineId);
+}

@@ -2,11 +2,10 @@
 
 import React, { useEffect, useState, Fragment } from "react";
 import {
-  getDoctorProfile,
-  updateDoctorProfile,
-  uploadDoctorProfileImage,
+  doctorProfileApi,
   DoctorProfileUpdateDto,
-} from "@/lib/api/doctorProfileApi";
+} from "@/lib/api/doctor.api";
+import type { DoctorProfileResponseDto } from "@/lib/type/doctor.types";
 import { Dialog, Transition } from "@headlessui/react";
 import { Button } from "@/components/ui/button";
 import { Edit, Camera, Briefcase, Phone, Mail, Award, MapPin, Calendar, User } from "lucide-react";
@@ -41,18 +40,24 @@ const InfoRow = ({ icon, label, value }: { icon: React.ReactNode; label: string;
 };
 
 /* ── Profile Image ── */
-interface DoctorProfile extends DoctorProfileUpdateDto {
-  doctorProfileId: string;
+interface DoctorProfile extends Record<string, any> {
+  id?: string;
+  doctorProfileId?: string;
+  fullName?: string;
   email?: string;
+  specialization?: string;
+  contactNumber?: string;
+  profileImage?: string;
+  status?: string;
+  yearsOfExperience?: number;
+  workingAT?: string;
   dateOfBirth?: string;
   gender?: string;
   country?: string;
-  status?: string;
-  profileImgUrl?: string;
 }
 
-const ProfileImage = ({ profileImgUrl, previewImage, firstLetter, onFileChange, uploading, imageKey }: any) => {
-  const fullImageUrl = profileImgUrl ? `${STATIC_BASE_URL}${profileImgUrl}` : null;
+const ProfileImage = ({ profileImage, previewImage, firstLetter, onFileChange, uploading, imageKey }: any) => {
+  const fullImageUrl = profileImage ? `${STATIC_BASE_URL}${profileImage}` : null;
 
   return (
     <div className="relative">
@@ -90,9 +95,8 @@ export default function DoctorProfilePage() {
   const [imageKey, setImageKey] = useState(0);
 
   useEffect(() => {
-    getDoctorProfile().then((data: any) => {
-      const doctorProfileId = data.doctorProfileId || data.id || 0;
-      setProfile({ ...data, doctorProfileId });
+    doctorProfileApi.getMyProfile().then((data: any) => {
+      setProfile(data);
       setFormData(data);
     });
   }, []);
@@ -104,12 +108,12 @@ export default function DoctorProfilePage() {
 
   const handleImageChange = (e: any) => {
     const file = e.target.files?.[0];
-    if (!file || !profile) return;
+    if (!file) return;
     setUploading(true);
     setPreviewImage(URL.createObjectURL(file));
-    uploadDoctorProfileImage(profile.doctorProfileId, file)
-      .then((url) => {
-        setProfile((p) => (p ? { ...p, profileImgUrl: url } : p));
+    doctorProfileApi.uploadProfileImage(file)
+      .then((response: any) => {
+        setProfile((p) => (p ? { ...p, profileImage: response.profileImage } : p));
         setImageKey((k) => k + 1);
         setPreviewImage(null);
       })
@@ -118,7 +122,7 @@ export default function DoctorProfilePage() {
 
   const handleSave = async () => {
     if (!profile) return;
-    await updateDoctorProfile(formData);
+    await doctorProfileApi.updateProfile(formData);
     setProfile((p) => p ? { ...p, ...formData } : p);
     setIsEditing(false);
     window.location.reload();
@@ -138,7 +142,7 @@ export default function DoctorProfilePage() {
       <div className="relative px-10 py-20">
         <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-12">
           <ProfileImage
-            profileImgUrl={profile.profileImgUrl}
+            profileImage={profile.profileImage}
             previewImage={previewImage}
             firstLetter={firstLetter}
             onFileChange={handleImageChange}

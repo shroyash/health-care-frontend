@@ -16,9 +16,9 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-import { getDoctorProfile } from "@/lib/api/doctorProfileApi";
-import type { DoctorProfileDTO } from "@/lib/api/doctorProfileApi";
-import { logout } from "@/lib/api/auth";
+import { doctorProfileApi } from "@/lib/api/doctor.api";
+import type { DoctorProfileResponseDto } from "@/lib/type/doctor.types";
+import { logout } from "@/lib/api/auth.api";
 
 interface SideNavBarProps {
   isOpen: boolean;
@@ -38,13 +38,13 @@ const navigation = [
 export default function SideNavBar({ isOpen, toggleSidebar }: SideNavBarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [profile, setProfile] = useState<DoctorProfileDTO | null>(null);
+  const [profile, setProfile] = useState<DoctorProfileResponseDto | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const data = await getDoctorProfile();
+        const data = await doctorProfileApi.getMyProfile();
         setProfile(data);
       } catch (err) {
         console.error("Error fetching profile:", err);
@@ -130,8 +130,8 @@ export default function SideNavBar({ isOpen, toggleSidebar }: SideNavBarProps) {
             <Avatar>
               <AvatarImage
                 src={
-                  profile.profileImgUrl
-                    ? `http://localhost:8004${profile.profileImgUrl}`
+                  profile.profileImage
+                    ? `http://localhost:8004${profile.profileImage}`
                     : undefined
                 }
               />
