@@ -1,0 +1,262 @@
+
+> my-healthcare-app@0.1.0 build
+> next build
+
+  ▲ Next.js 14.2.33
+  - Environments: .env.local
+
+   Creating an optimized production build ...
+ ⚠ Compiled with warnings
+
+./src/app/dashboard/admin/_components/Appointments.tsx
+Attempted import error: 'getRecentAppointments' is not exported from '@/lib/api/adminDashboard' (imported as 'getRecentAppointments').
+
+Import trace for requested module:
+./src/app/dashboard/admin/_components/Appointments.tsx
+
+./src/app/dashboard/admin/analytics/page.tsx
+Attempted import error: 'getRecentAppointments' is not exported from '@/lib/api/adminDashboard' (imported as 'getRecentAppointments').
+
+Import trace for requested module:
+./src/app/dashboard/admin/analytics/page.tsx
+
+./src/app/dashboard/admin/doctors/page.tsx
+Attempted import error: 'suspendDoctor' is not exported from '@/lib/api/adminDashboard' (imported as 'suspendDoctor').
+
+Import trace for requested module:
+./src/app/dashboard/admin/doctors/page.tsx
+
+./src/app/dashboard/admin/doctors/page.tsx
+Attempted import error: 'restoreDoctor' is not exported from '@/lib/api/adminDashboard' (imported as 'restoreDoctor').
+
+Import trace for requested module:
+./src/app/dashboard/admin/doctors/page.tsx
+
+./src/app/dashboard/admin/doctors/page.tsx
+Attempted import error: 'getAllDoctors' is not exported from '@/lib/api/adminDashboard' (imported as 'getAllDoctors').
+
+Import trace for requested module:
+./src/app/dashboard/admin/doctors/page.tsx
+
+./src/app/dashboard/admin/patients/page.tsx
+Attempted import error: 'suspendPatient' is not exported from '@/lib/api/adminDashboard' (imported as 'suspendPatient').
+
+Import trace for requested module:
+./src/app/dashboard/admin/patients/page.tsx
+
+./src/app/dashboard/admin/patients/page.tsx
+Attempted import error: 'restorePatient' is not exported from '@/lib/api/adminDashboard' (imported as 'restorePatient').
+
+Import trace for requested module:
+./src/app/dashboard/admin/patients/page.tsx
+
+./src/app/dashboard/admin/patients/page.tsx
+Attempted import error: 'getAllPatients' is not exported from '@/lib/api/adminDashboard' (imported as 'getAllPatients').
+
+Import trace for requested module:
+./src/app/dashboard/admin/patients/page.tsx
+
+./src/app/dashboard/doctor/_Components/DoctorDashboard.tsx
+Attempted import error: 'getUpcomingAppointments' is not exported from '@/lib/api/doctorDashboard' (imported as 'getUpcomingAppointments').
+
+Import trace for requested module:
+./src/app/dashboard/doctor/_Components/DoctorDashboard.tsx
+./src/app/dashboard/doctor/page.tsx
+
+./src/app/dashboard/doctor/_Components/DoctorDashboard.tsx
+Attempted import error: 'getCheckupTypeCount' is not exported from '@/lib/api/doctorDashboard' (imported as 'getCheckupTypeCount').
+
+Import trace for requested module:
+./src/app/dashboard/doctor/_Components/DoctorDashboard.tsx
+./src/app/dashboard/doctor/page.tsx
+
+./src/app/dashboard/doctor/schedule/page.tsx
+Attempted import error: 'getDoctorSchedule' is not exported from '@/lib/api/doctorDashboard' (imported as 'getDoctorSchedule').
+
+Import trace for requested module:
+./src/app/dashboard/doctor/schedule/page.tsx
+
+./src/app/dashboard/doctor/schedule/page.tsx
+Attempted import error: 'saveWeeklySchedule' is not exported from '@/lib/api/doctorDashboard' (imported as 'saveWeeklySchedule').
+
+Import trace for requested module:
+./src/app/dashboard/doctor/schedule/page.tsx
+
+./src/app/dashboard/patient/_Components/AvailableDoctor.tsx
+Attempted import error: 'getAllAvailableDoctors' is not exported from '@/lib/api/patientDashboard' (imported as 'getAllAvailableDoctors').
+
+Import trace for requested module:
+./src/app/dashboard/patient/_Components/AvailableDoctor.tsx
+./src/app/dashboard/patient/request-appointments/page.tsx
+
+./src/app/dashboard/patient/_Components/CustomRequestForm.tsx
+Attempted import error: 'getAllAvailableDoctors' is not exported from '@/lib/api/patientDashboard' (imported as 'getAllAvailableDoctors').
+
+Import trace for requested module:
+./src/app/dashboard/patient/_Components/CustomRequestForm.tsx
+./src/app/dashboard/patient/request-appointments/page.tsx
+
+./src/app/dashboard/patient/_Components/CustomRequestForm.tsx
+Attempted import error: 'createAppointmentRequest' is not exported from '@/lib/api/patientDashboard' (imported as 'createAppointmentRequest').
+
+Import trace for requested module:
+./src/app/dashboard/patient/_Components/CustomRequestForm.tsx
+./src/app/dashboard/patient/request-appointments/page.tsx
+
+./src/app/dashboard/patient/_Components/ScheduleModal.tsx
+Attempted import error: 'createAppointmentRequest' is not exported from '@/lib/api/patientDashboard' (imported as 'createAppointmentRequest').
+
+Import trace for requested module:
+./src/app/dashboard/patient/_Components/ScheduleModal.tsx
+./src/app/dashboard/patient/request-appointments/page.tsx
+
+ ⚠ Compiled with warnings
+
+./src/app/dashboard/admin/_components/Appointments.tsx
+Attempted import error: 'getRecentAppointments' is not exported from '@/lib/api/adminDashboard' (imported as 'getRecentAppointments').
+
+Import trace for requested module:
+./src/app/dashboard/admin/_components/Appointments.tsx
+
+./src/app/dashboard/admin/analytics/page.tsx
+Attempted import error: 'getRecentAppointments' is not exported from '@/lib/api/adminDashboard' (imported as 'getRecentAppointments').
+
+Import trace for requested module:
+./src/app/dashboard/admin/analytics/page.tsx
+
+./src/app/dashboard/admin/doctors/page.tsx
+Attempted import error: 'getAllDoctors' is not exported from '@/lib/api/adminDashboard' (imported as 'getAllDoctors').
+
+Import trace for requested module:
+./src/app/dashboard/admin/doctors/page.tsx
+
+./src/app/dashboard/admin/doctors/page.tsx
+Attempted import error: 'suspendDoctor' is not exported from '@/lib/api/adminDashboard' (imported as 'suspendDoctor').
+
+Import trace for requested module:
+./src/app/dashboard/admin/doctors/page.tsx
+
+./src/app/dashboard/admin/doctors/page.tsx
+Attempted import error: 'restoreDoctor' is not exported from '@/lib/api/adminDashboard' (imported as 'restoreDoctor').
+
+Import trace for requested module:
+./src/app/dashboard/admin/doctors/page.tsx
+
+./src/app/dashboard/admin/doctors/page.tsx
+Attempted import error: 'getAllDoctors' is not exported from '@/lib/api/adminDashboard' (imported as 'getAllDoctors').
+
+Import trace for requested module:
+./src/app/dashboard/admin/doctors/page.tsx
+
+./src/app/dashboard/admin/patients/page.tsx
+Attempted import error: 'getAllPatients' is not exported from '@/lib/api/adminDashboard' (imported as 'getAllPatients').
+
+Import trace for requested module:
+./src/app/dashboard/admin/patients/page.tsx
+
+./src/app/dashboard/admin/patients/page.tsx
+Attempted import error: 'suspendPatient' is not exported from '@/lib/api/adminDashboard' (imported as 'suspendPatient').
+
+Import trace for requested module:
+./src/app/dashboard/admin/patients/page.tsx
+
+./src/app/dashboard/admin/patients/page.tsx
+Attempted import error: 'restorePatient' is not exported from '@/lib/api/adminDashboard' (imported as 'restorePatient').
+
+Import trace for requested module:
+./src/app/dashboard/admin/patients/page.tsx
+
+./src/app/dashboard/admin/patients/page.tsx
+Attempted import error: 'getAllPatients' is not exported from '@/lib/api/adminDashboard' (imported as 'getAllPatients').
+
+Import trace for requested module:
+./src/app/dashboard/admin/patients/page.tsx
+
+./src/app/dashboard/doctor/_Components/DoctorAppointmentsList.tsx
+Attempted import error: 'getAppointments' is not exported from '@/lib/api/doctorDashboard' (imported as 'getAppointments').
+
+Import trace for requested module:
+./src/app/dashboard/doctor/_Components/DoctorAppointmentsList.tsx
+
+./src/app/dashboard/doctor/_Components/DoctorDashboard.tsx
+Attempted import error: 'getUpcomingAppointments' is not exported from '@/lib/api/doctorDashboard' (imported as 'getUpcomingAppointments').
+
+Import trace for requested module:
+./src/app/dashboard/doctor/_Components/DoctorDashboard.tsx
+./src/app/dashboard/doctor/page.tsx
+
+./src/app/dashboard/doctor/_Components/DoctorDashboard.tsx
+Attempted import error: 'getCheckupTypeCount' is not exported from '@/lib/api/doctorDashboard' (imported as 'getCheckupTypeCount').
+
+Import trace for requested module:
+./src/app/dashboard/doctor/_Components/DoctorDashboard.tsx
+./src/app/dashboard/doctor/page.tsx
+
+./src/app/dashboard/doctor/schedule/page.tsx
+Attempted import error: 'getDoctorSchedule' is not exported from '@/lib/api/doctorDashboard' (imported as 'getDoctorSchedule').
+
+Import trace for requested module:
+./src/app/dashboard/doctor/schedule/page.tsx
+
+./src/app/dashboard/doctor/schedule/page.tsx
+Attempted import error: 'saveWeeklySchedule' is not exported from '@/lib/api/doctorDashboard' (imported as 'saveWeeklySchedule').
+
+Import trace for requested module:
+./src/app/dashboard/doctor/schedule/page.tsx
+
+./src/app/dashboard/patient/_Components/AvailableDoctor.tsx
+Attempted import error: 'getAllAvailableDoctors' is not exported from '@/lib/api/patientDashboard' (imported as 'getAllAvailableDoctors').
+
+Import trace for requested module:
+./src/app/dashboard/patient/_Components/AvailableDoctor.tsx
+./src/app/dashboard/patient/request-appointments/page.tsx
+
+./src/app/dashboard/patient/_Components/CustomRequestForm.tsx
+Attempted import error: 'getAllAvailableDoctors' is not exported from '@/lib/api/patientDashboard' (imported as 'getAllAvailableDoctors').
+
+Import trace for requested module:
+./src/app/dashboard/patient/_Components/CustomRequestForm.tsx
+./src/app/dashboard/patient/request-appointments/page.tsx
+
+./src/app/dashboard/patient/_Components/CustomRequestForm.tsx
+Attempted import error: 'createAppointmentRequest' is not exported from '@/lib/api/patientDashboard' (imported as 'createAppointmentRequest').
+
+Import trace for requested module:
+./src/app/dashboard/patient/_Components/CustomRequestForm.tsx
+./src/app/dashboard/patient/request-appointments/page.tsx
+
+./src/app/dashboard/patient/_Components/PatientDashboard.tsx
+Attempted import error: 'getUpcomingAppointments' is not exported from '@/lib/api/patientDashboard' (imported as 'getUpcomingAppointments').
+
+Import trace for requested module:
+./src/app/dashboard/patient/_Components/PatientDashboard.tsx
+./src/app/dashboard/patient/page.tsx
+
+./src/app/dashboard/patient/_Components/ScheduleModal.tsx
+Attempted import error: 'createAppointmentRequest' is not exported from '@/lib/api/patientDashboard' (imported as 'createAppointmentRequest').
+
+Import trace for requested module:
+./src/app/dashboard/patient/_Components/ScheduleModal.tsx
+./src/app/dashboard/patient/request-appointments/page.tsx
+
+./src/app/dashboard/patient/appointments/page.tsx
+Attempted import error: 'getAppointments' is not exported from '@/lib/api/patientDashboard' (imported as 'getAppointments').
+
+Import trace for requested module:
+./src/app/dashboard/patient/appointments/page.tsx
+
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+Failed to compile.
+
+./src/app/auth-page/_components/Login.tsx:83:30
+Type error: Property 'role' does not exist on type 'UserResponseDto'. Did you mean 'roles'?
+
+[0m [90m 81 |[39m       console[33m.[39mlog([32m"Logged in user:"[39m[33m,[39m userData)[33m;[39m[0m
+[0m [90m 82 |[39m[0m
+[0m[31m[1m>[22m[39m[90m 83 |[39m       [36mconst[39m roles [33m=[39m userData[33m.[39mrole [33m||[39m [][33m;[39m[0m
+[0m [90m    |[39m                              [31m[1m^[22m[39m[0m
+[0m [90m 84 |[39m       console[33m.[39mlog([32m"User roles:"[39m[33m,[39m roles)[33m;[39m[0m
+[0m [90m 85 |[39m[0m
+[0m [90m 86 |[39m       localStorage[33m.[39msetItem([32m"user"[39m[33m,[39m [33mJSON[39m[33m.[39mstringify(userData))[33m;[39m[0m
+Next.js build worker exited with code: 1 and signal: null

@@ -7,7 +7,7 @@ import {
   ReactNode,
   useEffect,
 } from "react";
-import { adminDashboardApi } from "@/lib/api/dashboard.api";
+import { getAdminDashboardStats } from "@/lib/api/adminDashboard";
 import type { AdminDashboardStatsDto as AdminDashboardStats } from "@/lib/type/dashboard.types";
 
 interface DashboardStatsContextType {
@@ -39,7 +39,7 @@ export const DashboardStatsProvider = ({
     try {
       setLoading(true);
       setError(null);
-      const res = await adminDashboardApi.getStats();
+      const res = await getAdminDashboardStats();
       setStatsData(res);
     } catch (err) {
       const message =

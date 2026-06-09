@@ -2,19 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import {
-  getDoctorRequests,
-  getPendingDoctorRequests,
-  approveDoctorRequest,
-  rejectDoctorRequest,
-  DoctorRequestDto,
-} from "@/lib/api/admin/doctorRequest";
-
+import { getDoctorRequests,getPendingDoctorRequests ,approveDoctorRequest,rejectDoctorRequest} from "@/lib/api/doctorRequest";
 import { Search, Check, X, Eye } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { DoctorRequestDto } from "@/lib/api/doctorRequest";
 import {
   Dialog,
   DialogContent,

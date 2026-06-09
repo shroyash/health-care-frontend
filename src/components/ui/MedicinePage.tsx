@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Search, Plus, Edit, Trash2, Eye, Pill } from "lucide-react";
 import { toast } from "react-toastify";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -19,7 +19,7 @@ import {
   updateMedicine,
   deleteMedicine,
 } from "@/lib/api/medicineApi";
-import type { Medicine, MedicineRequestDto } from "@/lib/type/medicine";
+import { Medicine,MedicineRequestDto } from "@/lib/type/medicine.type";
 
 const EMPTY_FORM: MedicineRequestDto = {
   name: "",

@@ -1,31 +1,10 @@
 
 import { API } from "./api";
 import {
-  PatientsStats,
-  GenderCountResponseDto,
+  PatientProfileDTO,
+  PatientProfileUpdateDto,
 } from "../type/patient.types";
 
-// ── Patient Profile ────────────────────────────────────────────────
-
-export interface PatientProfileDTO {
-  patientProfileId: string;
-  fullName: string;
-  email: string;
-  contactNumber: string;
-  dateOfBirth: string;
-  gender: string;
-  country: string;
-  profileImage?: string;
-  status: string;
-}
-
-export interface PatientProfileUpdateDto {
-  fullName?: string;
-  contactNumber?: string;
-  dateOfBirth?: string;
-  gender?: string;
-  country?: string;
-}
 
 export const patientProfileApi = {
 
@@ -47,15 +26,3 @@ export const patientProfileApi = {
   },
 };
 
-// ── Admin Patient Management ──────────────────────────────────────
-
-export const adminPatientApi = {
-
-  getStats: () =>
-    API.getOne<PatientsStats>(
-      "/api/dashboard/admin/patients/stats"),
-
-  getGenderCount: () =>
-    API.getOne<GenderCountResponseDto>(
-      "/api/dashboard/admin/patients/gender-count"),
-};

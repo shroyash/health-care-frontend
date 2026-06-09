@@ -1,26 +1,5 @@
 import { API } from "./api";
-
-export interface Medicine {
-  id: number;
-  name: string;
-  description: string;
-  dosage: string;
-  category: string;
-  sideEffects: string;
-  manufacturer: string;
-  addedByDoctorId: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface MedicineRequestDto {
-  name: string;
-  description: string;
-  dosage: string;
-  category: string;
-  sideEffects: string;
-  manufacturer: string;
-}
+import { Medicine, MedicineRequestDto } from "../type/medicine.type";
 
 export async function getAllMedicines(): Promise<Medicine[]> {
   return API.getAll<Medicine>("/api/medicines");

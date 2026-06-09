@@ -21,10 +21,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import { getAppointments } from "@/lib/api/doctorDashboard";
-import { DoctorAppointment } from "@/lib/type/doctorDashboard";
+import { doctorAppointmentApi } from "@/lib/api/appointment.api";
+import { DoctorAppointment } from "@/lib/type/doctor.types";
 
-// ✅ "Sat, Mar 21, 2026"
+
 const formatDate = (date: string) =>
   new Date(date).toLocaleDateString("en-US", {
     weekday: "short",
@@ -69,8 +69,8 @@ export default function DoctorAppointmentsList({ upcoming = true }: DoctorAppoin
   useEffect(() => {
     async function fetchAppointments() {
       try {
-        const data = await getAppointments();
-        setAppointments(data);
+        const data = await doctorAppointmentApi.getAll();
+        setAppointments(data.content);
       } catch (error) {
         toast.error("Failed to fetch appointments");
       }

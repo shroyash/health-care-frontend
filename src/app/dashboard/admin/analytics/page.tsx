@@ -11,17 +11,17 @@ import {
 import { Card } from "@/components/ui/card";
 import {
   getAdminDashboardStats,
-  getRecentAppointments,
   getWeeklyAppointments,
   getPatientsGenderCount,
 } from "@/lib/api/adminDashboard";
+import { adminAppointmentApi } from "@/lib/api/appointment.api";
 import type {
   AdminDashboardStats,
-  AppointmentFull,
   WeeklyAppointmentCountResponse,
 } from "@/lib/type/adminDashboard";
+import { AppointmentFullDto } from "@/lib/type/appointment.types";
 
-// ── Palette — matches your dashboard exactly ──────────────────────────────────
+
 const INDIGO  = "#4f46e5";
 const GREEN   = "#22c55e";
 const AMBER   = "#f59e0b";
@@ -71,7 +71,7 @@ function ChartTooltip({ active, payload, label }: any) {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function buildBubbleData(appts: AppointmentFull[]) {
+function buildBubbleData(appts: AppointmentFullDto[]) {
   const counts: Record<string, Record<string, number>> = {};
   appts.forEach(a => {
     const type = a.checkupType || "OTHER";
@@ -85,13 +85,13 @@ function buildBubbleData(appts: AppointmentFull[]) {
   );
 }
 
-function buildRadarData(stats: AdminDashboardStats, appts: AppointmentFull[]) {
+function buildRadarData(stats: AdminDashboardStats, appts: AppointmentFullDto[]) {
   return [
     { metric: "Doctors",   value: Math.min(stats.totalDoctors * 5, 100) },
     { metric: "Patients",  value: Math.min(stats.totalPatients / 2, 100) },
     { metric: "Today",     value: Math.min(stats.totalAppointmentsToday * 10, 100) },
     { metric: "Completed", value: Math.min(appts.filter(a => a.status === "COMPLETED").length * 15, 100) },
-    { metric: "Confirmed", value: Math.min(appts.filter(a => a.status === "CONFIRMED").length * 15, 100) },
+    { metric: "Confirmed", value: Math.min(appts.filter(a => a.status === "COMPLETED").length * 15, 100) },
     { metric: "Pending",   value: Math.min(stats.pendingDoctorApprovals * 12, 100) },
   ];
 }
@@ -99,7 +99,7 @@ function buildRadarData(stats: AdminDashboardStats, appts: AppointmentFull[]) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function AdminAnalyticsPage() {
   const [stats,        setStats]        = useState<AdminDashboardStats | null>(null);
-  const [appointments, setAppointments] = useState<AppointmentFull[]>([]);
+  const [appointments, setAppointments] = useState<AppointmentFullDto[]>([]);
   const [weekly,       setWeekly]       = useState<WeeklyAppointmentCountResponse[]>([]);
   const [gender,       setGender]       = useState<{ name: string; value: number; fill: string }[]>([]);
   const [loading,      setLoading]      = useState(true);
@@ -110,11 +110,11 @@ export default function AdminAnalyticsPage() {
     try {
       const [s, a, w, g] = await Promise.all([
         getAdminDashboardStats(),
-        getRecentAppointments(),
+        adminAppointmentApi.getRecent(),
         getWeeklyAppointments(),
         getPatientsGenderCount(),
       ]);
-      setStats(s); setAppointments(a); setWeekly(w);
+      setStats(s); setAppointments(a.content); setWeekly(w);
       setGender([
         { name: "Male Patients",   value: g.male   ?? 0, fill: INDIGO },
         { name: "Female Patients", value: g.female ?? 0, fill: GREEN  },

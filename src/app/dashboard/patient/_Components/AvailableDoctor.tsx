@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getAllAvailableDoctors } from "@/lib/api/patientDashboard";
+import {patientDoctorApi} from "@/lib/api/patient-doctor.api";
 import { DoctorWithSchedule } from "@/lib/type/patientDashboard";
 import { toast } from "react-toastify";
+import { DoctorWithScheduleDto } from "@/lib/type/doctor.types";
 
 const BASE_URL = "http://localhost:8004";
 
@@ -50,7 +51,7 @@ function DoctorCard({
   onViewSchedule,
   index,
 }: {
-  doctor: DoctorWithSchedule;
+  doctor: DoctorWithScheduleDto;
   onViewSchedule: () => void;
   index: number;
 }) {
@@ -178,7 +179,7 @@ export const AvailableDoctors = ({
 }: {
   onViewSchedule: (doctor: DoctorWithSchedule) => void;
 }) => {
-  const [doctors, setDoctors] = useState<DoctorWithSchedule[]>([]);
+  const [doctors, setDoctors] = useState<DoctorWithScheduleDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
@@ -186,7 +187,7 @@ export const AvailableDoctors = ({
     const fetchDoctors = async () => {
       try {
         setLoading(true);
-        const res = await getAllAvailableDoctors();
+        const res = await patientDoctorApi.getAvailable();
         setDoctors(res);
       } catch (err) {
         toast.error("Failed to fetch doctors");

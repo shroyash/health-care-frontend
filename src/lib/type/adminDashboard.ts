@@ -46,16 +46,6 @@ export interface PatientStats {
   totalAppointments: number;
 }
 
-// ── Appointment ───────────────────────────────────────────────────
-export interface AppointmentFull {
-  appointmentId: number;
-  doctorName: string;
-  patientName: string;
-  appointmentDate: string;
-  status: string;
-  checkupType: string;
-  meetingLink?: string;
-}
 
 // ── Charts / Analytics ────────────────────────────────────────────
 export interface WeeklyAppointmentCountResponse {

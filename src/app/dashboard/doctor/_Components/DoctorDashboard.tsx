@@ -19,15 +19,16 @@ import {
 
 import {
   dashboardStats,
-  getUpcomingAppointments,
   getDoctorWeeklyAppointmentCount,
   getCheckupTypeCount,
 } from "@/lib/api/doctorDashboard";
 import DoctorAppointmentsList from "./DoctorAppointmentsList";
-import { DoctorDashboardStats, DoctorAppointment, CheckupTypeCountDto, DailyAppointmentCount } from "@/lib/type/doctorDashboard";
+import { DoctorDashboardStats, CheckupTypeCountDto, DailyAppointmentCount } from "@/lib/type/doctorDashboard";
+import { DoctorAppointment } from "@/lib/type/doctor.types";
+import { doctorAppointmentApi } from "@/lib/api/appointment.api";
 
 interface CheckupTypeChartData {
-  [key: string]: string | number; // Required for Recharts Pie
+  [key: string]: string | number; 
   name: string;
   value: number;
 }
@@ -49,7 +50,7 @@ const DoctorDashboard = () => {
         setStatsData(stats);
 
         // Fetch upcoming appointments
-        const upcoming = await getUpcomingAppointments();
+        const upcoming = await doctorAppointmentApi.getUpcoming();
         setUpcomingAppointments(upcoming);
 
         // Fetch weekly appointments and format for LineChart

@@ -1,12 +1,17 @@
-
 export interface DoctorProfileResponseDto {
-  id: string;
+  doctorProfileId: string;
   fullName: string;
   email: string;
   specialization: string;
+  yearsOfExperience: number;
+  workingAT: string;
   contactNumber: string;
-  profileImage?: string;
+  profileImg?: string;
+  profileImgUrl?: string;
   status: string;
+  dateOfBirth?: string;
+  gender?: string;
+  country?: string;
 }
 
 export interface DoctorWithScheduleDto {
@@ -42,4 +47,28 @@ export interface DoctorScheduleResponseDto {
   doctorProfileId: string;
   doctorName: string;
   schedules: ScheduleDto[];
+}
+
+export interface DoctorProfileUpdateDto {
+  fullName?: string;
+  specialization?: string;
+  yearsOfExperience?: number;
+  workingAT?: string;
+  contactNumber?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  country?: string;
+  email?: string;
+}
+
+export interface DoctorAppointment {
+  appointmentId: number;
+  patientId: string;
+  patientName: string;
+  appointmentDate: string;
+  startTime: string;
+  endTime: string;
+  checkupType: string;
+  meetingLink?: string;
+  status: string;
 }

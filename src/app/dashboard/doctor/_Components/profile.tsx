@@ -1,18 +1,14 @@
 "use client";
 
 import React, { useEffect, useState, Fragment } from "react";
-import {
-  doctorProfileApi,
-  DoctorProfileUpdateDto,
-} from "@/lib/api/doctor.api";
-import type { DoctorProfileResponseDto } from "@/lib/type/doctor.types";
+import { doctorProfileApi } from "@/lib/api/doctor.api";
+import type { DoctorProfileResponseDto, DoctorProfileUpdateDto } from "@/lib/type/doctor.types";
 import { Dialog, Transition } from "@headlessui/react";
 import { Button } from "@/components/ui/button";
 import { Edit, Camera, Briefcase, Phone, Mail, Award, MapPin, Calendar, User } from "lucide-react";
 
 const STATIC_BASE_URL = "http://localhost:8004";
 
-/* ── Labeled Input ── */
 interface LabeledInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
 }
@@ -27,7 +23,6 @@ const LabeledInput = ({ label, ...props }: LabeledInputProps) => (
   </div>
 );
 
-/* ── Info Row ── */
 const InfoRow = ({ icon, label, value }: { icon: React.ReactNode; label: string; value?: string | number | null }) => {
   if (value === null || value === undefined || value === "") return null;
   return (
@@ -39,26 +34,8 @@ const InfoRow = ({ icon, label, value }: { icon: React.ReactNode; label: string;
   );
 };
 
-/* ── Profile Image ── */
-interface DoctorProfile extends Record<string, any> {
-  id?: string;
-  doctorProfileId?: string;
-  fullName?: string;
-  email?: string;
-  specialization?: string;
-  contactNumber?: string;
-  profileImage?: string;
-  status?: string;
-  yearsOfExperience?: number;
-  workingAT?: string;
-  dateOfBirth?: string;
-  gender?: string;
-  country?: string;
-}
-
 const ProfileImage = ({ profileImage, previewImage, firstLetter, onFileChange, uploading, imageKey }: any) => {
   const fullImageUrl = profileImage ? `${STATIC_BASE_URL}${profileImage}` : null;
-
   return (
     <div className="relative">
       {previewImage ? (
@@ -78,9 +55,8 @@ const ProfileImage = ({ profileImage, previewImage, firstLetter, onFileChange, u
   );
 };
 
-/* ── Main Page ── */
 export default function DoctorProfilePage() {
-  const [profile, setProfile] = useState<DoctorProfile | null>(null);
+  const [profile, setProfile] = useState<DoctorProfileResponseDto | null>(null);
   const [formData, setFormData] = useState<DoctorProfileUpdateDto>({
     fullName: "",
     email: "",
@@ -88,6 +64,9 @@ export default function DoctorProfilePage() {
     yearsOfExperience: 0,
     workingAT: "",
     contactNumber: "",
+    gender: "",
+    dateOfBirth: "",
+    country: "",
   });
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -97,16 +76,29 @@ export default function DoctorProfilePage() {
   useEffect(() => {
     doctorProfileApi.getMyProfile().then((data: any) => {
       setProfile(data);
-      setFormData(data);
+      setFormData({
+        fullName: data.fullName ?? "",
+        email: data.email ?? "",
+        specialization: data.specialization ?? "",
+        yearsOfExperience: data.yearsOfExperience ?? 0,
+        workingAT: data.workingAT ?? "",
+        contactNumber: data.contactNumber ?? "",
+        gender: data.gender ?? "",
+        dateOfBirth: data.dateOfBirth ?? "",
+        country: data.country ?? "",
+      });
     });
   }, []);
 
-  const handleChange = (e: any) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: name === "yearsOfExperience" ? Number(value) : value });
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === "yearsOfExperience" ? Number(value) : value,
+    }));
   };
 
-  const handleImageChange = (e: any) => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
@@ -123,7 +115,7 @@ export default function DoctorProfilePage() {
   const handleSave = async () => {
     if (!profile) return;
     await doctorProfileApi.updateProfile(formData);
-    setProfile((p) => p ? { ...p, ...formData } : p);
+    setProfile((p) => (p ? { ...p, ...formData } : p));
     setIsEditing(false);
     window.location.reload();
   };
@@ -131,18 +123,16 @@ export default function DoctorProfilePage() {
   if (!profile) return <p className="text-center mt-20 text-gray-500">Loading…</p>;
 
   const firstLetter = profile.fullName?.charAt(0) || "?";
-
   const formattedDob = profile.dateOfBirth
     ? new Date(profile.dateOfBirth).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
     : null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br text-black">
-      {/* Hero Section */}
       <div className="relative px-10 py-20">
         <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-12">
           <ProfileImage
-            profileImage={profile.profileImage}
+            profileImage={profile.profileImg}
             previewImage={previewImage}
             firstLetter={firstLetter}
             onFileChange={handleImageChange}
@@ -151,7 +141,6 @@ export default function DoctorProfilePage() {
           />
 
           <div className="flex-1 text-center lg:text-left space-y-4">
-            {/* Name + Status */}
             <div className="flex items-center gap-3 justify-center lg:justify-start flex-wrap">
               <h1 className="text-4xl font-bold">Dr. {profile.fullName}</h1>
               {profile.status && (
@@ -167,7 +156,6 @@ export default function DoctorProfilePage() {
 
             <p className="text-xl opacity-90">{profile.specialization}</p>
 
-            {/* Key stats */}
             <div className="flex flex-wrap gap-6 justify-center lg:justify-start mt-4 text-sm opacity-90">
               <span className="flex items-center gap-2">
                 <Award className="w-4 h-4" /> {profile.yearsOfExperience}+ yrs experience
@@ -192,7 +180,6 @@ export default function DoctorProfilePage() {
               )}
             </div>
 
-            {/* Contact */}
             <div className="flex flex-col sm:flex-row gap-4 mt-4 opacity-90">
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4" /> {profile.email}
@@ -209,22 +196,20 @@ export default function DoctorProfilePage() {
         </div>
       </div>
 
-      {/* Details Card */}
       <div className="max-w-6xl mx-auto px-10 pb-16">
         <div className="bg-white rounded-2xl shadow-md p-6 space-y-4">
           <h2 className="text-lg font-semibold text-gray-800 mb-2">Doctor Details</h2>
-          <InfoRow icon={<Mail className="w-4 h-4" />}     label="Email"              value={profile.email} />
-          <InfoRow icon={<Phone className="w-4 h-4" />}    label="Contact"            value={profile.contactNumber} />
-          <InfoRow icon={<Award className="w-4 h-4" />}    label="Specialization"     value={profile.specialization} />
-          <InfoRow icon={<Briefcase className="w-4 h-4" />} label="Working At"        value={profile.workingAT} />
-          <InfoRow icon={<Award className="w-4 h-4" />}    label="Experience"         value={profile.yearsOfExperience ? `${profile.yearsOfExperience} years` : null} />
-          <InfoRow icon={<User className="w-4 h-4" />}     label="Gender"             value={profile.gender ? profile.gender.charAt(0) + profile.gender.slice(1).toLowerCase() : null} />
-          <InfoRow icon={<Calendar className="w-4 h-4" />} label="Date of Birth"      value={formattedDob} />
-          <InfoRow icon={<MapPin className="w-4 h-4" />}   label="Country"            value={profile.country} />
+          <InfoRow icon={<Mail className="w-4 h-4" />}      label="Email"          value={profile.email} />
+          <InfoRow icon={<Phone className="w-4 h-4" />}     label="Contact"        value={profile.contactNumber} />
+          <InfoRow icon={<Award className="w-4 h-4" />}     label="Specialization" value={profile.specialization} />
+          <InfoRow icon={<Briefcase className="w-4 h-4" />} label="Working At"     value={profile.workingAT} />
+          <InfoRow icon={<Award className="w-4 h-4" />}     label="Experience"     value={profile.yearsOfExperience ? `${profile.yearsOfExperience} years` : null} />
+          <InfoRow icon={<User className="w-4 h-4" />}      label="Gender"         value={profile.gender ? profile.gender.charAt(0) + profile.gender.slice(1).toLowerCase() : null} />
+          <InfoRow icon={<Calendar className="w-4 h-4" />}  label="Date of Birth"  value={formattedDob} />
+          <InfoRow icon={<MapPin className="w-4 h-4" />}    label="Country"        value={profile.country} />
         </div>
       </div>
 
-      {/* Edit Modal */}
       <Transition appear show={isEditing} as={Fragment}>
         <Dialog as="div" className="relative z-50" onClose={setIsEditing}>
           <div className="fixed inset-0 bg-black/50" />
@@ -232,11 +217,14 @@ export default function DoctorProfilePage() {
             <Dialog.Panel className="w-full max-w-md rounded-2xl bg-white p-6 text-gray-900">
               <Dialog.Title className="text-lg font-semibold mb-4">Edit Profile</Dialog.Title>
               <div className="space-y-3">
-                <LabeledInput label="Full Name"           name="fullName"           value={formData.fullName}           onChange={handleChange} />
-                <LabeledInput label="Specialization"      name="specialization"     value={formData.specialization}     onChange={handleChange} />
-                <LabeledInput label="Years of Experience" name="yearsOfExperience"  type="number" value={formData.yearsOfExperience} onChange={handleChange} />
-                <LabeledInput label="Working At"          name="workingAT"          value={formData.workingAT}          onChange={handleChange} />
-                <LabeledInput label="Contact Number"      name="contactNumber"      value={formData.contactNumber}      onChange={handleChange} />
+                <LabeledInput label="Full Name"           name="fullName"          value={formData.fullName}          onChange={handleChange} />
+                <LabeledInput label="Specialization"      name="specialization"    value={formData.specialization}    onChange={handleChange} />
+                <LabeledInput label="Years of Experience" name="yearsOfExperience" value={formData.yearsOfExperience} onChange={handleChange} type="number" />
+                <LabeledInput label="Working At"          name="workingAT"         value={formData.workingAT}         onChange={handleChange} />
+                <LabeledInput label="Contact Number"      name="contactNumber"     value={formData.contactNumber}     onChange={handleChange} />
+                <LabeledInput label="Gender"              name="gender"            value={formData.gender ?? ""}      onChange={handleChange} />
+                <LabeledInput label="Date of Birth"       name="dateOfBirth"       value={formData.dateOfBirth ?? ""} onChange={handleChange} type="date" />
+                <LabeledInput label="Country"             name="country"           value={formData.country ?? ""}     onChange={handleChange} />
               </div>
               <div className="mt-6 flex justify-end gap-2">
                 <Button onClick={handleSave}>Save</Button>

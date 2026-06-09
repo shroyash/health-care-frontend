@@ -2,8 +2,8 @@
  * Admin doctor-request API — maps to /api/admin/doctor-requests
  */
 
-import api from "../api";
-import { API } from "../api";
+import api from "./api";
+import { API } from "./api";
 
 export interface DoctorRequestDto {
   doctorReqId: number;

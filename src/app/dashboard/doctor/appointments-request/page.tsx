@@ -7,10 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { CheckCircle, XCircle, Clock, Search, Users, Info } from "lucide-react";
-import {
-  getDoctorAppointmentRequests,
-  updateAppointmentRequestStatus,
-} from "@/lib/api/doctorDashboard";
+import {doctorAppointmentRequestApi} from "@/lib/api/appointment-request.api";
 import { AppointmentRequest } from "@/lib/type/doctorDashboard";
 import {
   Dialog,
@@ -53,7 +50,7 @@ export default function AppointmentRequestPage() {
 
   const fetchAppointments = async () => {
     try {
-      const data = await getDoctorAppointmentRequests();
+      const data = await doctorAppointmentRequestApi.getIncoming();
       setAppointments(data);
     } catch (error) {
       toast.error("Failed to fetch appointments");
@@ -62,13 +59,13 @@ export default function AppointmentRequestPage() {
 
   const handleStatusUpdate = async (id: number, status: "APPROVED" | "REJECTED") => {
     try {
-      const response = await updateAppointmentRequestStatus(id, status);
+      const response = await doctorAppointmentRequestApi.updateStatus(id, status);
 
-      // Handle API-level errors (e.g. { status: false, message: "Cannot approve an appointment in the past" })
-      if (response?.status === false) {
-        toast.error(response.message || "Failed to update status");
-        return;
-      }
+      // // Handle API-level errors (e.g. { status: false, message: "Cannot approve an appointment in the past" })
+      // if (response?.status === false) {
+      //   toast.error(response.message || "Failed to update status");
+      //   return;
+      // }
 
       setAppointments((prev) =>
         prev.map((apt) => (apt.requestId === id ? { ...apt, status } : apt))

@@ -7,17 +7,7 @@ export interface DoctorDashboardStats {
   reportsTaken: number;
 }
 
-export interface DoctorAppointment {
-  appointmentId: number;
-  patientId: string;
-  patientName: string;
-  appointmentDate: string;
-  startTime: string;
-  endTime: string;
-  checkupType: string;
-  meetingLink?: string;
-  status: string;
-}
+
 
 export interface AppointmentRequest {
   requestId: number;

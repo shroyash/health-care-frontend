@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Search, Calendar, Clock, User } from "lucide-react";
-
+import { AppointmentFullDto } from "@/lib/type/appointment.types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,8 +20,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import { getRecentAppointments } from "@/lib/api/adminDashboard";
-import { AppointmentFull } from "@/lib/type/adminDashboard";
+import { adminAppointmentApi } from "@/lib/api/appointment.api";
 
 /* -------------------- Utils -------------------- */
 const formatDateTime = (date: string) =>
@@ -50,14 +49,14 @@ const getStatusColor = (status: string) => {
 
 /* -------------------- Component -------------------- */
 export function AppointmentsList() {
-  const [appointments, setAppointments] = useState<AppointmentFull[]>([]);
+  const [appointments, setAppointments] = useState<AppointmentFullDto[]>([]);
   const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState<AppointmentFull | null>(null);
+  const [selected, setSelected] = useState<AppointmentFullDto | null>(null);
 
   useEffect(() => {
     async function fetchAppointments() {
-      const data = await getRecentAppointments();
-      setAppointments(data);
+      const data = await adminAppointmentApi.getRecent();
+      setAppointments(data.content);
     }
     fetchAppointments();
   }, []);

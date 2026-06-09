@@ -11,6 +11,7 @@ import {
   AppointmentRange,
 } from "../type/appointment.types";
 import { PageResponse } from "../type/common.types";
+import { DoctorAppointment } from "../type/doctor.types";
 
 
 // ── Doctor ────────────────────────────────────────────────────────
@@ -18,7 +19,7 @@ import { PageResponse } from "../type/common.types";
 export const doctorAppointmentApi = {
 
   getUpcoming: () =>
-    API.getAll<DoctorAppointmentDto>(
+    API.getAll<DoctorAppointment>(
       "/api/appointments/doctor/upcoming"),
 
   getAll: (page = 0, size = 10) =>

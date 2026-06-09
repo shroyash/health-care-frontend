@@ -38,7 +38,7 @@ export const authApi = {
     API.create<ChangePasswordRequest, void>("/api/auth/change-password", data),
 };
 
-// For backward compatibility or if preferred as standalone exports
+
 export const loginUserWeb = authApi.loginUserWeb;
 export const logout = authApi.logout;
 export const getCurrentUser = authApi.getCurrentUser;

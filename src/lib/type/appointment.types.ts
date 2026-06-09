@@ -24,13 +24,13 @@ export interface PatientAppointmentDto {
 }
 
 export interface AppointmentFullDto {
-  id: number;
+  appointmentId: number;
   doctorName: string;
   patientName: string;
   appointmentDate: string;
   status: AppointmentStatus;
   checkupType: string;
-  meetingLink: string;
+  meetingLink?: string;
 }
 
 export interface AppointmentStatusCountDto {

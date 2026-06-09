@@ -1,20 +1,41 @@
 "use client";
 import { useEffect, useState } from "react";
-import { appointmentApi } from "@/lib/api/appointmentApi";
-import type { DoctorAppointmentDto } from "@/lib/type/appointment";
-import AppointmentHistoryPage from "@/components/ui/Appointmenthistorypage";
+import { doctorAppointmentApi } from "@/lib/api/appointment.api";
+import AppointmentHistoryPage, { PageResponse } from "@/components/ui/Appointmenthistorypage";
+import { DoctorAppointmentDto } from "@/lib/type/appointment.types";
 
 export default function DoctorHistoryPage() {
   const [appointments, setAppointments] = useState<DoctorAppointmentDto[]>([]);
   const [loading,      setLoading]      = useState(true);
   const [error,        setError]        = useState<string | null>(null);
+  const [currentPage,  setCurrentPage]  = useState(0);
+  const [totalPages,   setTotalPages]   = useState(1);
 
   useEffect(() => {
-    appointmentApi.getDoctorHistory()
-      .then(setAppointments)
-      .catch(() => setError("Failed to load appointment history."))
-      .finally(() => setLoading(false));
-  }, []);
+    let cancelled = false;
+
+    setLoading(true);
+
+    doctorAppointmentApi
+      .getHistory(currentPage)
+      .then((res: PageResponse<DoctorAppointmentDto>) => {
+        if (!cancelled) {
+          setAppointments(res.content);
+          setTotalPages(res.totalPages);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          console.error("[DoctorHistoryPage] getHistory failed:", err);
+          setError("Failed to load appointment history.");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => { cancelled = true; };
+  }, [currentPage]);
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-screen">
@@ -28,5 +49,13 @@ export default function DoctorHistoryPage() {
     </div>
   );
 
-  return <AppointmentHistoryPage appointments={appointments} isDoctor={true} />;
+  return (
+    <AppointmentHistoryPage
+      appointments={appointments}
+      isDoctor={true}
+      totalPages={totalPages}
+      currentPage={currentPage}
+      onPageChange={setCurrentPage}
+    />
+  );
 }

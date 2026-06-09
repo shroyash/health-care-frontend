@@ -8,19 +8,7 @@ import {
   DoctorScheduleResponseDto,
 } from "../type/doctor.types";
 
-// ── Doctor Profile DTO ────────────────────────────────────────────
 
-export interface DoctorProfileUpdateDto {
-  fullName?: string;
-  specialization?: string;
-  yearsOfExperience?: number;
-  workingAT?: string;
-  contactNumber?: string;
-  dateOfBirth?: string;
-  gender?: string;
-  country?: string;
-  email?: string;
-}
 
 // ── Doctor Profile ────────────────────────────────────────────────
 
@@ -28,18 +16,18 @@ export const doctorProfileApi = {
 
   getMyProfile: () =>
     API.getOne<DoctorProfileResponseDto>(
-      "/api/doctors/profile"),
+      "/api/doctor-profiles"),
 
   updateProfile: (data: Partial<DoctorProfileResponseDto>) =>
     API.putNoId<Partial<DoctorProfileResponseDto>,
                 DoctorProfileResponseDto>(
-      "/api/doctors/profile", data),
+      "/api/doctor-profiles", data),
 
   uploadProfileImage: (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
     return API.create<FormData, { profileImage: string }>(
-      "/api/doctors/profile/upload-image",
+      "/api/doctor-profiles/upload-image",
       formData
     );
   },
