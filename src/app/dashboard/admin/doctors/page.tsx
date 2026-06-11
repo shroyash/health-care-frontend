@@ -19,7 +19,7 @@ import {
   restoreDoctor,
 } from "@/lib/api/adminDashboard";
 import { useDashboardStats } from "@/context/DashboardStatsContext";
-import { DoctorProfile } from "@/lib/type/adminDashboard";
+import { DoctorProfileResponseDto } from "@/lib/type/doctor.types";
 
 /* ------------------ Helpers ------------------ */
 
@@ -28,7 +28,7 @@ const displayValue = (value: any, fallback = "Not provided") => {
   return value;
 };
 
-const getStatusColor = (status: DoctorProfile["status"]) => {
+const getStatusColor = (status: DoctorProfileResponseDto["status"]) => {
   switch (status) {
     case "ACTIVE":
       return "bg-green-100 text-green-700 border-green-200";
@@ -42,10 +42,10 @@ const getStatusColor = (status: DoctorProfile["status"]) => {
 /* ------------------ Component ------------------ */
 
 export default function DoctorManagementPage() {
-  const [doctors, setDoctors] = useState<DoctorProfile[]>([]);
+  const [doctors, setDoctors] = useState<DoctorProfileResponseDto[]>([]);
   const [pendingCount, setPendingCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedDoctor, setSelectedDoctor] = useState<DoctorProfile | null>(null);
+  const [selectedDoctor, setSelectedDoctor] = useState<DoctorProfileResponseDto | null>(null);
   const [loading, setLoading] = useState(true);
 
   const { statsData } = useDashboardStats();
@@ -78,7 +78,7 @@ export default function DoctorManagementPage() {
     );
   }, [searchTerm, doctors]);
 
-  const handleStatusChange = async (doctor: DoctorProfile) => {
+  const handleStatusChange = async (doctor: DoctorProfileResponseDto) => {
     try {
       if (doctor.status === "ACTIVE") {
         await suspendDoctor(doctor.doctorProfileId);

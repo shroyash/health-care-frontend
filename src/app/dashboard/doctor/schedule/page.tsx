@@ -6,13 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Clock, Trash2, Info, CalendarDays } from "lucide-react";
 import { toast } from "react-toastify";
+import {doctorScheduleApi} from "@/lib/api/doctor.api";
+import { DoctorScheduleResponseDto,DoctorScheduleDto ,ScheduleDto,ScheduleInfo} from "@/lib/type/doctor-schedule.types";
 
-import { saveWeeklySchedule, getDoctorSchedule } from "@/lib/api/doctorDashboard";
-import {
-  ScheduleDto,
-  SaveDoctorScheduleDto,
-  DoctorScheduleResponseDto,
-} from "@/lib/type/doctorDashboard";
 
 /* ------------------- Types ------------------- */
 interface TimeSlot {
@@ -298,31 +294,35 @@ const Schedule = () => {
   const [tempSlots, setTempSlots] = useState<TimeSlot[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const fetchSchedule = async () => {
-    try {
-      const response: DoctorScheduleResponseDto = await getDoctorSchedule();
-      const mapped: TimeSlot[] = response.schedules
-        .map((slot: ScheduleDto) => ({
-          id: slot.scheduleId,
-          date: slot.scheduleDate,
-          startTime: slot.startTime,
-          endTime: slot.endTime,
-          available: slot.available,
-        }))
-        .filter(
-          (slot) =>
-            new Date(`${slot.date}T${slot.startTime}`).getTime() >= Date.now()
-        )
-        .sort(
-          (a, b) =>
-            new Date(`${a.date}T${a.startTime}`).getTime() -
-            new Date(`${b.date}T${b.startTime}`).getTime()
-        );
-      setDoctorSchedule(mapped);
-    } catch {
-      toast.error("Failed to load schedule");
-    }
-  };
+const fetchSchedule = async () => {
+  try {
+    const response: DoctorScheduleResponseDto =
+      await doctorScheduleApi.getMySchedule();
+
+    const mapped: TimeSlot[] = response.schedules
+      .map((slot: ScheduleInfo) => ({
+        id: slot.scheduleId,
+        date: slot.scheduleDate,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        available: slot.available,
+      }))
+      .filter(
+        (slot) =>
+          new Date(`${slot.date}T${slot.startTime}`).getTime() >= Date.now()
+      )
+      .sort(
+        (a, b) =>
+          new Date(`${a.date}T${a.startTime}`).getTime() -
+          new Date(`${b.date}T${b.startTime}`).getTime()
+      );
+
+    setDoctorSchedule(mapped);
+  } catch (error) {
+    console.error(error);
+    toast.error("Failed to load schedule");
+  }
+};
 
   useEffect(() => { fetchSchedule(); }, []);
 
@@ -334,35 +334,43 @@ const Schedule = () => {
     setTempSlots((prev) => prev.filter((s) => s.id !== id));
   };
 
-  const handleSave = async () => {
-    if (!tempSlots.length) { toast.error("Add at least one slot"); return; }
-    try {
-      setLoading(true);
-      const dto: SaveDoctorScheduleDto = {
-        schedules: tempSlots.map((slot) => ({
-          scheduleDate: new Date(`${slot.date}T${slot.startTime}:00`).toISOString(),
-          startTime: slot.startTime,
-          endTime: slot.endTime,
-          available: true,
-        })),
-      };
-      await saveWeeklySchedule(dto);
-      toast.success("Schedule saved successfully");
-      setTempSlots([]);
-      await fetchSchedule();
-    } catch (error: any) {
-      // ✅ Backend now returns ApiResponse JSON with "message" field
-      // e.g. { status: false, message: "Slot already exists: 2026-03-22 at 19:00", data: null }
-      const message =
-        error?.response?.data?.message ||
-        error?.response?.data?.error ||
-        error?.message ||
-        "Failed to save schedule";
-      toast.error(message);
-    } finally {
-      setLoading(false);
-    }
-  };
+const handleSave = async () => {
+  if (!tempSlots.length) {
+    toast.error("Add at least one slot");
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    const dto: DoctorScheduleDto = {
+      schedules: tempSlots.map((slot) => ({
+        scheduleDate: slot.date,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        available: true,
+      })),
+    };
+
+    await doctorScheduleApi.saveWeekly(dto);
+
+    toast.success("Schedule saved successfully");
+
+    setTempSlots([]);
+
+    await fetchSchedule();
+  } catch (error: any) {
+    const message =
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      error?.message ||
+      "Failed to save schedule";
+
+    toast.error(message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Single source of truth: server slots + pending temp slots combined
   const allSlots = [...doctorSchedule, ...tempSlots];

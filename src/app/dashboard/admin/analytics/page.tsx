@@ -15,10 +15,7 @@ import {
   getPatientsGenderCount,
 } from "@/lib/api/adminDashboard";
 import { adminAppointmentApi } from "@/lib/api/appointment.api";
-import type {
-  AdminDashboardStats,
-  WeeklyAppointmentCountResponse,
-} from "@/lib/type/adminDashboard";
+import { AdminDashboardStatsDto,WeeklyAppointmentCountDto } from "@/lib/type/dashboard.types";
 import { AppointmentFullDto } from "@/lib/type/appointment.types";
 
 
@@ -85,7 +82,7 @@ function buildBubbleData(appts: AppointmentFullDto[]) {
   );
 }
 
-function buildRadarData(stats: AdminDashboardStats, appts: AppointmentFullDto[]) {
+function buildRadarData(stats: AdminDashboardStatsDto, appts: AppointmentFullDto[]) {
   return [
     { metric: "Doctors",   value: Math.min(stats.totalDoctors * 5, 100) },
     { metric: "Patients",  value: Math.min(stats.totalPatients / 2, 100) },
@@ -98,9 +95,9 @@ function buildRadarData(stats: AdminDashboardStats, appts: AppointmentFullDto[])
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function AdminAnalyticsPage() {
-  const [stats,        setStats]        = useState<AdminDashboardStats | null>(null);
+  const [stats,        setStats]        = useState<AdminDashboardStatsDto | null>(null);
   const [appointments, setAppointments] = useState<AppointmentFullDto[]>([]);
-  const [weekly,       setWeekly]       = useState<WeeklyAppointmentCountResponse[]>([]);
+  const [weekly,       setWeekly]       = useState<WeeklyAppointmentCountDto[]>([]);
   const [gender,       setGender]       = useState<{ name: string; value: number; fill: string }[]>([]);
   const [loading,      setLoading]      = useState(true);
   const [error,        setError]        = useState<string | null>(null);

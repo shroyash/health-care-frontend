@@ -1,7 +1,7 @@
 "use client";
 import type { RefObject } from "react";
 import { formatTime } from "@/lib/utils";
-import type { ChatMessage } from "@/lib/type/communication";
+import type { ChatMessage } from "@/lib/type/communication.type";
 
 interface LiveChatProps {
   messages: ChatMessage[];

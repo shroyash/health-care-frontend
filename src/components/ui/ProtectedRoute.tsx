@@ -2,18 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { API } from "@/lib/api/api";
-import { Role } from "@/lib/type/auth";
+import { getCurrentUser } from "@/lib/api/auth.api";
+import { UserResponseDto } from "@/lib/type/auth.type";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requiredRole?: string;
 }
 
-interface UserResponse {
-  username: string;
-  roles: Role[];
-}
 
 export default function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
   const router = useRouter();
@@ -23,11 +19,11 @@ export default function ProtectedRoute({ children, requiredRole }: ProtectedRout
     const checkAuth = async () => {
       try {
         // ✅ This returns only the inner data (UserResponse)
-        const user = await API.getOne<UserResponse>("/users/auth/me");
+        const user  = await getCurrentUser();
 
         console.log("✅ Authenticated user:", user);
 
-        const roles = user.roles.map((r) => (typeof r === "string" ? r : r.name));
+       const roles = user.roles;
 
         // ✅ Check if required role exists
         if (requiredRole && !roles.includes(requiredRole)) {

@@ -23,6 +23,7 @@ import {
 
 import { doctorAppointmentApi } from "@/lib/api/appointment.api";
 import { DoctorAppointment } from "@/lib/type/doctor.types";
+import { DoctorAppointmentDto } from "@/lib/type/appointment.types";
 
 
 const formatDate = (date: string) =>
@@ -61,10 +62,10 @@ interface DoctorAppointmentsListProps {
 }
 
 export default function DoctorAppointmentsList({ upcoming = true }: DoctorAppointmentsListProps) {
-  const [appointments, setAppointments] = useState<DoctorAppointment[]>([]);
+  const [appointments, setAppointments] = useState<DoctorAppointmentDto[]>([]);
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("ALL");
-  const [selected, setSelected] = useState<DoctorAppointment | null>(null);
+  const [selected, setSelected] = useState<DoctorAppointmentDto | null>(null);
 
   useEffect(() => {
     async function fetchAppointments() {
@@ -137,7 +138,7 @@ export default function DoctorAppointmentsList({ upcoming = true }: DoctorAppoin
           {filteredAppointments.length > 0 ? (
             filteredAppointments.map((appointment) => (
               <div
-                key={appointment.appointmentId}
+                key={appointment.id}
                 className="bg-white rounded-xl shadow-md p-5 hover:shadow-xl transition border border-gray-100"
               >
                 <div className="flex items-center justify-between mb-3">

@@ -1,12 +1,11 @@
 // api/doctor.api.ts
 import { API } from "./api";
+import { DoctorProfileResponseDto } from "../type/doctor.types";
 import {
-  DoctorProfileResponseDto,
-  DoctorWithScheduleDto,
   DoctorScheduleDto,
-  DoctorScheduleUpdateDTO,
   DoctorScheduleResponseDto,
-} from "../type/doctor.types";
+  ScheduleDto,
+} from "../type/doctor-schedule.types";
 
 
 
@@ -26,14 +25,14 @@ export const doctorProfileApi = {
   uploadProfileImage: (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
-    return API.create<FormData, { profileImage: string }>(
+    return API.create<FormData, DoctorProfileResponseDto>(
       "/api/doctor-profiles/upload-image",
       formData
     );
   },
 
   getAllAvailable: () =>
-    API.getAll<DoctorWithScheduleDto>(
+    API.getAll<DoctorScheduleResponseDto>(
       "/api/appointments/patient/doctors/available"),
 };
 
@@ -53,8 +52,8 @@ export const doctorScheduleApi = {
     API.getOne<DoctorScheduleResponseDto>(
       `/api/schedules/${doctorProfileId}`),
 
-  update: (scheduleId: number, data: DoctorScheduleUpdateDTO) =>
-    API.update<DoctorScheduleUpdateDTO, DoctorScheduleResponseDto>(
+  update: (scheduleId: number, data: DoctorScheduleDto) =>
+    API.update<DoctorScheduleDto, DoctorScheduleResponseDto>(
       "/api/schedules", scheduleId, data),
 
   delete: (scheduleId: number) =>

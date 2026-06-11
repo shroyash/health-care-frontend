@@ -23,3 +23,8 @@ export interface WeeklyAppointmentCountDto {
   day: string;
   count: number;
 }
+
+export interface GenderCountResponseDto {
+  gender: "MALE" | "FEMALE";
+  count: number;
+}

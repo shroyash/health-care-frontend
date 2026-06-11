@@ -12,6 +12,7 @@ import {
   PieChart,
   Pie,
   Cell,
+  Legend,
 } from "recharts";
 
 import { Card } from "@/components/ui/card";
@@ -19,10 +20,11 @@ import {
   getWeeklyAppointments,
   getPatientsGenderCount,
 } from "@/lib/api/adminDashboard";
+
 import type {
-  WeeklyAppointmentCountResponse,
-  GenderCountResponse,
-} from "@/lib/type/adminDashboard";
+  WeeklyAppointmentCountDto,
+  GenderCountResponseDto,
+} from "@/lib/type/dashboard.types";
 
 const COLORS = ["#4f46e5", "#22c55e"];
 
@@ -30,9 +32,11 @@ export default function DashboardCharts() {
   const [weeklyData, setWeeklyData] = useState<
     { day: string; appointments: number }[]
   >([]);
+
   const [genderData, setGenderData] = useState<
     { name: string; value: number }[]
   >([]);
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -40,10 +44,9 @@ export default function DashboardCharts() {
 
     const fetchChartsData = async () => {
       try {
-        // Weekly appointments
-        const weekly: WeeklyAppointmentCountResponse[] =
+        // Weekly Appointments
+        const weekly: WeeklyAppointmentCountDto[] =
           await getWeeklyAppointments();
-          console.log(weekly)
 
         if (isMounted) {
           setWeeklyData(
@@ -54,20 +57,29 @@ export default function DashboardCharts() {
           );
         }
 
-        // Gender distribution
-        const gender: GenderCountResponse =
+        // Gender Distribution
+        const gender: GenderCountResponseDto[] =
           await getPatientsGenderCount();
 
+        console.log("Gender API Response:", gender);
+
         if (isMounted) {
-          setGenderData([
-            { name: "Male Patients", value: gender.male ?? 0 },
-            { name: "Female Patients", value: gender.female ?? 0 },
-          ]);
+          setGenderData(
+            gender.map((item) => ({
+              name:
+                item.gender === "MALE"
+                  ? "Male Patients"
+                  : "Female Patients",
+              value: item.count,
+            }))
+          );
         }
       } catch (error) {
-        console.error("Failed to load chart data", error);
+        console.error("Failed to load chart data:", error);
       } finally {
-        if (isMounted) setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -89,8 +101,8 @@ export default function DashboardCharts() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-      {/* Line Chart */}
-      <Card className="shadow-soft p-6">
+      {/* Weekly Appointments */}
+      <Card className="p-6">
         <h2 className="text-lg font-semibold mb-4">
           Weekly Appointments Trend
         </h2>
@@ -111,29 +123,41 @@ export default function DashboardCharts() {
         </ResponsiveContainer>
       </Card>
 
-      {/* Pie Chart */}
-      <Card className="shadow-soft p-6">
+      {/* Gender Distribution */}
+      <Card className="p-6">
         <h2 className="text-lg font-semibold mb-4">
           Patient Distribution
         </h2>
 
-        <ResponsiveContainer width="100%" height={300}>
-          <PieChart>
-            <Pie
-              data={genderData}
-              cx="50%"
-              cy="50%"
-              outerRadius={110}
-              dataKey="value"
-              label
-            >
-              {genderData.map((_, index) => (
-                <Cell key={index} fill={COLORS[index]} />
-              ))}
-            </Pie>
-            <Tooltip />
-          </PieChart>
-        </ResponsiveContainer>
+        {genderData.length > 0 ? (
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={genderData}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={100}
+                label
+              >
+                {genderData.map((_, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS[index % COLORS.length]}
+                  />
+                ))}
+              </Pie>
+
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="flex items-center justify-center h-[300px]">
+            No gender data available
+          </div>
+        )}
       </Card>
     </div>
   );

@@ -6,6 +6,7 @@ import {
 } from "../type/patient.types";
 
 
+
 export const patientProfileApi = {
 
   getMyProfile: () =>
@@ -26,3 +27,17 @@ export const patientProfileApi = {
   },
 };
 
+export const adminPatientApi = {
+
+  getAll: () =>
+    API.getAll<PatientProfileDTO>(
+      "/api/admin/patients"),
+
+  suspend: (patientId: string) =>
+    API.putNoId<void, PatientProfileDTO>(
+      `/api/admin/patients/${patientId}/suspend`, undefined),
+
+  restore: (patientId: string) =>
+    API.putNoId<void, PatientProfileDTO>(
+      `/api/admin/patients/${patientId}/restore`, undefined),
+};

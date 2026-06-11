@@ -1,26 +1,20 @@
 
-import api from "./api";
 import { API } from "./api";
-import type {
-  PatientDashboardStats,
-  DailyAppointmentCount,
-  AppointmentStatusCount,
+import type { PatientDashboardStatsDto } from "../type/dashboard.types";
+import type { DailyAppointmentCountDto, AppointmentStatusCountDto } from "../type/appointment.types";
 
-} from "../type/patientDashboard";
-
-
-export async function getPatientDashboardStats(): Promise<PatientDashboardStats> {
-  return API.getOne<PatientDashboardStats>("/api/dashboard/patient/stats");
+export async function getPatientDashboardStats(): Promise<PatientDashboardStatsDto> {
+  return API.getOne<PatientDashboardStatsDto>("/api/dashboard/patient/stats");
 }
 
-export async function getPatientWeeklyCount(): Promise<DailyAppointmentCount[]> {
-  return API.getAll<DailyAppointmentCount>(
+export async function getPatientWeeklyCount(): Promise<DailyAppointmentCountDto[]> {
+  return API.getAll<DailyAppointmentCountDto>(
     "/api/appointments/patient/range?range=weekly"
   );
 }
 
-export async function getPatientStatusCount(): Promise<AppointmentStatusCount[]> {
-  return API.getAll<AppointmentStatusCount>(
+export async function getPatientStatusCount(): Promise<AppointmentStatusCountDto[]> {
+  return API.getAll<AppointmentStatusCountDto>(
     "/api/appointments/patient/status-count"
   );
 }

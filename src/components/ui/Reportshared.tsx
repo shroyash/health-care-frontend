@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import type { ReportResponseDto } from "@/lib/type/report";
+import type { ReportResponseDto } from "@/lib/type/report.types";
 
 // ── Icons ──────────────────────────────────────────────────────────────────────
 export const FileIcon = () => (

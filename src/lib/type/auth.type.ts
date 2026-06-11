@@ -31,6 +31,13 @@ export interface UserResponseDto {
   role: Role[];
 }
 
+export interface UserResponseCurrent {
+  userId: string;
+  username: string;
+  email: string;
+  roles: string[];
+}
+
 export interface ForgotPasswordRequest {
   email: string;
 }

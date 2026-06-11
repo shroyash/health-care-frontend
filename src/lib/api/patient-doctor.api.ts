@@ -1,9 +1,10 @@
 import { API } from "./api";
-import { DoctorProfileResponseDto, DoctorWithScheduleDto } from "../type/doctor.types";
+import { DoctorProfileResponseDto } from "../type/doctor.types";
+import { DoctorScheduleDto } from "../type/doctor-schedule.types";
 
 export const patientDoctorApi = {
   getAvailable: () =>
-    API.getAll<DoctorWithScheduleDto>("/api/appointments/patient/doctors/available"),
+    API.getAll<DoctorScheduleDto>("/api/appointments/patient/doctors/available"),
 
   getBySpecialization: (specialization: string) =>
     API.getAll<DoctorProfileResponseDto>(
@@ -15,3 +16,4 @@ export const patientDoctorApi = {
       `/api/appointments/patient/doctors/experience?level=${level}`
     ),
 };
+

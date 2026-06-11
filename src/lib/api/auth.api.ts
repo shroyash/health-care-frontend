@@ -8,6 +8,7 @@ import {
   ResetPasswordRequest,
   ChangePasswordRequest,
 } from "../type/auth.type";
+import { UserResponseCurrent } from "../type/auth.type";
 
 export const authApi = {
   loginUserWeb: (data: LoginRequest) =>
@@ -17,7 +18,7 @@ export const authApi = {
     API.create<{}, void>("/api/auth/logout", {}),
 
   getCurrentUser: () =>
-    API.getOne<UserResponseDto>("/api/auth/me"),
+    API.getOne<UserResponseCurrent>("/api/auth/me"),
 
   registerPatient: (data: RegisterUserRequest) =>
     API.create<RegisterUserRequest, void>("/api/register/patient", data),

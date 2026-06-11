@@ -3,19 +3,26 @@
 import { useState, useEffect, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Search, User, Eye, ArrowLeft } from "lucide-react";
+
 import {
   getAllPatients,
-  getPatientStats,
   suspendPatient,
   restorePatient,
 } from "@/lib/api/adminDashboard";
-import {
-  PatientProfile as Patient,
-  PatientStats as PatientDashboardStats,
-} from "@/lib/type/adminDashboard";
+
+import { useDashboardStats } from "@/context/DashboardStatsContext";
+import {adminPatientApi} from "@/lib/api/patient.api";
+import type { PatientAppointmentDto } from "@/lib/type/appointment.types";
+import { PatientProfileDTO } from "@/lib/type/patient.types";
 
 const getStatusColor = (status: string) => {
   switch (status.toLowerCase()) {
@@ -28,78 +35,50 @@ const getStatusColor = (status: string) => {
   }
 };
 
-const displayGender = (gender?: string | null) => {
-  if (!gender) return "N/A";
-  switch (gender.toUpperCase()) {
-    case "MALE": return "Male";
-    case "FEMALE": return "Female";
-    default: return gender;
-  }
-};
-
 export default function PatientsPage() {
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [stats, setStats] = useState<PatientDashboardStats>({
-    activePatients: 0,
-    totalPatients: 0,
-    totalAppointments: 0,
-  });
+  const [patients, setPatients] = useState<PatientProfileDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [selectedPatient, setSelectedPatient] =
+    useState<PatientProfileDTO | null>(null);
+
+  // ✅ FIXED STATS USAGE
+  const { statsData } = useDashboardStats();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [patientsData, statsData] = await Promise.all([
-          getAllPatients(),
-          getPatientStats(),
-        ]);
+        const patientsData = await adminPatientApi.getAll();
+
         setPatients(patientsData);
-        setStats(statsData);
       } catch (err) {
         console.error("Failed to fetch data:", err);
       } finally {
         setLoading(false);
       }
     };
+
     fetchData();
   }, []);
 
   const filteredPatients = useMemo(() => {
     const term = searchTerm.toLowerCase();
-    return patients.filter(
-      (p) =>
-        p.fullName.toLowerCase().includes(term) ||
-        p.email.toLowerCase().includes(term)
-    );
+
+    return patients.filter((p) => {
+      return (
+        (p as any).fullName?.toLowerCase()?.includes(term) ||
+        (p as any).email?.toLowerCase()?.includes(term)
+      );
+    });
   }, [patients, searchTerm]);
 
-  const handleStatusChange = async (patientId: string, status: string) => {
-    try {
-      if (status.toLowerCase() === "active") {
-        await suspendPatient(patientId);
-      } else {
-        await restorePatient(patientId);
-      }
-      const updatedPatients = await getAllPatients();
-      setPatients(updatedPatients);
-
-      if (selectedPatient) {
-        const updated = updatedPatients.find(p => p.patientId === selectedPatient.patientId);
-        setSelectedPatient(updated || null);
-      }
-    } catch (err) {
-      console.error("Failed to update patient status:", err);
-    }
-  };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading patients...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto" />
+          <p className="mt-4 text-gray-600">Loading...</p>
         </div>
       </div>
     );
@@ -108,32 +87,46 @@ export default function PatientsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Patient Management</h1>
-          <p className="text-muted-foreground mt-1">Manage all registered patients</p>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold">Patient Management</h1>
+        <p className="text-muted-foreground">
+          Manage all registered patients
+        </p>
       </div>
 
-      {/* Stats */}
-      {!selectedPatient && (
+      {/* ✅ FIXED STATS SECTION */}
+      {!selectedPatient && statsData && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="shadow-soft border-0">
             <CardContent className="p-4">
-              <div className="text-2xl font-bold text-primary">{stats.activePatients}</div>
-              <div className="text-sm text-muted-foreground">Active Patients</div>
+              <div className="text-2xl font-bold text-primary">
+                {statsData.totalPatients ?? 0}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Active Patients
+              </div>
             </CardContent>
           </Card>
+
           <Card className="shadow-soft border-0">
             <CardContent className="p-4">
-              <div className="text-2xl font-bold text-foreground">{stats.totalPatients}</div>
-              <div className="text-sm text-muted-foreground">Total Patients</div>
+              <div className="text-2xl font-bold">
+                {statsData.totalPatients ?? 0}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Total Patients
+              </div>
             </CardContent>
           </Card>
+
           <Card className="shadow-soft border-0">
             <CardContent className="p-4">
-              <div className="text-2xl font-bold text-success">{stats.totalAppointments}</div>
-              <div className="text-sm text-muted-foreground">Total Appointments</div>
+              <div className="text-2xl font-bold text-success">
+                {statsData.totalAppointmentsToday ?? 0}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Today Appointments
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -145,51 +138,37 @@ export default function PatientsPage() {
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
               <CardTitle>Patient Details</CardTitle>
-              <CardDescription>Complete profile of the patient</CardDescription>
+              <CardDescription>
+                Complete profile of the patient
+              </CardDescription>
             </div>
-            <Button variant="ghost" onClick={() => setSelectedPatient(null)}>
+            <Button
+              variant="ghost"
+              onClick={() => setSelectedPatient(null)}
+            >
               <ArrowLeft className="h-4 w-4 mr-1" /> Back
             </Button>
           </CardHeader>
+
           <CardContent className="space-y-4">
             <div className="flex items-center gap-4">
-              {/* Profile Image */}
-              <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
-                {selectedPatient.profileImgUrl ? (
-                  <img
-                    src={`http://localhost:8004${selectedPatient.profileImgUrl}`}
-                    alt={selectedPatient.fullName}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <User className="h-8 w-8 text-muted-foreground" />
-                )}
+              <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center">
+                <User className="h-8 w-8 text-muted-foreground" />
               </div>
+
               <div>
-                <h2 className="text-xl font-semibold">{selectedPatient.fullName}</h2>
-                <p className="text-sm text-muted-foreground">{selectedPatient.email}</p>
-                <Badge className={`mt-2 ${getStatusColor(selectedPatient.status)}`}>
-                  {selectedPatient.status}
+                <h2 className="text-xl font-semibold">
+                  {(selectedPatient as any).fullName}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {(selectedPatient as any).email}
+                </p>
+
+                <Badge className="mt-2">
+                  {(selectedPatient as any).status}
                 </Badge>
               </div>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <p><strong>Gender:</strong> {displayGender(selectedPatient.gender)}</p>
-              <p><strong>Country:</strong> {selectedPatient.country || "N/A"}</p>
-              <p><strong>Date of Birth:</strong> {selectedPatient.dateOfBirth || "N/A"}</p>
-            </div>
-
-            <Button
-              className={`mt-4 ${
-                selectedPatient.status.toLowerCase() === "active"
-                  ? "bg-destructive hover:bg-destructive/80"
-                  : "bg-green-600 hover:bg-green-700"
-              }`}
-              onClick={() => handleStatusChange(selectedPatient.patientId, selectedPatient.status)}
-            >
-              {selectedPatient.status.toLowerCase() === "active" ? "Suspend Patient" : "Restore Patient"}
-            </Button>
           </CardContent>
         </Card>
       ) : (
@@ -197,65 +176,50 @@ export default function PatientsPage() {
           {/* Search */}
           <Card className="shadow-soft border-0">
             <CardHeader>
-              <CardTitle className="text-lg">Search Patients</CardTitle>
+              <CardTitle>Search Patients</CardTitle>
             </CardHeader>
+
             <CardContent>
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by name or email..."
-                  className="pl-10"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
+              <Input
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </CardContent>
           </Card>
 
-          {/* Patients List */}
+          {/* List */}
           <Card className="shadow-soft border-0">
             <CardHeader>
-              <CardTitle>All Patients ({filteredPatients.length})</CardTitle>
-              <CardDescription>Complete list of registered patients</CardDescription>
+              <CardTitle>
+                All Patients ({patients.length})
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {filteredPatients.map((p) => (
-                  <div
-                    key={p.patientId}
-                    className="p-4 rounded-lg border border-border hover:bg-accent/30 transition-all duration-200 flex justify-between items-center"
-                  >
-                    <div className="flex items-center gap-4">
-                      {/* Profile Image */}
-                      <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
-                        {p.profileImgUrl ? (
-                          <img
-                            src={`http://localhost:8004${p.profileImgUrl}`}
-                            alt={p.fullName}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <User className="h-5 w-5 text-muted-foreground" />
-                        )}
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-lg">{p.fullName}</h4>
-                        <p className="text-sm text-muted-foreground">{p.email}</p>
-                        <Badge className={`mt-1 ${getStatusColor(p.status)}`}>{p.status}</Badge>
-                      </div>
-                    </div>
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="hover:bg-accent"
-                      onClick={() => setSelectedPatient(p)}
-                    >
-                      <Eye className="h-3 w-3" />
-                    </Button>
+            <CardContent className="space-y-4">
+              {patients.map((p, index) => (
+                <div
+                  key={index}
+                  className="flex justify-between items-center border p-4 rounded"
+                >
+                  <div>
+                    <h4 className="font-semibold">
+                      {(p as any).fullName}
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      {(p as any).email}
+                    </p>
                   </div>
-                ))}
-              </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedPatient(p)}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
             </CardContent>
           </Card>
         </>
