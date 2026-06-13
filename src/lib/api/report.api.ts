@@ -45,5 +45,5 @@ export const patientReportApi = {
 export const adminReportApi = {
   getAll: () =>
     API.getAll<ReportResponseDto>(
-      "/api/reports/admin"),
+      "/api/reports"),
 };

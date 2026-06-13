@@ -13,11 +13,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Search, User, ArrowLeft } from "lucide-react";
 import {
-  getAllDoctors,
   getPendingDoctorCount,
   suspendDoctor,
   restoreDoctor,
 } from "@/lib/api/adminDashboard";
+import {adminDoctorApi } from "@/lib/api/doctor.api";
 import { useDashboardStats } from "@/context/DashboardStatsContext";
 import { DoctorProfileResponseDto } from "@/lib/type/doctor.types";
 
@@ -54,7 +54,7 @@ export default function DoctorManagementPage() {
     const fetchDoctors = async () => {
       try {
         const [allDoctors, pending] = await Promise.all([
-          getAllDoctors(),
+          adminDoctorApi.getAll(),
           getPendingDoctorCount(),
         ]);
         setDoctors(allDoctors);
@@ -86,7 +86,7 @@ export default function DoctorManagementPage() {
         await restoreDoctor(doctor.doctorProfileId);
       }
 
-      const updated = await getAllDoctors();
+      const updated = await adminDoctorApi.getAll();
       setDoctors(updated);
 
       if (selectedDoctor) {

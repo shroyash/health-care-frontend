@@ -66,7 +66,7 @@ export const adminDoctorApi = {
 
   getAll: () =>
     API.getAll<DoctorProfileResponseDto>(
-      "/api/dashboard/admin/doctors"),
+      "/api/admin/doctors"),
 
   suspend: (doctorId: string) =>
     API.putNoId<void, DoctorProfileResponseDto>(

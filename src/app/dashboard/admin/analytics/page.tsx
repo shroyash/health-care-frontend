@@ -15,8 +15,9 @@ import {
   getPatientsGenderCount,
 } from "@/lib/api/adminDashboard";
 import { adminAppointmentApi } from "@/lib/api/appointment.api";
-import { AdminDashboardStatsDto,WeeklyAppointmentCountDto } from "@/lib/type/dashboard.types";
+import { AdminDashboardStatsDto, WeeklyAppointmentCountDto } from "@/lib/type/dashboard.types";
 import { AppointmentFullDto } from "@/lib/type/appointment.types";
+import { GenderCountResponseDto } from "@/lib/type/dashboard.types";
 
 
 const INDIGO  = "#4f46e5";
@@ -33,8 +34,6 @@ const STATUS_COLOR: Record<string, string> = {
   COMPLETED:  GREEN,
   CANCELLED:  ROSE,
 };
-
-const GENDER_COLORS = [INDIGO, GREEN];
 
 // ── Animated counter ──────────────────────────────────────────────────────────
 function AnimatedNumber({ value }: { value: number }) {
@@ -111,10 +110,18 @@ export default function AdminAnalyticsPage() {
         getWeeklyAppointments(),
         getPatientsGenderCount(),
       ]);
-      setStats(s); setAppointments(a.content); setWeekly(w);
+
+      setStats(s);
+      setAppointments(a.content);
+      setWeekly(w);
+
+      // g is GenderCountResponseDto[] — e.g. [{ gender: "MALE", count: 42 }, { gender: "FEMALE", count: 58 }]
+      const genderMap = Object.fromEntries(
+        (g as GenderCountResponseDto[]).map((item) => [item.gender.toLowerCase(), item.count])
+      );
       setGender([
-        { name: "Male Patients",   value: g.male   ?? 0, fill: INDIGO },
-        { name: "Female Patients", value: g.female ?? 0, fill: GREEN  },
+        { name: "Male Patients",   value: genderMap["male"]   ?? 0, fill: INDIGO },
+        { name: "Female Patients", value: genderMap["female"] ?? 0, fill: GREEN  },
       ]);
     } catch (err: any) {
       setError(err?.response?.data?.message || "Failed to load");
@@ -123,7 +130,7 @@ export default function AdminAnalyticsPage() {
 
   useEffect(() => { fetchAll(); }, []);
 
-  // ── Loading — matches your dashboard skeleton pattern ──────────────────────
+  // ── Loading ────────────────────────────────────────────────────────────────
   if (loading) return (
     <div className="p-6 lg:p-8 space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -152,14 +159,14 @@ export default function AdminAnalyticsPage() {
   const radarData    = stats ? buildRadarData(stats, appointments) : [];
   const totalGender  = gender.reduce((s, d) => s + d.value, 0);
   const weeklyMax    = Math.max(...weekly.map(w => w.count), 1);
-  const statusGroups = ["SCHEDULED","CONFIRMED","COMPLETED","CANCELLED"].map(s => ({
+  const statusGroups = ["SCHEDULED", "CONFIRMED", "COMPLETED", "CANCELLED"].map(s => ({
     status: s, count: appointments.filter(a => a.status === s).length,
   }));
 
   return (
     <div className="p-6 lg:p-8 space-y-8">
 
-      {/* ── Page title — same style as your dashboard ────────────────────── */}
+      {/* ── Page title ──────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Analytics</h1>
@@ -306,18 +313,17 @@ export default function AdminAnalyticsPage() {
       </div>
 
       {/* ══════════════════════════════════════════════════════════
-          STAT CARDS — same size/style as your dashboard cards
+          STAT CARDS
       ══════════════════════════════════════════════════════════ */}
       {stats && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: "Total Doctors",     value: stats.totalDoctors,           color: INDIGO, icon: "⚕️" },
-            { label: "Total Patients",    value: stats.totalPatients,          color: GREEN,  icon: "🧑" },
-            { label: "Appointments Today",value: stats.totalAppointmentsToday, color: AMBER,  icon: "📅" },
-            { label: "Pending Approvals", value: stats.pendingDoctorApprovals, color: ROSE,   icon: "⏳" },
+            { label: "Total Doctors",      value: stats.totalDoctors,           color: INDIGO, icon: "⚕️" },
+            { label: "Total Patients",     value: stats.totalPatients,          color: GREEN,  icon: "🧑" },
+            { label: "Appointments Today", value: stats.totalAppointmentsToday, color: AMBER,  icon: "📅" },
+            { label: "Pending Approvals",  value: stats.pendingDoctorApprovals, color: ROSE,   icon: "⏳" },
           ].map(({ label, value, color, icon }) => (
             <Card key={label} className="shadow-soft p-5 relative overflow-hidden">
-              {/* Top accent — same pattern as indigo line chart stroke */}
               <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: color }} />
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">{label}</p>
@@ -332,11 +338,11 @@ export default function AdminAnalyticsPage() {
       )}
 
       {/* ══════════════════════════════════════════════════════════
-          CHARTS — same Card + same grid as your dashboard charts
+          CHARTS
       ══════════════════════════════════════════════════════════ */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-2">
 
-        {/* Weekly — ComposedChart with Bar + Line, matching your line stroke color */}
+        {/* Weekly Trend */}
         <Card className="shadow-soft p-6">
           <h2 className="text-lg font-semibold mb-4">Weekly Appointments Trend</h2>
           <ResponsiveContainer width="100%" height={300}>
@@ -351,13 +357,13 @@ export default function AdminAnalyticsPage() {
               <XAxis dataKey="day" />
               <YAxis allowDecimals={false} />
               <Tooltip content={<ChartTooltip />} />
-              <Bar dataKey="count" name="Appointments" fill="url(#barG)" radius={[4,4,0,0]} />
+              <Bar dataKey="count" name="Appointments" fill="url(#barG)" radius={[4, 4, 0, 0]} />
               <Line type="monotone" dataKey="count" name="Trend" stroke={GREEN} strokeWidth={3} dot={false} />
             </ComposedChart>
           </ResponsiveContainer>
         </Card>
 
-        {/* Platform Pulse radar */}
+        {/* Platform Pulse */}
         <Card className="shadow-soft p-6">
           <h2 className="text-lg font-semibold mb-4">Platform Pulse</h2>
           <ResponsiveContainer width="100%" height={300}>
