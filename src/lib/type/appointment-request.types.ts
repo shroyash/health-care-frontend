@@ -1,6 +1,6 @@
 // types/appointment-request.types.ts
 export interface AppointmentRequestDto {
-  doctorId: string;
+  doctorId: string; 
   doctorName: string;
   date: string;           
   startTime: string;

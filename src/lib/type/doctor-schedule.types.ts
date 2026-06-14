@@ -6,6 +6,7 @@ export interface DoctorScheduleResponseDto {
   schedules: ScheduleInfo[];
 }
 
+
 export interface ScheduleInfo {
   scheduleId: number;
   scheduleDate: string; 
@@ -18,13 +19,20 @@ export interface ScheduleInfo {
   updatedAt: string; 
 }
 
-export interface DoctorScheduleDto {
+export interface DoctorWithScheduleDto {
+  doctorProfileId: string;
+  name: string;
+  profileUrl?: string;
+  specialty: string;
+  email?: string;
+  phone?: string;
   schedules: ScheduleDto[];
 }
 
 export interface ScheduleDto {
-  scheduleDate: string;
+  date: string;
   startTime: string;
   endTime: string;
   available: boolean;
 }
+

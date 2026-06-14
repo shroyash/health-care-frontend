@@ -16,19 +16,16 @@ import {
   Cell,
   Legend,
 } from "recharts";
-
 import {
   dashboardStats,
-  getDoctorWeeklyAppointmentCount,
+  getWeeklyAppointmentsByDoctor,
   getCheckupTypeCount,
 } from "@/lib/api/doctorDashboard";
 import DoctorAppointmentsList from "./DoctorAppointmentsList";
-import { DoctorDashboardStats, CheckupTypeCountDto, DailyAppointmentCount } from "@/lib/type/doctorDashboard";
-import { DoctorAppointment } from "@/lib/type/doctor.types";
-import { doctorAppointmentApi } from "@/lib/api/appointment.api";
+import { DoctorDashboardStatsDto, WeeklyAppointmentCountDto } from "@/lib/type/dashboard.types";
+import { CheckupTypeCountDto } from "@/lib/type/appointment.types";
 
 interface CheckupTypeChartData {
-  [key: string]: string | number; 
   name: string;
   value: number;
 }
@@ -36,42 +33,28 @@ interface CheckupTypeChartData {
 const COLORS = ["#3b82f6", "#facc15", "#10b981", "#ef4444"];
 
 const DoctorDashboard = () => {
-  const [statsData, setStatsData] = useState<DoctorDashboardStats | null>(null);
-  const [upcomingAppointments, setUpcomingAppointments] = useState<DoctorAppointment[]>([]);
-  const [weeklyAppointments, setWeeklyAppointments] = useState<DailyAppointmentCount[]>([]);
+  const [statsData, setStatsData] = useState<DoctorDashboardStatsDto | null>(null);
+  const [weeklyAppointments, setWeeklyAppointments] = useState<WeeklyAppointmentCountDto[]>([]);
   const [checkupTypeData, setCheckupTypeData] = useState<CheckupTypeChartData[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        // Fetch stats
-        const stats = await dashboardStats();
+        const [stats, weekly, checkups] = await Promise.all([
+          dashboardStats(),
+          getWeeklyAppointmentsByDoctor(),
+          getCheckupTypeCount(),
+        ]);
+
         setStatsData(stats);
-
-        // Fetch upcoming appointments
-        const upcoming = await doctorAppointmentApi.getUpcoming();
-        setUpcomingAppointments(upcoming);
-
-        // Fetch weekly appointments and format for LineChart
-        const weekly = await getDoctorWeeklyAppointmentCount();
-        console.log("Weekly Appointments:", weekly);
-        setWeeklyAppointments(
-          weekly.map(item => ({
-            date: item.date,
-            count: item.count,
+        setWeeklyAppointments(weekly);
+        setCheckupTypeData(
+          checkups.map((item: CheckupTypeCountDto) => ({
+            name: item.checkupType,
+            value: item.count,
           }))
         );
-
-        // Fetch checkup type counts and format for PieChart
-        const checkups = await getCheckupTypeCount();
-        console.log("Checkup Type Counts:", checkups);
-        const formattedCheckups: CheckupTypeChartData[] = checkups.map(item => ({
-          name: item.checkupType,
-          value: item.count,
-        }));
-        setCheckupTypeData(formattedCheckups);
-
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {
@@ -82,7 +65,6 @@ const DoctorDashboard = () => {
     fetchDashboardData();
   }, []);
 
-  // Dashboard stats cards
   const stats = statsData
     ? [
         { title: "Pending Requests", value: statsData.pendingRequests, icon: AlertTriangle, bgColor: "bg-yellow-400" },
@@ -96,7 +78,7 @@ const DoctorDashboard = () => {
     <div className="min-h-screen bg-gray-50 py-4">
       <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 
-        {/* Stats Section */}
+        {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {loading
             ? Array.from({ length: 4 }).map((_, index) => (
@@ -122,10 +104,9 @@ const DoctorDashboard = () => {
               })}
         </div>
 
-        {/* Charts Section */}
+        {/* Charts */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-6 mt-10">
 
-          {/* Weekly Appointments Chart */}
           <Card className="border-0 shadow-sm">
             <CardHeader>
               <CardTitle className="text-lg font-semibold">Weekly Appointments</CardTitle>
@@ -134,13 +115,8 @@ const DoctorDashboard = () => {
               <ResponsiveContainer width="100%" height={400}>
                 <LineChart data={weeklyAppointments}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="date"
-                    tickFormatter={(date) =>
-                      new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" })
-                    }
-                  />
-                  <YAxis />
+                  <XAxis dataKey="day" />
+                  <YAxis allowDecimals={false} />
                   <Tooltip />
                   <Line type="monotone" dataKey="count" stroke="#3b82f6" strokeWidth={3} />
                 </LineChart>
@@ -148,7 +124,6 @@ const DoctorDashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Checkup Type Pie Chart */}
           <Card className="border-0 shadow-sm">
             <CardHeader>
               <CardTitle className="text-lg font-semibold">Patients by Checkup Type</CardTitle>
@@ -165,7 +140,7 @@ const DoctorDashboard = () => {
                     outerRadius={120}
                     label
                   >
-                    {checkupTypeData.map((entry, index) => (
+                    {checkupTypeData.map((_, index) => (
                       <Cell key={index} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
@@ -178,8 +153,8 @@ const DoctorDashboard = () => {
 
         </div>
 
-        {/* Upcoming Appointments List */}
-  <DoctorAppointmentsList upcoming={true} />
+        {/* Upcoming Appointments */}
+        <DoctorAppointmentsList upcoming={true} />
 
       </div>
     </div>

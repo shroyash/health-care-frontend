@@ -28,9 +28,9 @@ export const doctorAppointmentRequestApi = {
     API.getAll<AppointmentRequestResponseDto>(
       "/api/appointment-requests/doctor"),
 
-  updateStatus: (requestId: number, status: AppointmentRequestStatus) =>
-    API.patch<{ status: AppointmentRequestStatus },
-              AppointmentApprovalResponseDto>(
-      `/api/appointment-requests/doctor/${requestId}/status`,
-      { status }),
+updateStatus: (requestId: number, status: AppointmentRequestStatus) =>
+  API.patch<{}, AppointmentApprovalResponseDto>(
+    `/api/appointment-requests/doctor/${requestId}/status?status=${status}`,
+    {}
+  ),
 };

@@ -20,36 +20,30 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "react-toastify";
-
-import {
-  getAllAvailableDoctors,
-  createAppointmentRequest,
-} from "@/lib/api/patientDashboard";
-
-import {
-  DoctorWithSchedule,
-  CreateAppointmentRequestDto,
-} from "@/lib/type/patientDashboard";
+import { DoctorWithScheduleDto } from "@/lib/type/doctor-schedule.types";
+import { patientAppointmentRequestApi } from "@/lib/api/appointment-request.api";
+import { doctorProfileApi } from "@/lib/api/doctor.api";
+import { AppointmentRequestDto } from "@/lib/type/appointment-request.types";
 
 export const CustomRequestForm = () => {
-  const [doctors, setDoctors] = useState<DoctorWithSchedule[]>([]);
+  const [doctors, setDoctors] = useState<DoctorWithScheduleDto[]>([]);
   const [loadingDoctors, setLoadingDoctors] = useState(true);
   const [loadingSubmit, setLoadingSubmit] = useState(false);
 
   const [formData, setFormData] = useState({
     doctorProfileId: "",
+    doctorName: "",
     day: "",
     startTime: "",
     endTime: "",
     notes: "",
   });
 
-  // ✅ Fetch doctors
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
         setLoadingDoctors(true);
-        const res = await getAllAvailableDoctors();
+        const res = await doctorProfileApi.getAllAvailable();
         setDoctors(res);
       } catch (err: any) {
         const message =
@@ -64,11 +58,9 @@ export const CustomRequestForm = () => {
     fetchDoctors();
   }, []);
 
-  // ✅ Submit handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // 🔴 Required validation
     if (
       !formData.doctorProfileId ||
       !formData.day ||
@@ -79,33 +71,32 @@ export const CustomRequestForm = () => {
       return;
     }
 
-    // 🔴 Time validation
     if (formData.startTime >= formData.endTime) {
       toast.error("End time must be after start time");
       return;
     }
 
-    // 🔴 Prevent double click
     if (loadingSubmit) return;
 
     setLoadingSubmit(true);
 
     try {
-      const request: CreateAppointmentRequestDto = {
+      const request: AppointmentRequestDto = {
         doctorId: formData.doctorProfileId,
+        doctorName: formData.doctorName,
         date: formData.day,
         startTime: formData.startTime,
         endTime: formData.endTime,
         notes: formData.notes,
       };
 
-      await createAppointmentRequest(request);
+      await patientAppointmentRequestApi.create(request);
 
       toast.success("Appointment request sent successfully!");
 
-      // ✅ Reset form
       setFormData({
         doctorProfileId: "",
+        doctorName: "",
         day: "",
         startTime: "",
         endTime: "",
@@ -117,11 +108,10 @@ export const CustomRequestForm = () => {
         error?.response?.data?.message ||
         "Failed to send request. Please try again.";
 
-      // 🔥 Specific handling
       if (status === 409) {
-        toast.error(message); // "You already requested this slot"
+        toast.error(message);
       } else if (status === 400) {
-        toast.error(message); // validation error from backend
+        toast.error(message);
       } else if (status === 500) {
         toast.error("Server error. Please try again later.");
       } else {
@@ -150,9 +140,16 @@ export const CustomRequestForm = () => {
             <Label>Select Doctor *</Label>
             <Select
               value={formData.doctorProfileId}
-              onValueChange={(value) =>
-                setFormData({ ...formData, doctorProfileId: value })
-              }
+              onValueChange={(value) => {
+                const selected = doctors.find(
+                  (d) => d.doctorProfileId === value
+                );
+                setFormData({
+                  ...formData,
+                  doctorProfileId: value,
+                  doctorName: selected?.name ?? "",
+                });
+              }}
               disabled={loadingDoctors}
             >
               <SelectTrigger>
@@ -167,7 +164,7 @@ export const CustomRequestForm = () => {
                 {doctors.map((doctor) => (
                   <SelectItem
                     key={doctor.doctorProfileId}
-                    value={doctor.doctorProfileId.toString()}
+                    value={doctor.doctorProfileId}
                   >
                     {doctor.name} - {doctor.specialty}
                   </SelectItem>

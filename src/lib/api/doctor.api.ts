@@ -2,8 +2,8 @@
 import { API } from "./api";
 import { DoctorProfileResponseDto } from "../type/doctor.types";
 import {
-  DoctorScheduleDto,
   DoctorScheduleResponseDto,
+  DoctorWithScheduleDto,
   ScheduleDto,
 } from "../type/doctor-schedule.types";
 
@@ -32,7 +32,7 @@ export const doctorProfileApi = {
   },
 
   getAllAvailable: () =>
-    API.getAll<DoctorScheduleResponseDto>(
+    API.getAll<DoctorWithScheduleDto>(
       "/api/appointments/patient/doctors/available"),
 };
 
@@ -40,8 +40,8 @@ export const doctorProfileApi = {
 
 export const doctorScheduleApi = {
 
-  saveWeekly: (data: DoctorScheduleDto) =>
-    API.create<DoctorScheduleDto, void>(
+  saveWeekly: (data: ScheduleDto) =>
+    API.create<ScheduleDto, void>(
       "/api/schedules/weekly", data),
 
   getMySchedule: () =>
@@ -52,8 +52,8 @@ export const doctorScheduleApi = {
     API.getOne<DoctorScheduleResponseDto>(
       `/api/schedules/${doctorProfileId}`),
 
-  update: (scheduleId: number, data: DoctorScheduleDto) =>
-    API.update<DoctorScheduleDto, DoctorScheduleResponseDto>(
+  update: (scheduleId: number, data: ScheduleDto) =>
+    API.update<ScheduleDto, DoctorScheduleResponseDto>(
       "/api/schedules", scheduleId, data),
 
   delete: (scheduleId: number) =>

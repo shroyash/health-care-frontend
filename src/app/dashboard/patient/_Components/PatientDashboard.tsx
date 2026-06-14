@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, Users, FileText, Heart } from "lucide-react";
+import { patientAppointmentApi } from "@/lib/api/appointment.api";
+import {AppointmentStatusCountDto} from "@/lib/type/appointment.types";
+
 
 import {
   LineChart,
@@ -19,18 +22,14 @@ import {
 } from "recharts";
 
 import {
-  getUpcomingAppointments,
   getPatientDashboardStats,
-  getPatientWeeklyCount,
-  getPatientStatusCount,
+  getWeeklyAppointmentsByPatient,
+   getPatientStatusCount,
 } from "@/lib/api/patientDashboard";
 
-import type {
-  PatientAppointment,
-  PatientDashboardStats,
-  DailyAppointmentCount,
-  AppointmentStatusCount,
-} from "@/lib/type/patientDashboard";
+
+import { PatientDashboardStatsDto, WeeklyAppointmentCountDto  } from "@/lib/type/dashboard.types";
+import { PatientAppointmentDto } from "@/lib/type/appointment.types";
 
 interface StatusChartData {
   [key: string]: string | number;
@@ -41,9 +40,9 @@ interface StatusChartData {
 const STATUS_COLORS = ["#22c55e", "#f59e0b", "#ef4444"];
 
 export function PatientDashboard() {
-  const [appointments, setAppointments] = useState<PatientAppointment[]>([]);
-  const [stats, setStats] = useState<PatientDashboardStats | null>(null);
-  const [weeklyData, setWeeklyData] = useState<DailyAppointmentCount[]>([]);
+  const [appointments, setAppointments] = useState<PatientAppointmentDto[]>([]);
+  const [stats, setStats] = useState<PatientDashboardStatsDto | null>(null);
+  const [weeklyData, setWeeklyData] = useState<WeeklyAppointmentCountDto[]>([]);
   const [statusData, setStatusData] = useState<StatusChartData[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -51,9 +50,9 @@ export function PatientDashboard() {
     const fetchDashboard = async () => {
       try {
         const [upcoming, statsData, weeklyCount, statusCount] = await Promise.all([
-          getUpcomingAppointments(),
+          patientAppointmentApi.getUpcoming(),
           getPatientDashboardStats(),
-          getPatientWeeklyCount(),
+          getWeeklyAppointmentsByPatient(),
           getPatientStatusCount(),
         ]);
 
@@ -62,7 +61,7 @@ export function PatientDashboard() {
         setWeeklyData(weeklyCount);
 
         setStatusData(
-          statusCount.map((item: AppointmentStatusCount) => ({
+          statusCount.map((item: AppointmentStatusCountDto) => ({
             name: item.status,
             value: item.count,
           }))
@@ -76,7 +75,7 @@ export function PatientDashboard() {
     fetchDashboard();
   }, []);
 
-  const getStatusBadge = (status: PatientAppointment["status"]) => {
+  const getStatusBadge = (status: PatientAppointmentDto["status"]) => {
     const map: any = {
       CONFIRMED: "bg-green-500 text-white",
       PENDING: "bg-yellow-500 text-white",
@@ -98,8 +97,8 @@ export function PatientDashboard() {
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 w-full">
         <StatCard icon={Calendar} label="Upcoming" value={stats?.totalUpcomingAppointments ?? 0} />
-        <StatCard icon={Users} label="Doctors" value={stats?.totalActiveDoctor ?? 0} />
-        <StatCard icon={FileText} label="Reports" value={stats?.totalReportWritten ?? 0} />
+        <StatCard icon={Users} label="Doctors" value={stats?.totalActiveDoctors ?? 0} />
+        <StatCard icon={FileText} label="Reports" value={stats?.totalReportsWritten ?? 0} />
         <StatCard icon={Heart} label="Health" value="Good" />
       </div>
 

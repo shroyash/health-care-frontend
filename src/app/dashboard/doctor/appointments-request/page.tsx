@@ -3,12 +3,11 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { CheckCircle, XCircle, Clock, Search, Users, Info } from "lucide-react";
 import {doctorAppointmentRequestApi} from "@/lib/api/appointment-request.api";
-import { AppointmentRequest } from "@/lib/type/doctorDashboard";
+import { AppointmentRequestResponseDto, AppointmentRequestStatus } from "@/lib/type/appointment-request.types";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +15,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { AppointmentStatus } from "@/lib/type/appointment.types";
 
 const formatFullDateFromBackend = (dateStr: string): string => {
   if (!dateStr) return "";
@@ -41,8 +41,8 @@ const formatTimeFromBackend = (timeStr: string): string => {
 export default function AppointmentRequestPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [appointments, setAppointments] = useState<AppointmentRequest[]>([]);
-  const [selectedAppointment, setSelectedAppointment] = useState<AppointmentRequest | null>(null);
+  const [appointments, setAppointments] = useState<AppointmentRequestResponseDto[]>([]);
+  const [selectedAppointment, setSelectedAppointment] = useState<AppointmentRequestResponseDto | null>(null);
 
   useEffect(() => {
     fetchAppointments();
@@ -57,7 +57,7 @@ export default function AppointmentRequestPage() {
     }
   };
 
-  const handleStatusUpdate = async (id: number, status: "APPROVED" | "REJECTED") => {
+  const handleStatusUpdate = async (id: number, status: AppointmentRequestStatus) => {
     try {
       const response = await doctorAppointmentRequestApi.updateStatus(id, status);
 

@@ -1,9 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import {patientDoctorApi} from "@/lib/api/patient-doctor.api";
-import { DoctorWithSchedule } from "@/lib/type/patientDashboard";
 import { toast } from "react-toastify";
-import { DoctorWithScheduleDto } from "@/lib/type/doctor.types";
+import {DoctorWithScheduleDto}  from "@/lib/type/doctor-schedule.types";
 
 const BASE_URL = "http://localhost:8004";
 
@@ -177,7 +176,7 @@ function SkeletonCard() {
 export const AvailableDoctors = ({
   onViewSchedule,
 }: {
-  onViewSchedule: (doctor: DoctorWithSchedule) => void;
+  onViewSchedule: (doctor: DoctorWithScheduleDto) => void;
 }) => {
   const [doctors, setDoctors] = useState<DoctorWithScheduleDto[]>([]);
   const [loading, setLoading] = useState(true);

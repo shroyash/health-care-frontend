@@ -12,7 +12,7 @@ export interface DoctorAppointmentDto {
 }
 
 export interface PatientAppointmentDto {
-  id: number;
+  appointmentId: number;
   doctorId: string;
   doctorName: string;
   appointmentDate: string;

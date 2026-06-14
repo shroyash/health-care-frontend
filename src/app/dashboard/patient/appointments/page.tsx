@@ -21,8 +21,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import { getAppointments } from "@/lib/api/patientDashboard";
-import { PatientAppointment } from "@/lib/type/patientDashboard";
+import { patientAppointmentApi } from "@/lib/api/appointment.api";
+import { PatientAppointmentDto } from "@/lib/type/appointment.types";
 
 /* -------------------- Utils -------------------- */
 
@@ -59,19 +59,19 @@ const getStatusColor = (status: string) => {
 const STATUS_TABS = ["ALL", "SCHEDULED", "CANCELLED", "COMPLETED"];
 
 export default function PatientAppointmentsList() {
-  const [appointments, setAppointments] = useState<PatientAppointment[]>([]);
+  const [appointments, setAppointments] = useState<PatientAppointmentDto[]>([]);
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("ALL");
-  const [selected, setSelected] = useState<PatientAppointment | null>(null);
+  const [selected, setSelected] = useState<PatientAppointmentDto | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     async function fetchAppointments() {
       try {
         setLoading(true);
-        const data = await getAppointments();
+        const data = await patientAppointmentApi.getAll();
 
-        const mapped: PatientAppointment[] = data.map((a: any) => ({
+        const mapped: PatientAppointmentDto[] = data.content.map((a: any) => ({
           appointmentId: a.appointmentId || a.appointment_id,
           doctorId: a.doctorId || a.doctor_id,
           doctorName: a.doctorName || a.doctor_name,
