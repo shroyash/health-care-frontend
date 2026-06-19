@@ -15,7 +15,7 @@ export interface DoctorDashboardStatsDto {
 
 export interface PatientDashboardStatsDto {
   totalUpcomingAppointments: number;
-  totalActiveDoctors: number;
+  totalActiveDoctor: number;
   totalReportsWritten: number;
 }
 

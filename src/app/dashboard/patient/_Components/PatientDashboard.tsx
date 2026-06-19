@@ -2,11 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, Users, FileText, Heart } from "lucide-react";
-import { patientAppointmentApi } from "@/lib/api/appointment.api";
-import {AppointmentStatusCountDto} from "@/lib/type/appointment.types";
-
 
 import {
   LineChart,
@@ -24,12 +20,12 @@ import {
 import {
   getPatientDashboardStats,
   getWeeklyAppointmentsByPatient,
-   getPatientStatusCount,
+  getPatientStatusCount,
 } from "@/lib/api/patientDashboard";
 
-
-import { PatientDashboardStatsDto, WeeklyAppointmentCountDto  } from "@/lib/type/dashboard.types";
-import { PatientAppointmentDto } from "@/lib/type/appointment.types";
+import { PatientDashboardStatsDto, WeeklyAppointmentCountDto } from "@/lib/type/dashboard.types";
+import { AppointmentStatusCountDto } from "@/lib/type/appointment.types";
+import PatientAppointmentsList from "./PatientAppointmentList";
 
 interface StatusChartData {
   [key: string]: string | number;
@@ -40,7 +36,6 @@ interface StatusChartData {
 const STATUS_COLORS = ["#22c55e", "#f59e0b", "#ef4444"];
 
 export function PatientDashboard() {
-  const [appointments, setAppointments] = useState<PatientAppointmentDto[]>([]);
   const [stats, setStats] = useState<PatientDashboardStatsDto | null>(null);
   const [weeklyData, setWeeklyData] = useState<WeeklyAppointmentCountDto[]>([]);
   const [statusData, setStatusData] = useState<StatusChartData[]>([]);
@@ -49,17 +44,14 @@ export function PatientDashboard() {
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const [upcoming, statsData, weeklyCount, statusCount] = await Promise.all([
-          patientAppointmentApi.getUpcoming(),
+        const [statsData, weeklyCount, statusCount] = await Promise.all([
           getPatientDashboardStats(),
           getWeeklyAppointmentsByPatient(),
           getPatientStatusCount(),
         ]);
 
-        setAppointments(upcoming);
         setStats(statsData);
         setWeeklyData(weeklyCount);
-
         setStatusData(
           statusCount.map((item: AppointmentStatusCountDto) => ({
             name: item.status,
@@ -75,15 +67,6 @@ export function PatientDashboard() {
     fetchDashboard();
   }, []);
 
-  const getStatusBadge = (status: PatientAppointmentDto["status"]) => {
-    const map: any = {
-      CONFIRMED: "bg-green-500 text-white",
-      PENDING: "bg-yellow-500 text-white",
-      CANCELLED: "bg-red-500 text-white",
-    };
-    return <Badge className={map[status]}>{status}</Badge>;
-  };
-
   return (
     <div className="space-y-6 w-full">
       {/* Header */}
@@ -97,7 +80,7 @@ export function PatientDashboard() {
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 w-full">
         <StatCard icon={Calendar} label="Upcoming" value={stats?.totalUpcomingAppointments ?? 0} />
-        <StatCard icon={Users} label="Doctors" value={stats?.totalActiveDoctors ?? 0} />
+        <StatCard icon={Users} label="Doctors" value={stats?.totalActiveDoctor ?? 0} />
         <StatCard icon={FileText} label="Reports" value={stats?.totalReportsWritten ?? 0} />
         <StatCard icon={Heart} label="Health" value="Good" />
       </div>
@@ -147,33 +130,8 @@ export function PatientDashboard() {
         </Card>
       </div>
 
-      {/* Upcoming Appointments */}
-      <Card className="shadow-card">
-        <CardHeader>
-          <CardTitle>Upcoming Appointments</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {loading ? (
-            <p className="text-muted-foreground text-sm">Loading...</p>
-          ) : appointments.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No upcoming appointments</p>
-          ) : (
-            appointments.map((a) => (
-              <div key={a.appointmentId} className="flex justify-between p-4 rounded-lg bg-gray-100">
-                <div>
-                  <p className="font-medium">{a.doctorName}</p>
-                  <p className="text-sm text-muted-foreground">{a.checkupType}</p>
-                  <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
-                    <Clock className="h-3 w-3" />
-                    {a.appointmentDate} | {a.startTime} - {a.endTime}
-                  </div>
-                </div>
-                {getStatusBadge(a.status)}
-              </div>
-            ))
-          )}
-        </CardContent>
-      </Card>
+      
+      <PatientAppointmentsList upcoming={true} />
     </div>
   );
 }
