@@ -3,14 +3,14 @@
 import { useEffect, useState, Fragment } from "react";
 import {
   patientProfileApi,
-  PatientProfileDTO,
-  PatientProfileUpdateDto,
 } from "@/lib/api/patient.api";
+import { PatientProfileDTO, PatientProfileUpdateDto } from "@/lib/type/patient.types";
 import { Dialog, Transition } from "@headlessui/react";
 import { Button } from "@/components/ui/button";
 import { Edit, Camera, Phone, Mail, MapPin, Calendar, User } from "lucide-react";
 
-const STATIC_BASE_URL = "http://localhost:8004";
+// Falls back to localhost for local dev, but should be set per-environment.
+const STATIC_BASE_URL = process.env.NEXT_PUBLIC_STATIC_BASE_URL ?? "http://localhost:8004";
 
 /* ── Labeled Input ── */
 interface LabeledInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -24,6 +24,23 @@ const LabeledInput = ({ label, ...props }: LabeledInputProps) => (
       {...props}
       className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
     />
+  </div>
+);
+
+/* ── Labeled Select (for gender) ── */
+interface LabeledSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+  label?: string;
+}
+
+const LabeledSelect = ({ label, children, ...props }: LabeledSelectProps) => (
+  <div className="space-y-1 w-full">
+    {label && <label className="block text-sm font-medium text-gray-600">{label}</label>}
+    <select
+      {...props}
+      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+    >
+      {children}
+    </select>
   </div>
 );
 
@@ -48,15 +65,30 @@ const InfoRow = ({
 };
 
 /* ── Profile Image ── */
+interface ProfileImageProps {
+  profileImgUrl?: string | null;
+  previewImage: string | null;
+  firstLetter: string;
+  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  uploading: boolean;
+  imageKey: number;
+}
+
 const ProfileImage = ({
-  profileImage,
+  profileImgUrl,
   previewImage,
   firstLetter,
   onFileChange,
   uploading,
   imageKey,
-}: any) => {
-  const fullImageUrl = profileImage ? `${STATIC_BASE_URL}${profileImage}` : null;
+}: ProfileImageProps) => {
+  // profileImgUrl may already be a full URL (e.g. from S3/CDN) or a relative
+  // path served by the API. Only prefix with STATIC_BASE_URL when relative.
+  const fullImageUrl = profileImgUrl
+    ? profileImgUrl.startsWith("http")
+      ? profileImgUrl
+      : `${STATIC_BASE_URL}${profileImgUrl}`
+    : null;
 
   return (
     <div className="relative">
@@ -85,12 +117,12 @@ const ProfileImage = ({
 export default function PatientProfilePage() {
   const [profile, setProfile] = useState<PatientProfileDTO | null>(null);
 
-  // ✅ All 4 fields matching PatientProfileUpdateDto
   const [form, setForm] = useState<PatientProfileUpdateDto>({
     fullName: "",
     contactNumber: "",
     country: "",
     dateOfBirth: "",
+    gender: "",
   });
 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -99,26 +131,27 @@ export default function PatientProfilePage() {
   const [imageKey, setImageKey] = useState(0);
 
   useEffect(() => {
-    patientProfileApi.getMyProfile().then((data: any) => {
+    patientProfileApi.getMyProfile().then((data: PatientProfileDTO) => {
       setProfile(data);
-      // ✅ Populate all fields from API response
       setForm({
         fullName: data.fullName ?? "",
         contactNumber: data.contactNumber ?? "",
         country: data.country ?? "",
         dateOfBirth: data.dateOfBirth ?? "",
+        gender: data.gender ?? "",
       });
     });
   }, []);
 
-  const handleImageChange = (e: any) => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
     setPreviewImage(URL.createObjectURL(file));
-    patientProfileApi.uploadProfileImage(file)
-      .then((response: any) => {
-        setProfile((p) => (p ? { ...p, profileImage: response.profileImage } : p));
+    patientProfileApi
+      .uploadProfileImage(file)
+      .then((response: { profileImgUrl: string }) => {
+        setProfile((p) => (p ? { ...p, profileImgUrl: response.profileImgUrl } : p));
         setImageKey((k) => k + 1);
         setPreviewImage(null);
       })
@@ -127,21 +160,9 @@ export default function PatientProfilePage() {
 
   const handleSave = async () => {
     if (!profile) return;
-    await patientProfileApi.updateProfile(form);
-    // ✅ Update all fields locally
-    setProfile((p) =>
-      p
-        ? {
-            ...p,
-            fullName: form.fullName,
-            contactNumber: form.contactNumber,
-            country: form.country,
-            dateOfBirth: form.dateOfBirth,
-          }
-        : p
-    );
+    const updated = await patientProfileApi.updateProfile(form);
+    setProfile((p) => (p ? { ...p, ...updated } : p));
     setIsEditing(false);
-    window.location.reload();
   };
 
   if (!profile) return <p className="text-center mt-20 text-gray-500">Loading…</p>;
@@ -249,14 +270,24 @@ export default function PatientProfilePage() {
               <div className="space-y-3">
                 <LabeledInput
                   label="Full Name"
-                  value={form.fullname}
-                  onChange={(e) => setForm({ ...form, fullname: e.target.value })}
+                  value={form.fullName}
+                  onChange={(e) => setForm({ ...form, fullName: e.target.value })}
                 />
                 <LabeledInput
                   label="Contact Number"
                   value={form.contactNumber}
                   onChange={(e) => setForm({ ...form, contactNumber: e.target.value })}
                 />
+                <LabeledSelect
+                  label="Gender"
+                  value={form.gender}
+                  onChange={(e) => setForm({ ...form, gender: e.target.value })}
+                >
+                  <option value="">Select gender</option>
+                  <option value="MALE">Male</option>
+                  <option value="FEMALE">Female</option>
+                  <option value="OTHER">Other</option>
+                </LabeledSelect>
                 <LabeledInput
                   label="Country"
                   value={form.country}

@@ -127,22 +127,25 @@ export default function PatientAppointmentsList({ upcoming = true }: PatientAppo
             </div>
           </div>
 
-          {/* Status Tabs */}
-          <div className="flex gap-2 flex-wrap mt-4">
-            {STATUS_TABS.map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 ${
-                  activeTab === tab
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-white text-gray-600 border-gray-200 hover:border-blue-400 hover:text-blue-600"
-                }`}
-              >
-                {tab === "ALL" ? "All" : tab.charAt(0) + tab.slice(1).toLowerCase()}
-              </button>
-            ))}
-          </div>
+          {/* Status Tabs — only relevant when showing the full appointment history,
+              not the "upcoming" widget, so we hide them entirely in upcoming mode */}
+          {!upcoming && (
+            <div className="flex gap-2 flex-wrap mt-4">
+              {STATUS_TABS.map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 ${
+                    activeTab === tab
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : "bg-white text-gray-600 border-gray-200 hover:border-blue-400 hover:text-blue-600"
+                  }`}
+                >
+                  {tab === "ALL" ? "All" : tab.charAt(0) + tab.slice(1).toLowerCase()}
+                </button>
+              ))}
+            </div>
+          )}
         </CardHeader>
 
         <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

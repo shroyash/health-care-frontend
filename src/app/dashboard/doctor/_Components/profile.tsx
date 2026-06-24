@@ -7,7 +7,8 @@ import { Dialog, Transition } from "@headlessui/react";
 import { Button } from "@/components/ui/button";
 import { Edit, Camera, Briefcase, Phone, Mail, Award, MapPin, Calendar, User } from "lucide-react";
 
-const STATIC_BASE_URL = "http://localhost:8004";
+// Falls back to localhost for local dev, but should be set per-environment.
+const STATIC_BASE_URL = process.env.NEXT_PUBLIC_STATIC_BASE_URL ?? "http://localhost:8004";
 
 interface LabeledInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -23,6 +24,22 @@ const LabeledInput = ({ label, ...props }: LabeledInputProps) => (
   </div>
 );
 
+interface LabeledSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+  label?: string;
+}
+
+const LabeledSelect = ({ label, children, ...props }: LabeledSelectProps) => (
+  <div className="space-y-1 w-full">
+    {label && <label className="block text-sm font-medium text-gray-600">{label}</label>}
+    <select
+      {...props}
+      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+    >
+      {children}
+    </select>
+  </div>
+);
+
 const InfoRow = ({ icon, label, value }: { icon: React.ReactNode; label: string; value?: string | number | null }) => {
   if (value === null || value === undefined || value === "") return null;
   return (
@@ -34,8 +51,24 @@ const InfoRow = ({ icon, label, value }: { icon: React.ReactNode; label: string;
   );
 };
 
-const ProfileImage = ({ profileImage, previewImage, firstLetter, onFileChange, uploading, imageKey }: any) => {
-  const fullImageUrl = profileImage ? `${STATIC_BASE_URL}${profileImage}` : null;
+interface ProfileImageProps {
+  profileImgUrl?: string | null;
+  previewImage: string | null;
+  firstLetter: string;
+  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  uploading: boolean;
+  imageKey: number;
+}
+
+const ProfileImage = ({ profileImgUrl, previewImage, firstLetter, onFileChange, uploading, imageKey }: ProfileImageProps) => {
+  // profileImgUrl may already be a full URL (e.g. S3/CDN) or a relative path
+  // served by the API. Only prefix with STATIC_BASE_URL when relative.
+  const fullImageUrl = profileImgUrl
+    ? profileImgUrl.startsWith("http")
+      ? profileImgUrl
+      : `${STATIC_BASE_URL}${profileImgUrl}`
+    : null;
+
   return (
     <div className="relative">
       {previewImage ? (
@@ -74,7 +107,7 @@ export default function DoctorProfilePage() {
   const [imageKey, setImageKey] = useState(0);
 
   useEffect(() => {
-    doctorProfileApi.getMyProfile().then((data: any) => {
+    doctorProfileApi.getMyProfile().then((data: DoctorProfileResponseDto) => {
       setProfile(data);
       setFormData({
         fullName: data.fullName ?? "",
@@ -90,7 +123,7 @@ export default function DoctorProfilePage() {
     });
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -103,9 +136,10 @@ export default function DoctorProfilePage() {
     if (!file) return;
     setUploading(true);
     setPreviewImage(URL.createObjectURL(file));
-    doctorProfileApi.uploadProfileImage(file)
-      .then((response: any) => {
-        setProfile((p) => (p ? { ...p, profileImage: response.profileImage } : p));
+    doctorProfileApi
+      .uploadProfileImage(file)
+      .then((response: { profileImgUrl: string }) => {
+        setProfile((p) => (p ? { ...p, profileImgUrl: response.profileImgUrl } : p));
         setImageKey((k) => k + 1);
         setPreviewImage(null);
       })
@@ -114,10 +148,9 @@ export default function DoctorProfilePage() {
 
   const handleSave = async () => {
     if (!profile) return;
-    await doctorProfileApi.updateProfile(formData);
-    setProfile((p) => (p ? { ...p, ...formData } : p));
+    const updated = await doctorProfileApi.updateProfile(formData);
+    setProfile((p) => (p ? { ...p, ...updated } : p));
     setIsEditing(false);
-    window.location.reload();
   };
 
   if (!profile) return <p className="text-center mt-20 text-gray-500">Loading…</p>;
@@ -132,7 +165,7 @@ export default function DoctorProfilePage() {
       <div className="relative px-10 py-20">
         <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-12">
           <ProfileImage
-            profileImage={profile.profileImg}
+            profileImgUrl={profile.profileImgUrl}
             previewImage={previewImage}
             firstLetter={firstLetter}
             onFileChange={handleImageChange}
@@ -222,7 +255,12 @@ export default function DoctorProfilePage() {
                 <LabeledInput label="Years of Experience" name="yearsOfExperience" value={formData.yearsOfExperience} onChange={handleChange} type="number" />
                 <LabeledInput label="Working At"          name="workingAT"         value={formData.workingAT}         onChange={handleChange} />
                 <LabeledInput label="Contact Number"      name="contactNumber"     value={formData.contactNumber}     onChange={handleChange} />
-                <LabeledInput label="Gender"              name="gender"            value={formData.gender ?? ""}      onChange={handleChange} />
+                <LabeledSelect label="Gender" name="gender" value={formData.gender ?? ""} onChange={handleChange}>
+                  <option value="">Select gender</option>
+                  <option value="MALE">Male</option>
+                  <option value="FEMALE">Female</option>
+                  <option value="OTHER">Other</option>
+                </LabeledSelect>
                 <LabeledInput label="Date of Birth"       name="dateOfBirth"       value={formData.dateOfBirth ?? ""} onChange={handleChange} type="date" />
                 <LabeledInput label="Country"             name="country"           value={formData.country ?? ""}     onChange={handleChange} />
               </div>

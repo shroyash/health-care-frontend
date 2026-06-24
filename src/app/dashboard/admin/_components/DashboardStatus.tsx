@@ -17,7 +17,11 @@ type StatType = {
 };
 
 export function DashboardStats() {
-  const { statsData } = useDashboardStats();
+ const { statsData, fetchStats } = useDashboardStats();
+ useEffect(() => {
+  fetchStats();
+}, [fetchStats]);
+
   const [pendingDoctorApprovals, setPendingDoctorApprovals] = useState<number>(0);
   const [loadingPending, setLoadingPending] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);

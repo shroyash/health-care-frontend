@@ -1,78 +1,69 @@
 // api/doctor.api.ts
 import { API } from "./api";
-import { DoctorProfileResponseDto } from "../type/doctor.types";
+import { DoctorProfileResponseDto, DoctorProfileUpdateDto } from "../type/doctor.types";
 import {
   DoctorScheduleResponseDto,
   DoctorWithScheduleDto,
   ScheduleDto,
 } from "../type/doctor-schedule.types";
 
-
-
 // ── Doctor Profile ────────────────────────────────────────────────
 
 export const doctorProfileApi = {
-
   getMyProfile: () =>
-    API.getOne<DoctorProfileResponseDto>(
-      "/api/doctor-profiles"),
+    API.getOne<DoctorProfileResponseDto>("/api/doctor-profiles/me"),
 
-  updateProfile: (data: Partial<DoctorProfileResponseDto>) =>
-    API.putNoId<Partial<DoctorProfileResponseDto>,
-                DoctorProfileResponseDto>(
-      "/api/doctor-profiles", data),
+  updateProfile: (data: DoctorProfileUpdateDto) =>
+    API.putNoId<DoctorProfileUpdateDto, DoctorProfileResponseDto>(
+      "/api/doctor-profiles",
+      data
+    ),
 
   uploadProfileImage: (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
-    return API.create<FormData, DoctorProfileResponseDto>(
-      "/api/doctor-profiles/upload-image",
+    return API.create<FormData, { profileImgUrl: string }>(
+      "/api/doctor-profiles/upload-img",
       formData
     );
   },
 
   getAllAvailable: () =>
     API.getAll<DoctorWithScheduleDto>(
-      "/api/appointments/patient/doctors/available"),
+      "/api/appointments/patient/doctors/available"
+    ),
 };
 
 // ── Doctor Schedule ───────────────────────────────────────────────
 
 export const doctorScheduleApi = {
-
   saveWeekly: (data: ScheduleDto) =>
-    API.create<ScheduleDto, void>(
-      "/api/schedules/weekly", data),
+    API.create<ScheduleDto, void>("/api/schedules/weekly", data),
 
   getMySchedule: () =>
-    API.getOne<DoctorScheduleResponseDto>(
-      "/api/schedules"),
+    API.getOne<DoctorScheduleResponseDto>("/api/schedules"),
 
   getById: (doctorProfileId: string) =>
-    API.getOne<DoctorScheduleResponseDto>(
-      `/api/schedules/${doctorProfileId}`),
+    API.getOne<DoctorScheduleResponseDto>(`/api/schedules/${doctorProfileId}`),
 
   update: (scheduleId: number, data: ScheduleDto) =>
     API.update<ScheduleDto, DoctorScheduleResponseDto>(
-      "/api/schedules", scheduleId, data),
+      "/api/schedules",
+      scheduleId,
+      data
+    ),
 
-  delete: (scheduleId: number) =>
-    API.remove("/api/schedules", scheduleId),
+  delete: (scheduleId: number) => API.remove("/api/schedules", scheduleId),
 };
 
 // ── Admin Doctor Management ───────────────────────────────────────
 
 export const adminDoctorApi = {
+  getAll: () => API.getAll<DoctorProfileResponseDto>("/api/admin/doctors"),
 
-  getAll: () =>
-    API.getAll<DoctorProfileResponseDto>(
-      "/api/admin/doctors"),
-
-  suspend: (doctorId: string) =>
-    API.putNoId<void, DoctorProfileResponseDto>(
-      `/api/dashboard/admin/doctors/${doctorId}/suspend`, undefined),
+  suspend: (doctorId: string, reason: string) =>
+    API.post(`/api/admin/users/${doctorId}/suspend`, { reason }),
 
   restore: (doctorId: string) =>
-    API.putNoId<void, DoctorProfileResponseDto>(
-      `/api/dashboard/admin/doctors/${doctorId}/restore`, undefined),
+    API.post(`/api/admin/users/${doctorId}/unsuspend`),
 };

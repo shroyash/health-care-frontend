@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { toast } from "react-toastify";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,8 +13,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Search, User, ArrowLeft } from "lucide-react";
-
-import { suspendPatient, restorePatient } from "@/lib/api/adminDashboard";
 import { useDashboardStats } from "@/context/DashboardStatsContext";
 import { adminPatientApi } from "@/lib/api/patient.api";
 import { PatientProfileDTO } from "@/lib/type/patient.types";
@@ -50,9 +49,11 @@ export default function PatientsPage() {
     const fetchData = async () => {
       try {
         const patientsData = await adminPatientApi.getAll();
+        console.log("Fetched patients:", patientsData);
         setPatients(patientsData);
       } catch (err) {
         console.error("Failed to fetch patients:", err);
+        toast.error("Failed to load patients. Please refresh the page.");
       } finally {
         setLoading(false);
       }
@@ -71,10 +72,12 @@ export default function PatientsPage() {
 
   const handleStatusChange = async (patient: PatientProfileDTO) => {
     try {
-      if (patient.status?.toUpperCase() === "ACTIVE") {
-        await suspendPatient(patient.patientProfileId);
+      const wasActive = patient.status?.toUpperCase() === "ACTIVE";
+
+      if (wasActive) {
+        await adminPatientApi.suspend(patient.patientId, "Violation of terms of service");
       } else {
-        await restorePatient(patient.patientProfileId);
+        await adminPatientApi.restore(patient.patientId);
       }
 
       const updated = await adminPatientApi.getAll();
@@ -82,12 +85,19 @@ export default function PatientsPage() {
 
       if (selectedPatient) {
         const match = updated.find(
-          (p) => p.patientProfileId === selectedPatient.patientProfileId
+          (p) => p.patientId === selectedPatient.patientId
         );
         setSelectedPatient(match || null);
       }
+
+      toast.success(
+        wasActive
+          ? `${patient.fullName} suspended successfully`
+          : `${patient.fullName} restored successfully`
+      );
     } catch (err) {
       console.error("Failed updating patient status:", err);
+      toast.error("Failed to update patient status. Please try again.");
     }
   };
 
@@ -241,7 +251,7 @@ export default function PatientsPage() {
               <div className="space-y-4">
                 {filteredPatients.map((p) => (
                   <div
-                    key={p.patientProfileId}
+                    key={p.patientId}
                     className="p-4 border rounded-lg hover:bg-accent/30 transition flex justify-between items-center"
                   >
                     <div className="flex items-center gap-4">

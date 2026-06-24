@@ -45,6 +45,10 @@ export default function Login({ setShowForgotPassword }: LoginProps) {
     if (error instanceof AxiosError) {
       const status = error.response?.status;
       const data = error.response?.data as ApiErrorResponse | undefined;
+      
+       if (data?.message?.toLowerCase().includes("suspended")) {
+      return data.message;
+    }
 
       switch (status) {
         case 400:

@@ -6,14 +6,12 @@ export interface DoctorProfileResponseDto {
   yearsOfExperience: number;
   workingAT: string;
   contactNumber: string;
-  profileImg?: string;
   profileImgUrl?: string;
   status: string;
   dateOfBirth?: string;
   gender?: string;
   country?: string;
 }
-
 
 export interface DoctorProfileUpdateDto {
   fullName?: string;

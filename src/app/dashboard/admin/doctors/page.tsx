@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "react-toastify";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,12 +15,11 @@ import { Input } from "@/components/ui/input";
 import { Search, User, ArrowLeft } from "lucide-react";
 import {
   getPendingDoctorCount,
-  suspendDoctor,
-  restoreDoctor,
 } from "@/lib/api/adminDashboard";
-import {adminDoctorApi } from "@/lib/api/doctor.api";
+import { adminDoctorApi } from "@/lib/api/doctor.api";
 import { useDashboardStats } from "@/context/DashboardStatsContext";
 import { DoctorProfileResponseDto } from "@/lib/type/doctor.types";
+
 
 /* ------------------ Helpers ------------------ */
 
@@ -61,6 +61,7 @@ export default function DoctorManagementPage() {
         setPendingCount(pending);
       } catch (err) {
         console.error("Failed loading doctor data", err);
+        toast.error("Failed to load doctors. Please refresh the page.");
       } finally {
         setLoading(false);
       }
@@ -80,10 +81,12 @@ export default function DoctorManagementPage() {
 
   const handleStatusChange = async (doctor: DoctorProfileResponseDto) => {
     try {
-      if (doctor.status === "ACTIVE") {
-        await suspendDoctor(doctor.doctorProfileId);
+      const wasActive = doctor.status === "ACTIVE";
+
+      if (wasActive) {
+        await adminDoctorApi.suspend(doctor.doctorProfileId, "Violation of terms of service");
       } else {
-        await restoreDoctor(doctor.doctorProfileId);
+        await adminDoctorApi.restore(doctor.doctorProfileId);
       }
 
       const updated = await adminDoctorApi.getAll();
@@ -95,8 +98,15 @@ export default function DoctorManagementPage() {
         );
         setSelectedDoctor(match || null);
       }
+
+      toast.success(
+        wasActive
+          ? `${doctor.fullName} suspended successfully`
+          : `${doctor.fullName} restored successfully`
+      );
     } catch (err) {
       console.error("Failed updating doctor status", err);
+      toast.error("Failed to update doctor status. Please try again.");
     }
   };
 

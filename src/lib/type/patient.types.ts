@@ -1,13 +1,12 @@
-
 export interface PatientProfileDTO {
-  patientProfileId: string;
+  patientId: string;
   fullName: string;
   email: string;
   contactNumber: string;
   dateOfBirth: string;
   gender: string;
   country: string;
-  profileImage?: string;
+  profileImgUrl?: string;
   status: string;
 }
 

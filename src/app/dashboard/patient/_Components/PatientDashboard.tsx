@@ -1,70 +1,42 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Clock, Users, FileText, Heart } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Calendar, Users, FileText, Heart } from "lucide-react";
 
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
-} from "recharts";
+import { getPatientDashboardStats } from "@/lib/api/patientDashboard";
+import { PatientDashboardStatsDto } from "@/lib/type/dashboard.types";
 
-import {
-  getPatientDashboardStats,
-  getWeeklyAppointmentsByPatient,
-  getPatientStatusCount,
-} from "@/lib/api/patientDashboard";
-
-import { PatientDashboardStatsDto, WeeklyAppointmentCountDto } from "@/lib/type/dashboard.types";
-import { AppointmentStatusCountDto } from "@/lib/type/appointment.types";
 import PatientAppointmentsList from "./PatientAppointmentList";
-
-interface StatusChartData {
-  [key: string]: string | number;
-  name: string;
-  value: number;
-}
-
-const STATUS_COLORS = ["#22c55e", "#f59e0b", "#ef4444"];
+import PatientDashboardCharts from "./Patientdashboardcharts";
 
 export function PatientDashboard() {
   const [stats, setStats] = useState<PatientDashboardStatsDto | null>(null);
-  const [weeklyData, setWeeklyData] = useState<WeeklyAppointmentCountDto[]>([]);
-  const [statusData, setStatusData] = useState<StatusChartData[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchDashboard = async () => {
-      try {
-        const [statsData, weeklyCount, statusCount] = await Promise.all([
-          getPatientDashboardStats(),
-          getWeeklyAppointmentsByPatient(),
-          getPatientStatusCount(),
-        ]);
+    let isMounted = true;
 
-        setStats(statsData);
-        setWeeklyData(weeklyCount);
-        setStatusData(
-          statusCount.map((item: AppointmentStatusCountDto) => ({
-            name: item.status,
-            value: item.count,
-          }))
-        );
+    const fetchStats = async () => {
+      try {
+        const statsData = await getPatientDashboardStats();
+        if (isMounted) {
+          setStats(statsData);
+        }
       } catch (error) {
         console.error("Dashboard fetch error", error);
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
-    fetchDashboard();
+
+    fetchStats();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return (
@@ -79,58 +51,24 @@ export function PatientDashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 w-full">
-        <StatCard icon={Calendar} label="Upcoming" value={stats?.totalUpcomingAppointments ?? 0} />
-        <StatCard icon={Users} label="Doctors" value={stats?.totalActiveDoctor ?? 0} />
-        <StatCard icon={FileText} label="Reports" value={stats?.totalReportsWritten ?? 0} />
-        <StatCard icon={Heart} label="Health" value="Good" />
+        {loading ? (
+          Array.from({ length: 4 }).map((_, index) => (
+            <Card key={index} className="shadow-sm border-0 w-full h-[76px] animate-pulse bg-muted" />
+          ))
+        ) : (
+          <>
+            <StatCard icon={Calendar} label="Upcoming" value={stats?.totalUpcomingAppointments ?? 0} />
+            <StatCard icon={Users} label="Doctors" value={stats?.totalActiveDoctor ?? 0} />
+            <StatCard icon={FileText} label="Reports" value={stats?.totalReportsWritten ?? 0} />
+            <StatCard icon={Heart} label="Health" value="Good" />
+          </>
+        )}
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="shadow-card">
-          <CardHeader>
-            <CardTitle>Appointments Trend</CardTitle>
-          </CardHeader>
-          <CardContent className="h-100">
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={weeklyData}>
-                <XAxis dataKey="date" />
-                <YAxis allowDecimals={false} />
-                <Tooltip />
-                <Line type="monotone" dataKey="count" stroke="#2563eb" strokeWidth={3} />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+      <PatientDashboardCharts />
 
-        <Card className="shadow-card">
-          <CardHeader>
-            <CardTitle>Appointment Status</CardTitle>
-          </CardHeader>
-          <CardContent className="h-100 flex items-center justify-center">
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={statusData}
-                  dataKey="value"
-                  nameKey="name"
-                  innerRadius={60}
-                  outerRadius={100}
-                  label
-                >
-                  {statusData.map((_, index) => (
-                    <Cell key={index} fill={STATUS_COLORS[index % STATUS_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      
+      {/* Upcoming Appointments */}
       <PatientAppointmentsList upcoming={true} />
     </div>
   );
