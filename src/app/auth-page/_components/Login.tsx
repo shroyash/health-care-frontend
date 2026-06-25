@@ -99,10 +99,22 @@ export default function Login({ setShowForgotPassword }: LoginProps) {
       else router.push("/auth-page");
 
       reset();
+      // NOTE: isLoading is intentionally left `true` here on the success
+      // path. router.push() doesn't wait for the destination page to
+      // actually finish loading/rendering — it just kicks off navigation.
+      // If we reset isLoading immediately (the old `finally` block did
+      // this), the button flips back to its normal state during the gap
+      // between "navigation started" and "new page actually rendered".
+      // For routes that take longer to load (like the admin dashboard),
+      // that gap is long enough that the user sees the button go back to
+      // normal and assumes nothing is happening, even though the redirect
+      // is still in progress. Since this component unmounts once
+      // navigation completes, there's no need to ever reset isLoading on
+      // the success path — only the error path below needs to turn it
+      // back off so the user can correct their input and retry.
     } catch (err) {
       console.error("Login error:", err);
       setError(getErrorMessage(err));
-    } finally {
       setIsLoading(false);
     }
   };

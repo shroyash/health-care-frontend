@@ -88,6 +88,12 @@ const ProfileImage = ({ profileImgUrl, previewImage, firstLetter, onFileChange, 
   );
 };
 
+type ToastType = "success" | "error";
+interface ToastState {
+  message: string;
+  type: ToastType;
+}
+
 export default function DoctorProfilePage() {
   const [profile, setProfile] = useState<DoctorProfileResponseDto | null>(null);
   const [formData, setFormData] = useState<DoctorProfileUpdateDto>({
@@ -105,6 +111,14 @@ export default function DoctorProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [imageKey, setImageKey] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [toast, setToast] = useState<ToastState | null>(null);
+
+  const showToast = (message: string, type: ToastType = "success") => {
+    setToast({ message, type });
+    window.setTimeout(() => setToast(null), 3000);
+  };
 
   useEffect(() => {
     doctorProfileApi.getMyProfile().then((data: DoctorProfileResponseDto) => {
@@ -131,6 +145,15 @@ export default function DoctorProfilePage() {
     }));
   };
 
+  // FIX: Previously this assumed `response.profileImgUrl` always existed.
+  // If the backend returned a different shape, the URL lookup failed and
+  // the avatar fell back to the first letter until a reload re-fetched the
+  // real profile. We now try several common response shapes, and if NONE
+  // of them match, we fall back to re-fetching the full profile from
+  // getMyProfile() — which we already know returns the correct shape
+  // (you confirmed this works after a manual page reload). This gives us
+  // a guaranteed-correct result without forcing the user to reload the
+  // whole page themselves.
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -138,19 +161,62 @@ export default function DoctorProfilePage() {
     setPreviewImage(URL.createObjectURL(file));
     doctorProfileApi
       .uploadProfileImage(file)
-      .then((response: { profileImgUrl: string }) => {
-        setProfile((p) => (p ? { ...p, profileImgUrl: response.profileImgUrl } : p));
-        setImageKey((k) => k + 1);
+      .then(async (response: any) => {
+        const newUrl =
+          response?.profileImgUrl ??
+          response?.data?.profileImgUrl ??
+          response?.url ??
+          response?.imageUrl ??
+          response?.data?.url ??
+          response?.data?.imageUrl;
+
+        if (newUrl) {
+          setProfile((p) => (p ? { ...p, profileImgUrl: newUrl } : p));
+          setImageKey((k) => k + 1);
+        } else {
+          // Response shape didn't match anything we expected — re-fetch
+          // the profile directly instead of guessing further.
+          console.warn("Upload response shape unrecognized, refetching profile:", response);
+          const fresh = await doctorProfileApi.getMyProfile();
+          setProfile(fresh);
+          setImageKey((k) => k + 1);
+        }
         setPreviewImage(null);
+        showToast("Profile picture updated");
+      })
+      .catch((err) => {
+        console.error("Image upload failed:", err);
+        setPreviewImage(null);
+        showToast("Failed to upload image. Please try again.", "error");
       })
       .finally(() => setUploading(false));
   };
 
+  // FIX: Previously this merged the raw API response (`updated`) into state.
+  // If the backend's response shape didn't exactly match DoctorProfileResponseDto
+  // (e.g. nested under `data`, different field names, or no body at all),
+  // the spread silently added nothing useful and the UI kept showing stale
+  // values until a full page reload re-fetched the profile from scratch.
+  //
+  // Since `formData` already holds exactly what the user submitted (and is
+  // guaranteed to match our own DTO shape), we merge that into `profile`
+  // directly instead of relying on the server's response shape.
   const handleSave = async () => {
     if (!profile) return;
-    const updated = await doctorProfileApi.updateProfile(formData);
-    setProfile((p) => (p ? { ...p, ...updated } : p));
-    setIsEditing(false);
+    setSaving(true);
+    setSaveError(null);
+    try {
+      await doctorProfileApi.updateProfile(formData);
+      setProfile((p) => (p ? { ...p, ...formData } : p));
+      setIsEditing(false);
+      showToast("Profile updated successfully");
+    } catch (err) {
+      console.error("Failed to update profile:", err);
+      setSaveError("Failed to save changes. Please try again.");
+      showToast("Failed to update profile", "error");
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (!profile) return <p className="text-center mt-20 text-gray-500">Loading…</p>;
@@ -162,6 +228,16 @@ export default function DoctorProfilePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br text-black">
+      {toast && (
+        <div
+          className={`fixed top-6 right-6 z-[60] flex items-center gap-2 rounded-lg px-4 py-3 shadow-lg text-sm font-medium text-white transition-all ${
+            toast.type === "success" ? "bg-green-600" : "bg-red-600"
+          }`}
+        >
+          {toast.message}
+        </div>
+      )}
+
       <div className="relative px-10 py-20">
         <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-12">
           <ProfileImage
@@ -244,7 +320,7 @@ export default function DoctorProfilePage() {
       </div>
 
       <Transition appear show={isEditing} as={Fragment}>
-        <Dialog as="div" className="relative z-50" onClose={setIsEditing}>
+        <Dialog as="div" className="relative z-50" onClose={() => !saving && setIsEditing(false)}>
           <div className="fixed inset-0 bg-black/50" />
           <div className="fixed inset-0 flex items-center justify-center p-4">
             <Dialog.Panel className="w-full max-w-md rounded-2xl bg-white p-6 text-gray-900">
@@ -264,9 +340,18 @@ export default function DoctorProfilePage() {
                 <LabeledInput label="Date of Birth"       name="dateOfBirth"       value={formData.dateOfBirth ?? ""} onChange={handleChange} type="date" />
                 <LabeledInput label="Country"             name="country"           value={formData.country ?? ""}     onChange={handleChange} />
               </div>
+
+              {saveError && (
+                <p className="mt-3 text-sm text-red-600">{saveError}</p>
+              )}
+
               <div className="mt-6 flex justify-end gap-2">
-                <Button onClick={handleSave}>Save</Button>
-                <Button variant="ghost" onClick={() => setIsEditing(false)}>Cancel</Button>
+                <Button onClick={handleSave} disabled={saving}>
+                  {saving ? "Saving…" : "Save"}
+                </Button>
+                <Button variant="ghost" onClick={() => setIsEditing(false)} disabled={saving}>
+                  Cancel
+                </Button>
               </div>
             </Dialog.Panel>
           </div>

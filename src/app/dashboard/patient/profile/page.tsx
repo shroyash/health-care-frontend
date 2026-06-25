@@ -113,6 +113,12 @@ const ProfileImage = ({
   );
 };
 
+type ToastType = "success" | "error";
+interface ToastState {
+  message: string;
+  type: ToastType;
+}
+
 /* ── Main Page ── */
 export default function PatientProfilePage() {
   const [profile, setProfile] = useState<PatientProfileDTO | null>(null);
@@ -129,6 +135,14 @@ export default function PatientProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [imageKey, setImageKey] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [toast, setToast] = useState<ToastState | null>(null);
+
+  const showToast = (message: string, type: ToastType = "success") => {
+    setToast({ message, type });
+    window.setTimeout(() => setToast(null), 3000);
+  };
 
   useEffect(() => {
     patientProfileApi.getMyProfile().then((data: PatientProfileDTO) => {
@@ -143,6 +157,13 @@ export default function PatientProfilePage() {
     });
   }, []);
 
+  // FIX: Previously this assumed `response.profileImgUrl` always existed.
+  // If the backend returned a different shape (nested under `data`, named
+  // `url`/`imageUrl`, etc.), the lookup failed silently and the avatar kept
+  // showing the old image / letter fallback until a full page reload
+  // re-fetched the profile from scratch. We now try several common shapes,
+  // and if none match, we re-fetch the profile directly via getMyProfile()
+  // (the same call a reload triggers) instead of leaving the UI stale.
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -150,19 +171,64 @@ export default function PatientProfilePage() {
     setPreviewImage(URL.createObjectURL(file));
     patientProfileApi
       .uploadProfileImage(file)
-      .then((response: { profileImgUrl: string }) => {
-        setProfile((p) => (p ? { ...p, profileImgUrl: response.profileImgUrl } : p));
-        setImageKey((k) => k + 1);
+      .then(async (response: any) => {
+        const newUrl =
+          response?.profileImgUrl ??
+          response?.data?.profileImgUrl ??
+          response?.url ??
+          response?.imageUrl ??
+          response?.data?.url ??
+          response?.data?.imageUrl;
+
+        if (newUrl) {
+          setProfile((p) => (p ? { ...p, profileImgUrl: newUrl } : p));
+          setImageKey((k) => k + 1);
+        } else {
+          // Response shape didn't match anything expected — re-fetch the
+          // profile directly instead of guessing further.
+          console.warn("Upload response shape unrecognized, refetching profile:", response);
+          const fresh = await patientProfileApi.getMyProfile();
+          setProfile(fresh);
+          setImageKey((k) => k + 1);
+        }
         setPreviewImage(null);
+        showToast("Profile picture updated");
+      })
+      .catch((err) => {
+        console.error("Image upload failed:", err);
+        setPreviewImage(null);
+        showToast("Failed to upload image. Please try again.", "error");
       })
       .finally(() => setUploading(false));
   };
 
+  // FIX: Previously this merged the raw API response (`updated`) into state.
+  // If the backend's response shape didn't exactly match PatientProfileDTO
+  // (e.g. nested under `data`, different field names, or no body at all),
+  // the spread silently added nothing useful and the UI kept showing stale
+  // values until a full page reload re-fetched the profile from scratch.
+  //
+  // Since `form` already holds exactly what the user submitted (and is
+  // guaranteed to match our own DTO shape), we merge that into `profile`
+  // directly instead of relying on the server's response shape. We also
+  // wrap this in try/catch so a failed save surfaces an error instead of
+  // failing silently.
   const handleSave = async () => {
     if (!profile) return;
-    const updated = await patientProfileApi.updateProfile(form);
-    setProfile((p) => (p ? { ...p, ...updated } : p));
-    setIsEditing(false);
+    setSaving(true);
+    setSaveError(null);
+    try {
+      await patientProfileApi.updateProfile(form);
+      setProfile((p) => (p ? { ...p, ...form } : p));
+      setIsEditing(false);
+      showToast("Profile updated successfully");
+    } catch (err) {
+      console.error("Failed to update profile:", err);
+      setSaveError("Failed to save changes. Please try again.");
+      showToast("Failed to update profile", "error");
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (!profile) return <p className="text-center mt-20 text-gray-500">Loading…</p>;
@@ -179,6 +245,16 @@ export default function PatientProfilePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br text-black">
+      {toast && (
+        <div
+          className={`fixed top-6 right-6 z-[60] flex items-center gap-2 rounded-lg px-4 py-3 shadow-lg text-sm font-medium text-white transition-all ${
+            toast.type === "success" ? "bg-green-600" : "bg-red-600"
+          }`}
+        >
+          {toast.message}
+        </div>
+      )}
+
       {/* Hero Section */}
       <div className="relative px-10 py-20">
         <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-12">
@@ -262,7 +338,7 @@ export default function PatientProfilePage() {
 
       {/* Edit Modal */}
       <Transition appear show={isEditing} as={Fragment}>
-        <Dialog as="div" className="relative z-50" onClose={setIsEditing}>
+        <Dialog as="div" className="relative z-50" onClose={() => !saving && setIsEditing(false)}>
           <div className="fixed inset-0 bg-black/50" />
           <div className="fixed inset-0 flex items-center justify-center p-4">
             <Dialog.Panel className="w-full max-w-md rounded-2xl bg-white p-6 text-gray-900">
@@ -300,9 +376,16 @@ export default function PatientProfilePage() {
                   onChange={(e) => setForm({ ...form, dateOfBirth: e.target.value })}
                 />
               </div>
+
+              {saveError && (
+                <p className="mt-3 text-sm text-red-600">{saveError}</p>
+              )}
+
               <div className="mt-6 flex justify-end gap-2">
-                <Button onClick={handleSave}>Save</Button>
-                <Button variant="ghost" onClick={() => setIsEditing(false)}>
+                <Button onClick={handleSave} disabled={saving}>
+                  {saving ? "Saving…" : "Save"}
+                </Button>
+                <Button variant="ghost" onClick={() => setIsEditing(false)} disabled={saving}>
                   Cancel
                 </Button>
               </div>

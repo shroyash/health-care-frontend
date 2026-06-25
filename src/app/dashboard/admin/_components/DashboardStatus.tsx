@@ -9,8 +9,6 @@ import { getPendingDoctorCount } from "@/lib/api/adminDashboard";
 type StatType = {
   title: string;
   value: string | number;
-  change: string;
-  changeType: "positive" | "negative";
   icon: React.ComponentType<{ className?: string }>;
   gradient: string;
   isLoading?: boolean;
@@ -62,32 +60,24 @@ export function DashboardStats() {
       {
         title: "Total Patients",
         value: (statsData.totalPatients ?? 0).toString(),
-        change: "+0.5%",
-        changeType: "positive",
         icon: Users,
         gradient: "bg-gradient-to-r from-blue-400 to-blue-600",
       },
       {
         title: "Active Doctors",
         value: (statsData.totalDoctors ?? 0).toString(),
-        change: "+0.5%",
-        changeType: "positive",
         icon: UserCheck,
         gradient: "bg-gradient-to-r from-green-400 to-green-600",
       },
       {
         title: "Today's Appointments",
         value: (statsData.totalAppointmentsToday ?? 0).toString(),
-        change: "+0.1%",
-        changeType: "positive",
         icon: Calendar,
         gradient: "bg-gradient-to-r from-purple-400 to-purple-600",
       },
       {
         title: "Pending Doctor Approvals",
         value: loadingPending ? "..." : pendingDoctorApprovals,
-        change: "0.4%",
-        changeType: "negative",
         icon: TrendingUp,
         gradient: "bg-gradient-to-r from-yellow-400 to-yellow-600",
         isLoading: loadingPending,
@@ -125,7 +115,7 @@ export function DashboardStats() {
               </CardHeader>
 
               <CardContent className="relative flex items-center justify-between">
-                {/* Value and Change */}
+                {/* Value */}
                 <div className="space-y-1">
                   <div className="text-2xl font-bold text-foreground">
                     {stat.isLoading ? (
@@ -134,17 +124,6 @@ export function DashboardStats() {
                       stat.value
                     )}
                   </div>
-                  {!stat.isLoading && (
-                    <p
-                      className={`text-xs font-medium ${
-                        stat.changeType === "positive"
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
-                    >
-                      {stat.changeType === "positive" ? "↑" : "↓"} {stat.change}
-                    </p>
-                  )}
                 </div>
 
                 {/* Icon in circle */}
