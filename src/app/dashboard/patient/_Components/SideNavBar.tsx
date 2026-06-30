@@ -14,8 +14,10 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-import { patientProfileApi, type PatientProfileDTO } from "@/lib/api/patient.api";
+import { patientProfileApi } from "@/lib/api/patient.api";
 import { logout } from "@/lib/api/auth.api";
+import type { PatientProfileDTO } from "@/lib/type/patient.types";
+
 
 interface SideNavBarProps {
   isOpen: boolean;
@@ -126,8 +128,8 @@ export default function PatientSideNav({ isOpen, toggleSidebar }: SideNavBarProp
             <Avatar>
               <AvatarImage
                 src={
-                  profile.profileImage
-                    ? `http://localhost:8004${profile.profileImage}`
+                  profile.profileImgUrl
+                    ? `http://localhost:8004${profile.profileImgUrl}`
                     : undefined
                 }
               />

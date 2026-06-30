@@ -130,8 +130,8 @@ export default function SideNavBar({ isOpen, toggleSidebar }: SideNavBarProps) {
             <Avatar>
               <AvatarImage
                 src={
-                  profile.profileImg
-                    ? `http://localhost:8004${profile.profileImg}`
+                  profile.profileImgUrl
+                    ? `http://localhost:8004${profile.profileImgUrl}`
                     : undefined
                 }
               />
